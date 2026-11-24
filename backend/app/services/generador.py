@@ -71,6 +71,9 @@ def _puntuar_fuentes(t: str) -> dict[str, int]:
         puntos["precios_referencia"] += 5
     if re.search(r"\b(precio|precios|cuesta|cuestan|vale|costo)\b", t) and not puntos["ipc"] and not puntos["cba"]:
         puntos["compras"] += 2
+        if not re.search(r"\b(indice|indices|ipmc)\b", t):  # «precio de cemento» es un precio, no el índice IPMC
+            puntos["compras"] += 2
+            puntos["ipmc"] = max(0, puntos["ipmc"] - 2)
     if re.search(r"\b(proyecci|2030|futur)", t):
         puntos["proyecciones"] += 3
     if re.search(r"\b(inflacion|ipc|interanual)\b", t):

@@ -328,7 +328,8 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
             dimension = "clave"
         notas_rigor.append("Se separó cada serie para no promediar índices distintos.")
     # Medidas de saldo (población, índices): no se suman entre periodos; sin periodo se usa el último disponible.
-    if fuente.stock and dimension not in ("periodo", "anio") and serie not in ("periodo", "anio") and "anio" not in filtros:
+    sin_tiempo = dimension not in ("periodo", "anio") and serie not in ("periodo", "anio")
+    if fuente.stock and sin_tiempo and ("anio" not in filtros or (fuente.stock == "periodo" and "mes" not in filtros)):
         ultimo = _ultimo_periodo(bd, fuente, filtros)
         if ultimo:
             filtros["anio"] = ultimo[0]
@@ -367,7 +368,7 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
 
 def _ultimo_periodo(bd: Session, fuente: Fuente, filtros: dict) -> tuple[int, int] | None:
     m = fuente.modelo
-    base = {k: v for k, v in filtros.items() if k not in ("anio", "mes", "desde_anio", "hasta_anio")}
+    base = {k: v for k, v in filtros.items() if k not in ("mes", "desde_anio", "hasta_anio")}  # con año: su último mes
     conds = _filtros(fuente, base)
     if fuente.stock == "anio":
         from ..db import ahora as _ahora

@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import date, datetime
 
-from sqlalchemy import delete, insert
+from sqlalchemy import JSON, delete, insert
 from sqlalchemy.orm import Session
 
 from ..config import obtener_config
@@ -49,7 +49,13 @@ def _convertir(modelo, fila: dict) -> dict:
         if col.name not in fila or col.name == "id":
             continue
         v = fila[col.name]
-        tipo = col.type.python_type if hasattr(col.type, "python_type") else str
+        if isinstance(col.type, JSON):  # las columnas JSON llegan como texto JSON desde el CSV
+            salida[col.name] = json.loads(v) if v else None
+            continue
+        try:
+            tipo = col.type.python_type
+        except NotImplementedError:
+            tipo = str
         if v == "" or v is None:
             salida[col.name] = None if col.nullable else ("" if tipo is str else 0)
         elif tipo is float:
