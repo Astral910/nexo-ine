@@ -12,6 +12,19 @@ import re
 from ..texto import DEPARTAMENTOS, departamento_canonico, fichas, normalizar
 from .semantica import FUENTES
 
+# Regionalización oficial (Decreto 70-86), usada también por el IPC regional del INE.
+REGION_DE = {
+    "Guatemala": "Región I · Metropolitana", "Alta Verapaz": "Región II · Norte", "Baja Verapaz": "Región II · Norte",
+    "El Progreso": "Región III · Nororiente", "Izabal": "Región III · Nororiente", "Zacapa": "Región III · Nororiente",
+    "Chiquimula": "Región III · Nororiente", "Santa Rosa": "Región IV · Suroriente", "Jalapa": "Región IV · Suroriente",
+    "Jutiapa": "Región IV · Suroriente", "Sacatepéquez": "Región V · Central", "Chimaltenango": "Región V · Central",
+    "Escuintla": "Región V · Central", "Sololá": "Región VI · Suroccidente", "Totonicapán": "Región VI · Suroccidente",
+    "Quetzaltenango": "Región VI · Suroccidente", "Suchitepéquez": "Región VI · Suroccidente",
+    "Retalhuleu": "Región VI · Suroccidente", "San Marcos": "Región VI · Suroccidente",
+    "Huehuetenango": "Región VII · Noroccidente", "Quiché": "Región VII · Noroccidente", "Petén": "Región VIII · Petén",
+}
+PALABRAS_PRECIO = r"\b(precio|precios|cuesta|cuestan|vale|valen|costo|compra|compras|comprar|pagan|pago)\b"
+
 PALABRAS_CLAVE = {
     "precio", "precios", "costo", "costos", "cuesta", "cuestan", "vale", "valen", "compra", "compras", "comprar",
     "mediana", "mediano", "promedio", "media", "total", "monto", "gasto", "cantidad", "numero", "cuantas", "cuantos",
@@ -143,14 +156,28 @@ def generar(peticion: str, permisos: set[str]) -> dict:
     candidatas = [f for f, p in sorted(puntos.items(), key=lambda x: -x[1]) if FUENTES[f].permiso in permisos]
     if not candidatas:
         raise ValueError("No tienes acceso a fuentes de datos para generar tableros.")
-    fuente_id = candidatas[0] if puntos[candidatas[0]] > 0 else ("compras" if "compras" in candidatas else candidatas[0])
+    if puntos[candidatas[0]] > 0:
+        fuente_id = candidatas[0]
+    elif re.search(PALABRAS_PRECIO, t) and "compras" in candidatas:
+        fuente_id = "compras"
+    else:  # umbral de confianza: mejor decir que no se sabe que responder otra pregunta
+        raise ValueError("No encontré datos oficiales para responder esa pregunta. Prueba con temas como precios de "
+                         "compras públicas, IPC, canasta básica, población, materiales de construcción o alertas de precios.")
     fuente = FUENTES[fuente_id]
 
     filtros: dict = _anios(t)
     deptos = [d for d in DEPARTAMENTOS if re.search(rf"\b{re.escape(normalizar(d))}\b", t)]
     interpretacion = [{"tipo": "Fuente", "valor": fuente.titulo}]
+    avisos_previos: list[str] = []
     if deptos and "departamento" in fuente.filtros and not re.search(r"por departamento", t):
         filtros["departamento"] = departamento_canonico(deptos[0])
+    elif deptos and fuente_id == "ipc":
+        region = REGION_DE.get(departamento_canonico(deptos[0]) or "", "")
+        avisos_previos.append(f"El INE no publica el IPC por departamento. Se muestra el IPC de la {region}, a la que "
+                              f"pertenece {departamento_canonico(deptos[0])}.")
+    elif deptos and "departamento" not in fuente.filtros:
+        avisos_previos.append(f"Esta fuente no se publica por departamento: se muestra el total nacional "
+                              f"(se ignoró «{deptos[0]}»).")
     if fuente_id in ("poblacion",) and re.search(r"\burbana\b|\burbano\b", t) and "por area" not in t:
         filtros["area"] = "Urbana"
     elif fuente_id in ("poblacion",) and re.search(r"\brural\b", t) and "por area" not in t:
@@ -172,7 +199,11 @@ def generar(peticion: str, permisos: set[str]) -> dict:
     dimension = _dimension(t, fuente_id)
     serie = None
     if fuente_id == "ipc":
-        if re.search(r"region", t):
+        region_depto = REGION_DE.get(departamento_canonico(deptos[0]) or "") if deptos else None
+        if region_depto:
+            filtros["ambito"], filtros["clave"], medida = "region", region_depto, "indice"
+            interpretacion.append({"tipo": "Región", "valor": region_depto})
+        elif re.search(r"region", t):
             filtros["ambito"], serie, medida = "region", "clave", "indice"
         elif re.search(r"division|rubro|gasto", t):
             filtros["ambito"], serie, medida = "division", "clave", "indice"
@@ -182,7 +213,7 @@ def generar(peticion: str, permisos: set[str]) -> dict:
         else:
             filtros["ambito"] = "republica"
         filtros.setdefault("desde_anio", 2020)
-    if fuente_id == "cba" and "ambito" not in filtros:
+    if fuente_id == "cba" and "ambito" not in filtros and dimension:
         serie = "ambito"
     if fuente_id == "ipmc" and dimension == "periodo":
         serie = "clave"
@@ -207,14 +238,17 @@ def generar(peticion: str, permisos: set[str]) -> dict:
         widgets.append({"id": "principal", "tipo": _tipo_grafica(dimension, fuente_id),
                         "titulo": f"{titulo_base} por {fuente.dimensiones[dimension].lower()}", "ancho": 8,
                         "consulta": {**consulta, "dimension": dimension, **({"serie": serie} if serie else {})}})
-    if fuente_id == "compras" and dimension != "departamento":
-        widgets.append({"id": "depto", "tipo": "barras", "titulo": f"{titulo_base} por departamento", "ancho": 6,
-                        "consulta": {**consulta, "dimension": "departamento"}})
+    if fuente_id == "compras" and dimension != "departamento" and hay_texto:
+        widgets.append({"id": "depto", "tipo": "barras", "titulo": f"{titulo_base} por departamento de la entidad",
+                        "ancho": 6, "consulta": {**consulta, "dimension": "departamento"}})
         widgets.append({"id": "entidades", "tipo": "barras_h", "titulo": "Entidades que más compran", "ancho": 6,
                         "consulta": {**consulta, "medida": "conteo", "dimension": "entidad", "limite": 10}})
     widgets.append({"id": "tabla", "tipo": "tabla", "titulo": "Datos del gráfico", "ancho": 12,
                     "consulta": widgets[-1]["consulta"]})
-    advertencias = list(fuente.notas)
+    advertencias = avisos_previos + list(fuente.notas)
+    if fuente_id == "compras":
+        advertencias.append("El departamento es la sede de la entidad compradora (cerca del 79 % está en Guatemala), "
+                            "no el lugar de entrega.")
     if hay_texto and fuente_id in ("compras", "precios_referencia"):
         advertencias.append("La búsqueda es por palabras en la descripción: revisa que los artículos sean comparables "
                             "(misma unidad y especificaciones) antes de usar la cifra.")
@@ -229,7 +263,8 @@ EJEMPLOS = [
     "Costo de la canasta básica urbana y rural",
     "Población por departamento",
     "Población proyectada de Quetzaltenango hasta 2030",
-    "Precio de cemento gris en Guatecompras por departamento",
+    "Precio de cemento gris en Guatecompras por mes",
+    "IPC de Quetzaltenango",
     "Alertas de precios por severidad",
     "IPMC de hierro corrugado",
 ]

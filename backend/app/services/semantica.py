@@ -62,6 +62,9 @@ class Fuente:
     columna_fecha: str | None = None
     base: dict[str, Any] = field(default_factory=dict)  # filtros fijos
     k_columna: str | None = None  # columna de informante para supresión por secreto estadístico
+    k_minimo: int | None = None  # umbral propio (si es más estricto que el general)
+    stock: str | None = None  # "anio" o "periodo": la medida no se suma entre periodos
+    requiere_producto: bool = False  # los precios solo tienen sentido para un producto concreto
     notas: list[str] = field(default_factory=list)
     sinonimos: list[str] = field(default_factory=list)
 
@@ -77,7 +80,7 @@ FUENTES: dict[str, Fuente] = {
         {"indice": Medida("Índice (2024=100)", "avg", "valor", "índice", "indice"),
          "variacion": Medida("Variación (%)", "avg", "valor", "%", "porcentaje")},
         {"periodo": "Mes", "clave": "Serie", "anio": "Año"},
-        ["ambito", "clave", "desde_anio", "hasta_anio", "texto"], base=_serie("IPC"),
+        ["ambito", "clave", "desde_anio", "hasta_anio", "anio", "mes", "texto"], base=_serie("IPC"), stock="periodo",
         notas=["Índice empalmado por el INE a base anual 2024=100."],
         sinonimos=["ipc", "inflacion", "indice de precios al consumidor", "precios al consumidor", "costo de vida"]),
     "ipmc": Fuente(
@@ -85,7 +88,7 @@ FUENTES: dict[str, Fuente] = {
         "INE, IPMC mensual por artículo", "tableros:ver",
         {"indice": Medida("Índice", "avg", "valor", "índice", "indice")},
         {"periodo": "Mes", "clave": "Artículo", "anio": "Año"},
-        ["clave", "desde_anio", "hasta_anio", "texto"], base=_serie("IPMC"),
+        ["clave", "desde_anio", "hasta_anio", "anio", "mes", "texto"], base=_serie("IPMC"), stock="periodo",
         notas=["Índices por artículo tal como los publica el INE; no se calculan agregados sin ponderaciones."],
         sinonimos=["ipmc", "materiales de construccion", "construccion", "cemento", "hierro", "block", "lamina"]),
     "cba": Fuente(
@@ -93,7 +96,7 @@ FUENTES: dict[str, Fuente] = {
         "INE, costo per cápita de la CBA urbana y rural", "tableros:ver",
         {"costo": Medida("Costo mensual per cápita", "avg", "valor", "Q por persona al mes", "moneda")},
         {"periodo": "Mes", "ambito": "Área", "anio": "Año"},
-        ["ambito", "desde_anio", "hasta_anio"], base=_serie("CBA"),
+        ["ambito", "desde_anio", "hasta_anio", "anio", "mes"], base=_serie("CBA"), stock="periodo",
         notas=["Costo mensual per cápita en quetzales corrientes."],
         sinonimos=["cba", "canasta basica", "canasta", "costo de la canasta", "alimentaria"]),
     "compras": Fuente(
@@ -103,10 +106,10 @@ FUENTES: dict[str, Fuente] = {
          "precio_mediano": Medida("Precio unitario mediano", "median", "precio_unitario", "Q", "moneda"),
          "precio_promedio": Medida("Precio unitario promedio", "avg", "precio_unitario", "Q", "moneda"),
          "monto_total": Medida("Monto adjudicado", "sum", "monto", "Q", "moneda")},
-        {"mes": "Mes", "anio": "Año", "departamento": "Departamento", "modalidad": "Modalidad",
+        {"mes": "Mes", "anio": "Año", "departamento": "Departamento de la entidad", "modalidad": "Modalidad",
          "categoria": "Categoría", "entidad": "Entidad compradora", "unspsc": "Código UNSPSC"},
         ["texto", "departamento", "modalidad", "categoria", "anio", "desde_anio", "hasta_anio", "unspsc"],
-        columna_fecha="fecha",
+        columna_fecha="fecha", requiere_producto=True,
         notas=["Precio unitario = monto adjudicado ÷ cantidad, solo en procesos de un artículo y una adjudicación.",
                "Precios nominales: no están ajustados por inflación."],
         sinonimos=["guatecompras", "compras", "compras publicas", "adjudicaciones", "contrataciones", "licitaciones"]),
@@ -119,7 +122,7 @@ FUENTES: dict[str, Fuente] = {
         {"mes": "Mes de entrega", "anio": "Año", "entidad": "Entidad requirente", "modalidad": "Modalidad",
          "categoria": "Categoría"},
         ["texto", "categoria", "modalidad", "anio", "desde_anio", "hasta_anio"], columna_fecha="fecha",
-        notas=["Precios en quetzales a la fecha de entrega de cada precio de referencia."],
+        requiere_producto=True, notas=["Precios en quetzales a la fecha de entrega de cada precio de referencia."],
         sinonimos=["precios de referencia", "precio de referencia", "dpir", "referencia"]),
     "precios_ipc": Fuente(
         "precios_ipc", "Precios recolectados para el IPC", PrecioRecolectado,
@@ -129,8 +132,9 @@ FUENTES: dict[str, Fuente] = {
          "precio_mediano": Medida("Precio mediano", "median", "precio_actual", "Q", "moneda"),
          "relativo_mediano": Medida("Relativo de precio mediano", "median", "relativo", "razón", "indice")},
         {"departamento": "Departamento", "municipio": "Municipio", "articulo": "Artículo", "periodo": "Mes"},
-        ["texto", "departamento", "anio", "mes"], k_columna="cod_fuente",
-        notas=["Celdas con menos de 3 informantes se suprimen por secreto estadístico.",
+        ["texto", "departamento", "anio", "mes"], k_columna="cod_fuente", k_minimo=5, requiere_producto=True,
+        notas=["Celdas con menos de 5 informantes o boletas distintas se suprimen por secreto estadístico (en 2023 "
+               "el archivo público no trae código de informante y se usa la boleta, de forma conservadora).",
                "Comparar precios entre artículos distintos no tiene sentido: filtra por un artículo."],
         sinonimos=["precios recolectados", "recoleccion", "informantes", "precios del ipc", "boletas"]),
     "alertas": Fuente(
@@ -159,7 +163,7 @@ FUENTES: dict[str, Fuente] = {
          "hombres": Medida("Hombres", "sum", "hombres", "personas"),
          "mujeres": Medida("Mujeres", "sum", "mujeres", "personas")},
         {"anio": "Año", "departamento": "Departamento", "municipio": "Municipio"},
-        ["departamento", "municipio", "desde_anio", "hasta_anio", "anio"],
+        ["departamento", "municipio", "desde_anio", "hasta_anio", "anio"], stock="anio",
         notas=["Proyección oficial del INE con base en el Censo 2018."],
         sinonimos=["proyeccion", "proyecciones", "poblacion proyectada", "poblacion futura", "crecimiento poblacional"]),
     "solicitudes": Fuente(
@@ -310,8 +314,31 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
         if d and d not in fuente.dimensiones:
             raise ErrorConsulta(f"Dimensión no disponible: {d}")
     limite = max(1, min(int(consulta.get("limite") or (600 if _temporal(dimension) else 15)), 600))
-    conds = _filtros(fuente, consulta.get("filtros") or {})
-    k = obtener_config().k_minimo
+    filtros = dict(consulta.get("filtros") or {})
+    notas_rigor: list[str] = []
+    medidas_precio = medida.agregacion in ("median", "avg") and medida.formato == "moneda"
+    if fuente.requiere_producto and medidas_precio and not (filtros.get("texto") or filtros.get("unspsc")):
+        raise ErrorConsulta("Para calcular precios indica un producto: promediar bienes distintos no tiene sentido.")
+    # Series distintas (regiones, divisiones, artículos, áreas) nunca se promedian entre sí.
+    if fuente.modelo is SerieIndice and "clave" not in (dimension, serie) and not (
+            isinstance(filtros.get("clave"), str) or (isinstance(filtros.get("clave"), list) and len(filtros["clave"]) == 1)):
+        if dimension:
+            serie = "clave"
+        else:
+            dimension = "clave"
+        notas_rigor.append("Se separó cada serie para no promediar índices distintos.")
+    # Medidas de saldo (población, índices): no se suman entre periodos; sin periodo se usa el último disponible.
+    if fuente.stock and dimension not in ("periodo", "anio") and serie not in ("periodo", "anio") and "anio" not in filtros:
+        ultimo = _ultimo_periodo(bd, fuente, filtros)
+        if ultimo:
+            filtros["anio"] = ultimo[0]
+            if fuente.stock == "periodo":
+                filtros["mes"] = ultimo[1]
+                notas_rigor.append(f"Cifra del último mes publicado: {ultimo[0]}-{ultimo[1]:02d}.")
+            else:
+                notas_rigor.append(f"Cifra del año {ultimo[0]}.")
+    conds = _filtros(fuente, filtros)
+    k = max(obtener_config().k_minimo, fuente.k_minimo or 0)
 
     if medida.agregacion == "sum_json":
         filas = _ejecutar_json(bd, fuente, medida, dimension, conds, limite)
@@ -320,7 +347,7 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
     else:
         filas = _ejecutar_sql(bd, fuente, medida, dimension, serie, conds, limite, k, consulta.get("orden"))
 
-    advertencias = list(fuente.notas)
+    advertencias = notas_rigor + list(fuente.notas)
     suprimidas = sum(1 for f in filas if f.get("suprimido"))
     if suprimidas:
         advertencias.insert(0, f"{suprimidas} celda(s) suprimida(s) por tener menos de {k} informantes.")
@@ -330,11 +357,28 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
         "medida": {"id": medida_id, "etiqueta": medida.etiqueta, "unidad": medida.unidad, "formato": medida.formato},
         "dimension": {"id": dimension, "etiqueta": fuente.dimensiones.get(dimension, "")} if dimension else None,
         "serie": {"id": serie, "etiqueta": fuente.dimensiones.get(serie, "")} if serie else None,
+        "filtros_aplicados": filtros,
         "filas": filas,
         "n_total": total_n,
         "advertencias": advertencias,
         "generado_en": ahora().isoformat(timespec="seconds"),
     }
+
+
+def _ultimo_periodo(bd: Session, fuente: Fuente, filtros: dict) -> tuple[int, int] | None:
+    m = fuente.modelo
+    base = {k: v for k, v in filtros.items() if k not in ("anio", "mes", "desde_anio", "hasta_anio")}
+    conds = _filtros(fuente, base)
+    if fuente.stock == "anio":
+        from ..db import ahora as _ahora
+
+        anios = [a for (a,) in bd.execute(select(m.anio).where(and_(*conds)).distinct())]
+        if not anios:
+            return None
+        actual = _ahora().year
+        return (actual if actual in anios else max(anios), 0)
+    fila = bd.execute(select(m.anio, m.mes).where(and_(*conds)).order_by(m.anio.desc(), m.mes.desc()).limit(1)).first()
+    return (fila[0], fila[1]) if fila else None
 
 
 def _temporal(dimension: str | None) -> bool:

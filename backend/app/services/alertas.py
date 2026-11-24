@@ -76,8 +76,9 @@ def _severidad(exceso: float) -> str:
 def detectar(bd: Session, anio: int, mes: int, c: float = 4.0) -> dict:
     """Recalcula las alertas del periodo indicado. Conserva las ya revisadas por una persona."""
     periodo = f"{anio}-{mes:02d}"
+    # Clave natural (no el id interno, que cambia al recargar datos) para no reabrir alertas ya revisadas.
     revisadas = {
-        (a.precio_id, a.metodo) for a in bd.execute(
+        (a.cod_articulo, a.cod_fuente, a.municipio, a.metodo) for a in bd.execute(
             select(AlertaPrecio).where(AlertaPrecio.periodo == periodo, AlertaPrecio.estado != "nueva")).scalars()
     }
     bd.execute(delete(AlertaPrecio).where(AlertaPrecio.periodo == periodo, AlertaPrecio.estado == "nueva"))
@@ -88,19 +89,30 @@ def detectar(bd: Session, anio: int, mes: int, c: float = 4.0) -> dict:
     metodo = "hidiroglou-berthelot" if len(con_relativo) >= 0.5 * max(len(filas), 1) else "desvio-de-nivel"
 
     if metodo == "hidiroglou-berthelot":
-        grupos: dict[str, list[PrecioRecolectado]] = defaultdict(list)
+        # Grupos por artículo y región (n ≥ 30); el resto se evalúa contra la distribución nacional del artículo.
+        nacional: dict[str, list[PrecioRecolectado]] = defaultdict(list)
+        regional: dict[tuple, list[PrecioRecolectado]] = defaultdict(list)
         for f in con_relativo:
-            grupos[f.cod_articulo].append(f)
+            nacional[f.cod_articulo].append(f)
+            regional[(f.cod_articulo, f.region)].append(f)
+        evaluaciones: list[tuple[list[PrecioRecolectado], set[int]]] = []
+        cubiertos: set[int] = set()
+        for obs in regional.values():
+            if len(obs) >= 30:
+                evaluaciones.append((obs, {o.id for o in obs}))
+                cubiertos.update(o.id for o in obs)
+        for obs in nacional.values():
+            pendientes = {o.id for o in obs if o.id not in cubiertos}
+            if pendientes and len(obs) >= MIN_GRUPO_HB:
+                evaluaciones.append((obs, pendientes))
         evaluados = 0
-        for obs in grupos.values():
-            if len(obs) < MIN_GRUPO_HB:
-                continue
-            evaluados += len(obs)
+        for obs, emitir in evaluaciones:
+            evaluados += len(emitir)
             res = hidiroglou_berthelot([o.relativo for o in obs],
                                        [max(o.precio_anterior, o.precio_actual) for o in obs], c=c)
             mediana = statistics.median(o.relativo for o in obs)
             for o, r in zip(obs, res, strict=True):
-                if r.atipico and (o.id, metodo) not in revisadas:
+                if o.id in emitir and r.atipico and (o.cod_articulo, o.cod_fuente, o.municipio, metodo) not in revisadas:
                     nuevas.append(_alerta(o, periodo, metodo, r.puntaje, r.limite_inferior, r.limite_superior,
                                           mediana, len(obs), _severidad(r.exceso), o.relativo))
     else:
@@ -123,7 +135,7 @@ def detectar(bd: Session, anio: int, mes: int, c: float = 4.0) -> dict:
                 else:  # casi todos con el mismo precio: se marca lo que se aleja más de 50 %
                     z = x - med
                     atipico, exceso = abs(z) > math.log(1.5), abs(z) / math.log(1.5) - 1
-                if atipico and (o.id, "desvio-de-nivel") not in revisadas:
+                if atipico and (o.cod_articulo, o.cod_fuente, o.municipio, "desvio-de-nivel") not in revisadas:
                     nuevas.append(_alerta(o, periodo, "desvio-de-nivel", z, -3.5, 3.5, math.exp(med), len(obs),
                                           _severidad(exceso), o.precio_actual / math.exp(med)))
     bd.add_all(nuevas)
