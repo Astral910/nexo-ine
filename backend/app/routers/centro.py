@@ -106,6 +106,17 @@ def _articulos_ipc(_ventana: int) -> list[tuple[str, str, str]]:
     return [(cod, art, normalizar(art)) for cod, art in filas if art]
 
 
+@lru_cache(maxsize=2)
+def _lugares(_ventana: int) -> list[tuple[str, str, str, str, int, str]]:
+    """Lugares poblados del Censo 2018 ordenados por población, en memoria (unos 20 mil): filtrar en Python toma
+    milisegundos, frente a un LIKE sobre toda la tabla en cada tecla."""
+    with SesionLocal() as bd:
+        filas = bd.execute(select(LugarPoblado.nombre, LugarPoblado.municipio, LugarPoblado.departamento,
+                                  LugarPoblado.cod_municipio, LugarPoblado.poblacion, LugarPoblado.texto_norm)
+                           .order_by(LugarPoblado.poblacion.desc())).all()
+    return [(n, m, d, c, p or 0, t or "") for n, m, d, c, p, t in filas]
+
+
 _VENTANA_S = 6 * 3600
 _calentada = -1
 
@@ -119,7 +130,7 @@ def calentar_busqueda() -> None:
     global _calentada
     if _calentada != _ventana():
         _calentada = _ventana()
-        threading.Thread(target=_articulos_ipc, args=(_calentada,), daemon=True).start()
+        threading.Thread(target=lambda v=_calentada: (_articulos_ipc(v), _lugares(v)), daemon=True).start()
 
 
 @router.get("/buscar")
@@ -133,13 +144,11 @@ def buscar(q: str = Query(min_length=2, max_length=100), ctx: Contexto = Depends
     if not palabras:
         return resultados
     if ctx.puede("territorio:ver") or ctx.puede("tableros:ver"):
-        cq = select(LugarPoblado)
-        for p in palabras:
-            cq = cq.where(LugarPoblado.texto_norm.like(f"%{p}%"))
-        for lp in bd.execute(cq.order_by(LugarPoblado.poblacion.desc()).limit(5)).scalars():
-            resultados.append({"tipo": "Lugar poblado", "titulo": f"{lp.nombre}, {lp.municipio}",
-                               "detalle": f"{lp.departamento} · {lp.poblacion or 0:,} habitantes (2018)",
-                               "ruta": f"/territorio/municipio/{lp.cod_municipio}"})
+        lugares = [x for x in _lugares(_ventana()) if all(p in x[5] for p in palabras)][:5]
+        for nombre, municipio, departamento, cod_municipio, poblacion, _ in lugares:
+            resultados.append({"tipo": "Lugar poblado", "titulo": f"{nombre}, {municipio}",
+                               "detalle": f"{departamento} · {poblacion:,} habitantes (2018)",
+                               "ruta": f"/territorio/municipio/{cod_municipio}"})
     if ctx.puede("indices:ver"):
         coinciden = [(cod, art) for cod, art, norm in _articulos_ipc(_ventana()) if all(p in norm for p in palabras)]
         for cod, art in coinciden[:5]:
