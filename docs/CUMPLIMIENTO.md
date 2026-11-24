@@ -4,6 +4,8 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 
 | Lineamiento | Evidencia | Estado |
 |---|---|---|
+| El tema debe ser relevante o coyuntural para el país y aportar a la discusión pública | Precios que paga el Estado (559 instituciones compradoras; el 10 % más caro paga el doble que el 10 % más barato por una laptop), crítica de precios del IPC y datos municipales. Nexo Abierto los pone al alcance de cualquiera ([README §1](../README.md)) | Cumplido |
+| Objetivo general: acercar la información pública a la población; mejorar su difusión, accesibilidad y comprensión | Nexo Abierto sin cuenta; vistas Resumen en lenguaje sencillo; «Cómo leer esta pantalla» con glosario en cada módulo; recorridos guiados de 3 y 1 minutos | Cumplido |
 | Usar como fuente principal al menos una base pública del portal del INE | 25 archivos de 8 conjuntos de datos.ine.gob.gt (portal de datos abiertos del INE): [docs/DATOS.md](DATOS.md) | Cumplido |
 | Citar correctamente otras fuentes abiertas | Guatecompras OCDS con atribución CC BY 4.0 en la interfaz, el PDF y la documentación | Cumplido |
 | Indicar las bases utilizadas y su fecha de descarga | `data/manifiesto.json` y [docs/DATOS.md](DATOS.md): URL, fecha y hora (Guatemala), licencia y SHA-256 | Cumplido |
@@ -27,9 +29,9 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 
 | Criterio | Peso | Evidencia principal |
 |---|---|---|
-| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial, tableros por rol y generados desde texto, 23 pruebas automáticas |
-| Aplicabilidad institucional (desempate) | 20 % | Responde a lo que presentaron la DPIR, la DIEC, la DCE y la DCR; usa su metodología (regla del 50 %, media, mediana y moda, 6 reglas de la DCE); adopción con software libre |
+| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial y plantillas, tableros por rol y generados desde texto, Nexo Abierto sin cuenta, 36 pruebas automáticas |
+| Aplicabilidad institucional (desempate) | 20 % | Responde a lo que presentaron la DPIR, la DIEC, la DCE y la DCR; usa su metodología (regla del 50 %, media, mediana y moda, 6 reglas de la DCE); sirve a los usuarios del INE fuera de la institución (Nexo Abierto); adopción con software libre |
 | Calidad técnica | 20 % | Arquitectura modular, capa semántica única, CI con pruebas en SQLite y PostgreSQL, documentación completa |
-| Innovación | 15 % | Tableros generativos deterministas, agentes de seguridad y TI, bitácora HMAC con anclas, precio unitario de 214 mil compras ajustado con el IPC |
+| Innovación | 15 % | Tableros generativos deterministas, agentes de seguridad y TI, bitácora HMAC con anclas, precio unitario de 214 mil compras ajustado con el IPC, y una capa pública que explica cada cifra |
 | Rigor en el uso de los datos | 10 % | Hidiroglou-Berthelot, Tukey sobre logaritmos, medidas de saldo, supresión por secreto estadístico y recodificación verificada |
-| Presentación y usabilidad | 10 % | Identidad visual del INE, búsqueda global, recorridos por rol y modo jurado |
+| Presentación y usabilidad | 10 % | Identidad visual del INE; dos vistas en cada pantalla (Resumen y Completa); «Cómo leer esta pantalla» con glosario; recorridos guiados de 3 y 1 minutos; búsqueda global; tamaño de letra ajustable |

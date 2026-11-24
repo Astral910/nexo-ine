@@ -13,7 +13,13 @@ Nexo reúne en una sola plataforma los procesos que las Direcciones del INE pres
 - territorio y operativos de campo;
 - validación de bases de datos.
 
-Cada persona entra con su rol y ve un tablero hecho para su trabajo. Las tareas repetitivas se automatizan, y cada cifra muestra su fuente oficial, su periodo y su fecha de descarga. Toda la plataforma está construida con seguridad y secreto estadístico desde el diseño.
+Nexo tiene dos caras:
+- **Nexo interno**, para el personal del INE y las entidades que piden precios de referencia. Cada persona entra con su rol y ve un tablero hecho para su trabajo. Las tareas repetitivas se automatizan.
+- **Nexo Abierto** (`/abierto`), sin cuenta, para la ciudadanía, periodistas, municipalidades, academia y compradores públicos. Muestra cuánto pagó el Estado por un producto, la ficha de cada municipio y responde preguntas a los datos oficiales.
+
+Cada pantalla tiene dos vistas: **Resumen**, con lo esencial explicado en lenguaje sencillo, y **Completa**, con todas las tablas, filtros y notas de método. El botón «Cómo leer esta pantalla» explica cada módulo con un glosario. Un recorrido guiado de 3 minutos, y otro de 1 minuto para Nexo Abierto, enseña lo esencial.
+
+Cada cifra muestra su fuente oficial, su periodo y su fecha de descarga. Toda la plataforma está construida con seguridad y secreto estadístico desde el diseño.
 
 | Acceso con la identidad del INE | Centro de mando |
 |---|---|
@@ -37,6 +43,25 @@ En el arranque del Datatón, las Direcciones del INE describieron procesos manua
 
 **Usuarios:** personal técnico de las Direcciones, Dirección y Gerencia, Informática, el oficial de seguridad, las entidades públicas que solicitan precios de referencia y el jurado. Un usuario puede tener varios roles y cambiar de espacio de trabajo con un clic.
 
+### Por qué importa al país
+
+Las cifras salen de los mismos datos que usa Nexo. Las compras son de enero de 2024 a diciembre de 2025, en quetzales de octubre de 2026 (ajustados con el IPC) y sin compras atípicas.
+
+- **El Estado paga precios muy distintos por lo mismo.**
+  - **Computadoras portátiles:** 56 instituciones hicieron 354 compras. La mediana fue Q8,948 por unidad. El 10 % más barato pagó Q6,729 o menos y el 10 % más caro, Q13,393 o más: el doble.
+  - **Papel bond:** 36 instituciones hicieron 284 compras. La mediana fue Q25.52, con un rango de Q20.91 a Q32.73.
+
+  Parte de la diferencia se explica por especificaciones distintas. Para eso existen los precios de referencia del INE, obligatorios en algunas modalidades de compra (Decreto 57-92). Hoy la DPIR los investiga a mano para cualquiera de las 559 instituciones que aparecen comprando en Guatecompras.
+- **La crítica de precios es enorme.** Para el IPC se recolectan más de 112 mil precios en más de 20 mil fuentes, según la DIEC. De cada 100 precios revisados, Nexo marca entre 3 y 4 para confirmar: el equipo revisa esos y no todos.
+- **El territorio es amplio.** Las 22 delegaciones atienden 340 municipios y 20,036 lugares poblados, y necesitan la cifra de cualquiera de ellos en una reunión.
+- **La información pública debe entenderse.** El objetivo general del Datatón es acercar la información a la población. Nexo Abierto explica cada cifra en lenguaje sencillo y enlaza al archivo original del INE.
+
+**Usuarios:**
+- **Dentro del INE:** DPIR, DIEC, DCE, DCR, DESA, Informática, Seguridad y Gerencia.
+- **Fuera del INE:**
+  - las entidades públicas que piden precios de referencia;
+  - en Nexo Abierto, la ciudadanía, periodistas, municipalidades, academia y compradores públicos.
+
 ## 2. Qué incluye
 
 | Módulo | Para quién | Lo principal |
@@ -48,14 +73,17 @@ En el arranque del Datatón, las Direcciones del INE describieron procesos manua
 | **Hoja de Balance de Alimentos** | DIEC | Suministro interno, dependencia de importaciones, disponibilidad per cápita y calculadora de derivados |
 | **Territorio y operativos** | DCE y DCR | Mapa, fichas municipales, proyecciones 2015–2030 y avance de campo por delegación |
 | **Validador de calidad** | DESA y DCE | Datos personales (CUI, NIT, teléfono, correo), códigos 98/99, pocos casos, extremos y reporte para la fuente. El archivo no se guarda |
-| **Automatizaciones** | Todos | Programadas o manuales, con historial: vigilar precios, recordar vencimientos, recalcular alertas, sincronizar el catálogo del INE, respaldos y agentes |
+| **Nexo Abierto (sin cuenta)** | Ciudadanía, periodistas, municipalidades y compradores públicos | Tres secciones de solo lectura, con fuentes públicas y límite de consultas por conexión. Cada una enlaza al archivo original:<br>• **«¿Cuánto debería costar?»:** rango de lo que pagó el Estado (del 10 % más barato al 10 % más caro), mediana y precio orientativo, precios de referencia del INE y el ejemplo de media, mediana y moda de la DPIR.<br>• **«Mi municipio en datos»:** 340 fichas con el Censo 2018 y las proyecciones, con la cita lista para copiar.<br>• **«Pregunte a los datos»:** tableros generados solo con fuentes públicas. |
+| **Vistas Resumen y Completa** | Todos | Cada pantalla tiene dos vistas: lo esencial con explicaciones sencillas, o todo el detalle. El botón «Cómo leer esta pantalla» explica qué muestra la pantalla, de dónde salen los datos y qué se puede hacer, con un glosario |
+| **Recorrido guiado** | Todos | 12 pasos (3 minutos) por los módulos que permite cada rol, y 6 pasos (1 minuto) por Nexo Abierto. Resalta el elemento del que habla y se maneja con el teclado |
+| **Automatizaciones** | Todos | Programadas o manuales, con historial: vigilar precios, recordar vencimientos, recalcular alertas, sincronizar el catálogo del INE, respaldos y agentes. Cada una dice en lenguaje sencillo qué hace y cómo le fue. Incluye plantillas de un clic y un asistente de 3 pasos: qué hacer, ajustes y cuándo |
 | **Catálogo y linaje** | Todos | Cada archivo con URL, fecha de descarga, licencia y SHA-256; catálogo del portal del INE sincronizado por API |
 | **Ciberseguridad** | Oficial de seguridad | Agente automático de postura, hallazgos, registro de riesgos 5×5, incidentes y 22 controles con su evidencia en el código |
 | **Salud de TI** | Informática | Agente de TI, métricas, respaldos e inventario de componentes con licencias |
 | **Bitácora** | Seguridad y jurado | Cadena HMAC-SHA256 con anclas externas: detecta alteraciones, recálculos y borrados |
 | **Privacidad** | Todos | Aviso, registro de tratamientos, políticas de retención, «Mis datos» (ver, exportar y pedir eliminación) |
 | **Usuarios y roles** | Informática | Aprobación de cuentas, 11 roles, segregación de funciones, desbloqueo y restablecimiento de MFA |
-| **Modo Jurado** | Jurado | La rúbrica oficial con evidencia en vivo y un recorrido guiado de 7 minutos |
+| **Modo Jurado** | Jurado | La rúbrica oficial con evidencia en vivo, los lineamientos cumplidos y los botones para iniciar los recorridos guiados |
 
 ## 3. Arquitectura general y tecnologías empleadas
 
@@ -75,6 +103,7 @@ flowchart LR
     AG["Agentes de seguridad y TI"]
     BIT["Bitácora HMAC<br/>con anclas"]
     WEB["Frontend React<br/>identidad del INE"]
+    PUB["Nexo Abierto<br/>/api/publico · solo lectura<br/>fuentes públicas · límites por IP"]
   end
   BD[("PostgreSQL 16<br/>(SQLite en desarrollo)")]
   INE --> D
@@ -82,6 +111,7 @@ flowchart LR
   C --> BD
   WEB -->|mismo origen| API
   API --> SEM --> BD
+  WEB -->|sin cuenta| PUB --> SEM
   AUT --> BD
   AG --> BD
   API --> BIT --> BD
@@ -152,7 +182,8 @@ uvicorn app.main:app --port 8000
 - Para la evaluación, la cuenta **jurado** recorre toda la plataforma en solo lectura y abre el Modo Jurado.
 
 ### Recorrido sugerido
-1. **Jurado → Modo Jurado:** la rúbrica con evidencia y el recorrido de 7 minutos.
+0. **Sin cuenta:** abre http://localhost:8000. Entra directo a Nexo Abierto; pulsa «Recorrido» para la guía de 1 minuto. Dentro de Nexo, «Guía de uso» → «Empezar el recorrido» hace la guía de 3 minutos.
+1. **Jurado → Modo Jurado:** la rúbrica con evidencia, los lineamientos cumplidos y los botones de los recorridos.
 2. **Analista DPIR → Precios de Referencia → PR-…-0003:** pulsa «Investigar», agrega cotizaciones, avanza a Análisis e Informe y abre el PDF.
 3. **Tableros → «IPC de Quetzaltenango»:** muestra la Región VI y explica que el IPC no se publica por departamento.
 4. **Analista DIEC → Índices → Alertas → 2022-07:** revisa una alerta; tu decisión queda en la bitácora.
@@ -211,6 +242,11 @@ NEXO_PRUEBAS_BD=postgresql+psycopg://usuario@localhost:5432/nexo_pruebas python 
   - Supresión automática de celdas con pocos informantes.
   - Validador que detecta datos personales y no guarda archivos.
   - Políticas de retención con purga diaria.
+- **Nexo Abierto:**
+  - API sin sesión y de solo lectura (`/api/publico`).
+  - Solo responde con fuentes públicas. Los precios recolectados con su informante, las alertas, las solicitudes, la bitácora y las ejecuciones nunca salen; hay pruebas automáticas que lo verifican.
+  - Límites por conexión: 240 consultas por minuto en general, 30 de precios y 20 de tableros.
+  - Caché en memoria y nada se escribe en la base.
 - **Auditoría:**
   - Bitácora con HMAC-SHA256 y anclas fuera de la base.
   - Agente de ciberseguridad cada 30 minutos.
@@ -238,6 +274,11 @@ El detalle está en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
   - El ajuste por IPC es una aproximación documentada.
 - **Hoja de Balance de Alimentos.** Las relaciones primario → derivado son aparentes (producción del derivado ÷ procesado del primario), no coeficientes técnicos.
 - **Generador de tableros.** Es determinista y con vocabulario controlado. Si no entiende, lo dice, pero no cubre todas las formas de preguntar.
+- **Nexo Abierto.**
+  - El precio orientativo no es un precio de referencia oficial: ese lo emite la DPIR a solicitud de cada entidad, y la página lo dice.
+  - La búsqueda de productos es por palabras. Por eso cada consulta muestra los grupos por clasificación para afinarla.
+  - Los límites y la caché viven en el proceso. Para publicarlo en internet hace falta un proxy con límites y caché compartida, y que el INE decida dónde alojarlo.
+- **Vistas Resumen.** Simplifican a propósito: las notas de método completas y las tablas están en la vista Completa.
 - **Datos de demostración.**
   - El avance de operativos y las solicitudes de ejemplo son de demostración y están marcados.
   - El universo del avance (lugares poblados) es real.
