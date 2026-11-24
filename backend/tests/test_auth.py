@@ -12,6 +12,8 @@ from .conftest import CLAVE, cliente, crear_usuario, csrf, iniciar_sesion
 def _activar_mfa(c) -> tuple[str, list[str]]:
     r = c.post("/api/auth/mfa/iniciar", headers=csrf(c))
     assert r.status_code == 200, r.text
+    qr = r.json()["qr_data_uri"]
+    assert qr.startswith("data:image/svg+xml") and "xmlns" in qr  # el QR se puede dibujar como imagen
     secreto = r.json()["secreto"]
     r = c.post("/api/auth/mfa/activar", json={"codigo": pyotp.TOTP(secreto).now()}, headers=csrf(c))
     assert r.status_code == 200, r.text  # con TZ=America/Guatemala (regresión AUTH-1)

@@ -275,7 +275,7 @@ export function Restablecer() {
 export function ConfigurarMfa() {
   const { usuario, establecer, refrescar } = useSesion();
   const navegar = useNavigate();
-  const [qr, setQr] = useState<{ secreto: string; qr_svg: string } | null>(null);
+  const [qr, setQr] = useState<{ secreto: string; qr_data_uri: string } | null>(null);
   const [codigo, setCodigo] = useState("");
   const [codigos, setCodigos] = useState<string[] | null>(null);
   const [error, setError] = useState("");
@@ -307,7 +307,7 @@ export function ConfigurarMfa() {
       ) : (
         <form className="columna" onSubmit={activar}>
           <div className="fila" style={{ alignItems: "flex-start" }}>
-            <img src={`data:image/svg+xml;utf8,${encodeURIComponent(qr.qr_svg)}`} alt="Código QR para tu aplicación de autenticación" style={{ width: 190, height: 190, border: "1px solid var(--borde)", borderRadius: 12 }} />
+            <img src={qr.qr_data_uri} alt="Código QR para tu aplicación de autenticación" style={{ width: 190, height: 190, border: "1px solid var(--borde)", borderRadius: 12, background: "#fff", padding: 6 }} />
             <div className="pequeno" style={{ flex: 1 }}>
               <p>1. Escanea el código con tu aplicación.</p>
               <p style={{ marginTop: 6 }}>2. Si no puedes escanear, escribe esta clave:</p>

@@ -350,8 +350,9 @@ def mfa_iniciar(datos: Reconfirmacion | None = None, ctx: Contexto = Depends(con
     usuario.mfa_pendiente_cifrado = cifrar(secreto)
     bd.commit()
     uri = pyotp.TOTP(secreto).provisioning_uri(name=usuario.email, issuer_name="Nexo INE")
-    qr = segno.make(uri, error="m").svg_inline(scale=5, dark="#004080")
-    return {"secreto": secreto, "uri": uri, "qr_svg": qr}
+    # Data URI con el espacio de nombres SVG: así el navegador lo dibuja como imagen (svg_inline no lo incluye).
+    qr = segno.make(uri, error="m").svg_data_uri(scale=5, dark="#004080")
+    return {"secreto": secreto, "uri": uri, "qr_data_uri": qr}
 
 
 @router.post("/mfa/activar")
