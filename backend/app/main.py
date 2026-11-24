@@ -28,6 +28,7 @@ from .routers import (
     jurado,
     precios,
     privacidad,
+    publico,
     seguridad,
     tableros,
     territorio,
@@ -68,7 +69,7 @@ def crear_app() -> FastAPI:
     app.add_middleware(CabecerasSeguridad)
 
     for modulo in (auth, admin, centro, tableros, precios, indices, hba, territorio, calidad, automatizaciones,
-                   datos, seguridad, ti, privacidad, bitacora_api, jurado):
+                   datos, seguridad, ti, privacidad, bitacora_api, jurado, publico):
         app.include_router(modulo.router)
 
     @app.get("/api/salud", tags=["sistema"])

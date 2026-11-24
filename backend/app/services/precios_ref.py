@@ -156,6 +156,7 @@ def investigar(bd: Session, terminos: str, unspsc: str | None = None, meses: int
                              .order_by(PrecioReferencia.fecha.desc()).limit(60)).scalars().all()
     filas_pr = [{"tipo": "referencia_ine", "fecha": p.fecha.isoformat() if p.fecha else None,
                  "origen": p.entidad or p.evento, "descripcion": f"{p.producto} — {p.caracteristicas[:200]}",
+                 "producto": p.producto, "caracteristicas": p.caracteristicas[:200],
                  "unidad": p.presentacion, "precio": round(p.precio, 2),
                  "precio_ajustado": round(ipc.ajustar(p.precio, p.fecha)[0], 2), "ajustado": ipc.ajustar(p.precio, p.fecha)[1],
                  "referencia": p.nog, "atipico": False} for p in referencias]

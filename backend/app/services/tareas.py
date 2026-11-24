@@ -10,6 +10,7 @@ import statistics
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from typing import Any
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
@@ -23,13 +24,51 @@ from . import agente_seguridad, agente_ti, alertas, catalogo, retencion
 
 
 @dataclass
+class Campo:
+    """Un dato que la persona completa al crear la automatización (se valida en el servidor)."""
+
+    clave: str
+    etiqueta: str
+    tipo: str = "texto"  # texto | numero | periodo (AAAA-MM)
+    ayuda: str = ""
+    defecto: Any = None
+    minimo: float | None = None
+    maximo: float | None = None
+    ejemplo: str = ""
+
+
+@dataclass
 class Tarea:
     clave: str
     nombre: str
     descripcion: str
     funcion: Callable[[Session, dict, Automatizacion], dict]
     permiso: str
-    parametros: dict = field(default_factory=dict)  # nombre -> descripción
+    para_que: str = ""  # en lenguaje sencillo: qué hace y qué recibe la persona
+    categoria: str = "Recordatorios y reportes"
+    campos: list[Campo] = field(default_factory=list)
+    parametros: dict = field(default_factory=dict)  # clave -> etiqueta (se deriva de los campos)
+
+    def __post_init__(self) -> None:
+        if self.campos and not self.parametros:
+            self.parametros = {c.clave: c.etiqueta for c in self.campos}
+
+
+@dataclass
+class Plantilla:
+    """Automatización lista para usar: la persona solo confirma (o ajusta) y la crea."""
+
+    id: str
+    titulo: str
+    descripcion: str
+    tarea: str
+    parametros: dict
+    frecuencia: str
+    valor_frecuencia: str
+
+
+# Datos que una tarea guarda para sí misma entre ejecuciones (no los escribe la persona).
+ESTADO_INTERNO = {"ultima_mediana"}
 
 
 def _verificar_bitacora(bd: Session, _p: dict, _a: Automatizacion) -> dict:
@@ -153,23 +192,86 @@ def _avance(bd: Session, _p: dict, _a: Automatizacion) -> dict:
 
 TAREAS: dict[str, Tarea] = {t.clave: t for t in [
     Tarea("bitacora.verificar", "Verificar integridad de la bitácora", "Recalcula la cadena de hashes.",
-          _verificar_bitacora, "seguridad:ver"),
+          _verificar_bitacora, "seguridad:ver",
+          para_que="Comprueba que nadie haya cambiado ni borrado el registro de acciones de Nexo. Si encuentra un "
+                   "cambio, avisa de inmediato a Seguridad.",
+          categoria="Seguridad y sistema"),
     Tarea("seguridad.revisar", "Agente de ciberseguridad", "Ejecuta los chequeos de postura de seguridad.",
-          _seguridad, "seguridad:ver"),
-    Tarea("ti.revisar", "Agente de TI", "Revisa salud, frescura de datos y automatizaciones.", _ti, "ti:ver"),
+          _seguridad, "seguridad:ver",
+          para_que="Revisa la seguridad de la plataforma (segundo factor, intentos fallidos, sesiones, permisos) y "
+                   "anota lo que hay que corregir, con su recomendación.",
+          categoria="Seguridad y sistema"),
+    Tarea("ti.revisar", "Agente de TI", "Revisa salud, frescura de datos y automatizaciones.", _ti, "ti:ver",
+          para_que="Comprueba que Nexo esté sano: que la base de datos responda, que haya espacio, respaldos y datos "
+                   "al día, y que las demás automatizaciones no fallen.",
+          categoria="Seguridad y sistema"),
     Tarea("ti.respaldar", "Respaldar base de datos", "Copia de seguridad en caliente (SQLite) o guía de pg_dump.",
-          _respaldar, "automatizaciones:administrar", {"conservar": "Cantidad de respaldos a conservar"}),
+          _respaldar, "automatizaciones:administrar",
+          para_que="Guarda una copia de seguridad de la base de datos y conserva solo las más recientes.",
+          categoria="Seguridad y sistema",
+          campos=[Campo("conservar", "Respaldos a conservar", "numero", "Los más antiguos se borran solos.", 7, 1, 60,
+                        "7")]),
     Tarea("retencion.aplicar", "Aplicar políticas de retención", "Elimina o anonimiza datos vencidos.",
-          _retencion, "privacidad:administrar"),
+          _retencion, "privacidad:administrar",
+          para_que="Borra o anonimiza los datos personales que ya cumplieron su plazo de conservación, según las "
+                   "políticas de privacidad. La bitácora se conserva.",
+          categoria="Privacidad"),
     Tarea("catalogo.sincronizar", "Sincronizar catálogo del INE", "Consulta el portal CKAN del INE.",
-          _catalogo, "datos:sincronizar"),
+          _catalogo, "datos:sincronizar",
+          para_que="Consulta el portal de datos abiertos del INE para saber qué conjuntos de datos son nuevos o se "
+                   "actualizaron.",
+          categoria="Calidad y alertas"),
     Tarea("indices.detectar_atipicos", "Detectar precios atípicos", "Hidiroglou-Berthelot o desvío de nivel.",
-          _atipicos, "indices:alertas", {"periodo": "AAAA-MM (vacío = último)", "c": "Amplitud de tolerancia (2-10)"}),
+          _atipicos, "indices:alertas",
+          para_que="Revisa los precios recolectados de un mes y marca los que cambiaron de forma poco común, para que "
+                   "una persona confirme si son reales o errores de captura.",
+          categoria="Calidad y alertas",
+          campos=[Campo("periodo", "Mes a revisar", "periodo",
+                        "Escríbalo como AAAA-MM. Déjelo vacío para revisar el último mes con datos.", None,
+                        ejemplo="2023-10"),
+                  Campo("c", "Tolerancia", "numero",
+                        "Entre 2 y 10. Un número más alto marca menos precios: solo los cambios más extremos.", 4, 2,
+                        10, "4")]),
     Tarea("dpir.vigilar_producto", "Vigilar el precio de un producto", "Mediana en Guatecompras y aviso de cambios.",
-          _vigilar_producto, "dpir:ver", {"terminos": "Producto a vigilar", "umbral_pct": "Cambio que dispara aviso (%)"}),
+          _vigilar_producto, "dpir:ver",
+          para_que="Sigue el precio de un producto en las compras públicas y le avisa si sube o baja más de lo que "
+                   "usted indique.",
+          categoria="Vigilancia de precios",
+          campos=[Campo("terminos", "Producto a vigilar", "texto",
+                        "Escríbalo como aparece en las compras públicas, sin marcas.", None, ejemplo="computadora portatil"),
+                  Campo("umbral_pct", "Cambio que dispara el aviso (%)", "numero",
+                        "Le avisamos si el precio mediano sube o baja más que este porcentaje.", 10, 1, 100, "10")]),
     Tarea("dpir.recordar_vencimientos", "Recordar solicitudes por vencer", "Avisa vencimientos próximos.",
-          _vencimientos, "dpir:gestionar", {"dias": "Días de anticipación"}),
-    Tarea("reportes.resumen", "Resumen de indicadores", "Cifras clave del centro de mando.", _resumen, "tableros:ver"),
+          _vencimientos, "dpir:gestionar",
+          para_que="Le avisa qué solicitudes de precio de referencia están por vencer, para atenderlas a tiempo.",
+          categoria="Recordatorios y reportes",
+          campos=[Campo("dias", "Días de anticipación", "numero",
+                        "Le avisamos de las solicitudes que vencen en este número de días o menos.", 3, 1, 30, "3")]),
+    Tarea("reportes.resumen", "Resumen de indicadores", "Cifras clave del centro de mando.", _resumen, "tableros:ver",
+          para_que="Le envía una notificación con las cifras clave: inflación, canasta básica, alertas de precios y "
+                   "solicitudes abiertas.",
+          categoria="Recordatorios y reportes"),
     Tarea("territorio.resumen_avance", "Resumen de avance de operativo", "Avance por departamento.", _avance,
-          "territorio:ver"),
+          "territorio:ver",
+          para_que="Calcula cuánto lleva el operativo de campo en cada departamento y le dice cuáles van más atrasados.",
+          categoria="Recordatorios y reportes"),
 ]}
+
+PLANTILLAS: list[Plantilla] = [
+    Plantilla("precio-laptops", "Avisarme si cambia el precio de las computadoras portátiles",
+              "Cada lunes revisa las compras públicas de computadoras portátiles y le avisa si el precio mediano "
+              "cambia más de 10 %.", "dpir.vigilar_producto", {"terminos": "computadora portatil", "umbral_pct": 10},
+              "semanal", "0@07:00"),
+    Plantilla("vencimientos", "Recordarme cada mañana las solicitudes por vencer",
+              "Cada día a las 7:30 le dice qué solicitudes vencen en 3 días o menos.", "dpir.recordar_vencimientos",
+              {"dias": 3}, "diaria", "07:30"),
+    Plantilla("resumen-diario", "Recibir cada mañana las cifras clave",
+              "Cada día a las 7:00 recibe la inflación, la canasta básica, las alertas y las solicitudes abiertas.",
+              "reportes.resumen", {}, "diaria", "07:00"),
+    Plantilla("atipicos-semanal", "Revisar cada lunes los precios atípicos",
+              "Cada lunes a las 8:00 revisa el último mes de precios recolectados y marca los cambios poco comunes.",
+              "indices.detectar_atipicos", {}, "semanal", "0@08:00"),
+    Plantilla("avance-viernes", "Resumen del avance de campo cada viernes",
+              "Cada viernes a las 16:00 recibe el avance del operativo por departamento y los más atrasados.",
+              "territorio.resumen_avance", {}, "semanal", "4@16:00"),
+]

@@ -59,8 +59,10 @@ def evidencia(bd: Session) -> dict:
             "avance de operativos y validación de bases con herramientas libres.",
             f"{bd.execute(select(func.count()).select_from(Rol)).scalar()} roles que reflejan las áreas del INE, con "
             "aprobación de cuentas por Informática.",
-            "Stack libre y estándar (Python, PostgreSQL, React), un solo contenedor, sin servicios de pago."],
-         "rutas": ["/precios", "/indices", "/territorio", "/calidad"]},
+            "Stack libre y estándar (Python, PostgreSQL, React), un solo contenedor, sin servicios de pago.",
+            "Nexo Abierto: sin cuenta, cualquier persona consulta cuánto pagó el Estado por un bien, la ficha de su "
+            "municipio y tableros con datos publicados del INE (solo fuentes públicas, con límite por conexión)."],
+         "rutas": ["/precios", "/indices", "/territorio", "/calidad", "/abierto"]},
         {"criterio": "Calidad técnica", "peso": 20, "evidencia": [
             "Arquitectura modular por dominio; capa semántica única para todas las gráficas.",
             "Reproducible: pipeline de datos con manifiesto (URL, fecha, SHA-256), Docker Compose y CI.",
@@ -83,8 +85,10 @@ def evidencia(bd: Session) -> dict:
             "Identidad visual del INE (paleta y tipografía Ubuntu Sans) y diseño accesible.",
             f"{bd.execute(select(func.count()).select_from(Tablero).where(Tablero.origen == 'sistema')).scalar()} "
             "tableros base, uno por rol, y búsqueda global (Ctrl + K).",
-            "Recorridos claros: registro, verificación, aprobación, MFA y primer tablero."],
-         "rutas": ["/", "/tableros"]},
+            "Dos vistas en cada pantalla: «Resumen» (lo esencial explicado en lenguaje sencillo) y «Completa» (todas "
+            "las tablas y notas de método), y «Cómo leer esta pantalla» con glosario en cada módulo.",
+            "Recorridos guiados: 3 minutos por los módulos de cada rol y 1 minuto por Nexo Abierto."],
+         "rutas": ["/", "/tableros", "/abierto"]},
     ]
     cumplimiento = [
         {"regla": "Fuente principal: base pública del portal del INE", "cumple": fuentes_ine > 0, "ruta": "/datos"},

@@ -62,17 +62,29 @@ def _ultimo(bd: Session, indicador: str, ambito: str, clave: str | None = None):
     return bd.execute(q.order_by(SerieIndice.anio.desc(), SerieIndice.mes.desc()).limit(1)).scalar()
 
 
+def cifras_oficiales(bd: Session, anio: int) -> dict:
+    """Últimas cifras publicadas del IPC y de la canasta básica, y la población proyectada del año.
+
+    Las usan el centro de mando y Nexo Abierto; cada uno las presenta a su manera.
+    """
+    return {
+        "ipc": _ultimo(bd, "IPC", "republica"),
+        "interanual": _ultimo(bd, "IPC", "republica_var", "Variación interanual"),
+        "mensual": _ultimo(bd, "IPC", "republica_var", "Variación mensual"),
+        "cba_urbana": _ultimo(bd, "CBA", "urbana"),
+        "cba_rural": _ultimo(bd, "CBA", "rural"),
+        "poblacion": int(bd.execute(select(func.sum(ProyeccionPoblacion.poblacion))
+                                    .where(ProyeccionPoblacion.anio == anio)).scalar() or 0),
+    }
+
+
 def resumen_general(bd: Session) -> dict:
     t = ahora()
-    ipc = _ultimo(bd, "IPC", "republica")
-    inter = _ultimo(bd, "IPC", "republica_var", "Variación interanual")
-    mensual = _ultimo(bd, "IPC", "republica_var", "Variación mensual")
-    cba_u = _ultimo(bd, "CBA", "urbana")
-    cba_r = _ultimo(bd, "CBA", "rural")
-    contar = lambda m, *c: bd.execute(select(func.count()).select_from(m).where(*c)).scalar() or 0  # noqa: E731
     anio_actual = t.year
-    poblacion = bd.execute(select(func.sum(ProyeccionPoblacion.poblacion))
-                           .where(ProyeccionPoblacion.anio == anio_actual)).scalar() or 0
+    cifras = cifras_oficiales(bd, anio_actual)
+    ipc, inter, mensual = cifras["ipc"], cifras["interanual"], cifras["mensual"]
+    cba_u, cba_r, poblacion = cifras["cba_urbana"], cifras["cba_rural"], cifras["poblacion"]
+    contar = lambda m, *c: bd.execute(select(func.count()).select_from(m).where(*c)).scalar() or 0  # noqa: E731
     from ..models import HbaConversion, HbaProducto  # noqa: PLC0415
 
     registros = sum(contar(m) for m in (CompraItem, PrecioReferencia, SerieIndice, PrecioRecolectado, LugarPoblado,

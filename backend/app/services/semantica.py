@@ -313,7 +313,8 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
     for d in (dimension, serie):
         if d and d not in fuente.dimensiones:
             raise ErrorConsulta(f"Dimensión no disponible: {d}")
-    limite = max(1, min(int(consulta.get("limite") or (600 if _temporal(dimension) else 15)), 600))
+    por_defecto = 600 if _temporal(dimension) else 22 if dimension == "departamento" else 15  # los 22 departamentos completos
+    limite = max(1, min(int(consulta.get("limite") or por_defecto), 600))
     filtros = dict(consulta.get("filtros") or {})
     notas_rigor: list[str] = []
     medidas_precio = medida.agregacion in ("median", "avg") and medida.formato == "moneda"
