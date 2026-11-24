@@ -177,7 +177,7 @@ function WidgetSistema({ w }: { w: WidgetSpec }) {
             {(datos as any[]).map((d) => (
               <div key={d.departamento} className="c4">
                 <div className="fila espaciado pequeno"><b>{d.departamento}</b><span>{fmt.pct(d.avance_pct)} · {fmt.numero(d.completados)}/{fmt.numero(d.meta)}</span></div>
-                <Progreso valor={d.avance_pct} color={d.avance_pct < 50 ? "#FF5500" : d.avance_pct < 80 ? "#0080FF" : "#2f8f2f"} />
+                <Progreso valor={d.avance_pct} color={d.avance_pct < 50 ? "#c4320a" : d.avance_pct < 80 ? "#0b4f96" : "#2b6a0f"} />
               </div>
             ))}
           </div>

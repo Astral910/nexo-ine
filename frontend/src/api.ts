@@ -17,6 +17,13 @@ function leerCookie(nombre: string): string {
 
 type Metodo = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+// Contador de solicitudes en curso: alimenta la barra de carga superior.
+let enCurso = 0;
+function avisarCarga(delta: number) {
+  enCurso = Math.max(0, enCurso + delta);
+  window.dispatchEvent(new CustomEvent("nexo:carga", { detail: enCurso }));
+}
+
 export async function api<T = any>(ruta: string, opciones: { metodo?: Metodo; cuerpo?: unknown; formulario?: FormData } = {}): Promise<T> {
   const metodo = opciones.metodo ?? (opciones.cuerpo !== undefined || opciones.formulario ? "POST" : "GET");
   const cabeceras: Record<string, string> = { Accept: "application/json" };
@@ -27,7 +34,13 @@ export async function api<T = any>(ruta: string, opciones: { metodo?: Metodo; cu
     cabeceras["Content-Type"] = "application/json";
     body = JSON.stringify(opciones.cuerpo);
   }
-  const r = await fetch(ruta, { method: metodo, headers: cabeceras, body, credentials: "same-origin" });
+  avisarCarga(1);
+  let r: Response;
+  try {
+    r = await fetch(ruta, { method: metodo, headers: cabeceras, body, credentials: "same-origin" });
+  } finally {
+    avisarCarga(-1);
+  }
   if (r.status === 401 && !ruta.startsWith("/api/auth/")) {
     window.dispatchEvent(new CustomEvent("nexo:sesion-expirada"));
   }

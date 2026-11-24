@@ -73,18 +73,35 @@ def _convertir(modelo, fila: dict) -> dict:
     return salida
 
 
+def _categoria_canonica(texto: str | None) -> str | None:
+    """El INE publicó las categorías en MAYÚSCULAS un año y en tipo oración otro ("SALUD E INSUMOS HOSPITALARIOS" y
+    "Salud e insumos hospitalarios"). Sin unificarlas, una misma categoría aparecería dos veces en cada gráfica.
+    Solo se convierten las que vienen enteramente en mayúsculas; las demás se respetan tal cual."""
+    if not texto or texto != texto.upper():
+        return texto
+    return texto[:1] + texto[1:].lower()
+
+
+# Ajustes de presentación que se aplican al cargar (los CSV procesados conservan el texto original de la fuente).
+AJUSTES = {"pr_referencia": {"categoria": _categoria_canonica}}
+
+
 def cargar_tabla(bd: Session, nombre: str, lote: int = 5000) -> int:
     modelo, _ = TABLAS[nombre]
     ruta = obtener_config().directorio_datos / "procesados" / f"{nombre}.csv.gz"
     if not ruta.exists():
-        log.warning("No existe %s; ejecuta primero el procesamiento.", ruta)
+        log.warning("No existe %s; ejecute primero el procesamiento.", ruta)
         return 0
     bd.execute(delete(modelo))
     n = 0
     buffer: list[dict] = []
     with gzip.open(ruta, "rt", encoding="utf-8", newline="") as f:
+        ajustes = AJUSTES.get(nombre, {})
         for fila in csv.DictReader(f):
-            buffer.append(_convertir(modelo, fila))
+            registro = _convertir(modelo, fila)
+            for columna, funcion in ajustes.items():
+                registro[columna] = funcion(registro.get(columna))
+            buffer.append(registro)
             if len(buffer) >= lote:
                 bd.execute(insert(modelo), buffer)
                 n += len(buffer)

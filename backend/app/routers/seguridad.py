@@ -95,7 +95,7 @@ def postura(ctx: Contexto = Depends(requiere("seguridad:ver")), bd: Session = De
 def hallazgos(agente: str = "seguridad", estado: str | None = None,
               ctx: Contexto = Depends(requiere("seguridad:ver", "ti:ver")), bd: Session = Depends(obtener_bd)):
     if agente not in ("seguridad", "ti") or not ctx.puede(f"{agente}:ver"):
-        raise HTTPException(403, "No puedes ver estos hallazgos.")
+        raise HTTPException(403, "No puede ver estos hallazgos.")
     q = select(Hallazgo).where(Hallazgo.agente == agente)
     if estado:
         q = q.where(Hallazgo.estado == estado)

@@ -91,7 +91,7 @@ class Configuracion(BaseSettings):
 
 def _validar_entorno(cfg: Configuracion) -> None:
     if cfg.entorno.lower() not in ("desarrollo", "produccion"):
-        raise RuntimeError(f"NEXO_ENTORNO inválido: {cfg.entorno!r}. Usa 'desarrollo' o 'produccion'.")
+        raise RuntimeError(f"NEXO_ENTORNO inválido: {cfg.entorno!r}. Use 'desarrollo' o 'produccion'.")
 
 
 def _resolver_clave(cfg: Configuracion) -> str:

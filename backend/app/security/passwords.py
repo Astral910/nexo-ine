@@ -59,18 +59,18 @@ def evaluar_password(clave: str, email: str = "", nombre: str = "") -> list[str]
         problemas.append(f"Debe tener como máximo {LONGITUD_MAXIMA} caracteres.")
     n = normalizar(clave).replace(" ", "")
     if not re.search(r"[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]", clave) or len(set(clave)) < 5:
-        problemas.append("Usa letras o números y al menos 5 caracteres distintos.")
+        problemas.append("Use letras o números y al menos 5 caracteres distintos.")
     elif n in _COMUNES or re.fullmatch(r"(.)\1{5,}", n) or n.isdigit():
         problemas.append("Es demasiado común o predecible.")
     usuario = normalizar(email.split("@")[0]) if email else ""
     if usuario and len(usuario) >= 4 and usuario in n:
-        problemas.append("No debe contener tu usuario de correo.")
+        problemas.append("No debe contener su usuario de correo.")
     for parte in normalizar(nombre).split():
         if len(parte) >= 4 and parte in n:
-            problemas.append("No debe contener tu nombre.")
+            problemas.append("No debe contener su nombre.")
             break
     if any(p in n for p in ("nexo", "dataton")) and len(n) < 16:
-        problemas.append("No uses el nombre del sistema o del evento como base.")
+        problemas.append("No use el nombre del sistema o del evento como base.")
     return problemas
 
 

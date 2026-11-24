@@ -1,6 +1,6 @@
 // Componentes base de la interfaz (sin dependencias externas).
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { CircleCheck, CircleX, Info, Inbox, TriangleAlert, X } from "lucide-react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { CircleCheck, CircleX, FileUp, Info, Inbox, TriangleAlert, X } from "lucide-react";
 import { api, ErrorApi } from "../api";
 
 export function Tarjeta({ titulo, ayuda, acciones, children, className = "", estilo }: {
@@ -22,11 +22,14 @@ export function Tarjeta({ titulo, ayuda, acciones, children, className = "", est
   );
 }
 
-export function Encabezado({ titulo, subtitulo, migas, acciones }: { titulo: ReactNode; subtitulo?: ReactNode; migas?: ReactNode; acciones?: ReactNode }) {
+export function Encabezado({ titulo, subtitulo, migas, acciones, sobretitulo }: {
+  titulo: ReactNode; subtitulo?: ReactNode; migas?: ReactNode; acciones?: ReactNode; sobretitulo?: ReactNode;
+}) {
   return (
     <div className="encabezado">
       <div>
         {migas && <div className="migas">{migas}</div>}
+        {sobretitulo && <div className="sobretitulo" style={{ marginBottom: 6 }}>{sobretitulo}</div>}
         <h1>{titulo}</h1>
         {subtitulo && <p className="subtitulo">{subtitulo}</p>}
       </div>
@@ -35,13 +38,33 @@ export function Encabezado({ titulo, subtitulo, migas, acciones }: { titulo: Rea
   );
 }
 
-export function Kpi({ etiqueta, valor, detalle, tono = "acento", icono }: {
-  etiqueta: ReactNode; valor: ReactNode; detalle?: ReactNode; tono?: "acento" | "naranja" | "verde" | "morado" | "amarillo"; icono?: ReactNode;
+/** Cifra que cuenta hasta su valor (400 ms, desaceleración). Respeta la preferencia de movimiento reducido. */
+export function NumeroAnimado({ valor, formato }: { valor: number; formato: (v: number) => string }) {
+  const [mostrado, setMostrado] = useState(valor);
+  useEffect(() => {
+    const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.classList.contains("sin-animacion");
+    if (reducido || !Number.isFinite(valor)) { setMostrado(valor); return; }
+    let cuadro = 0;
+    const inicio = performance.now();
+    const paso = (ahora: number) => {
+      const t = Math.min(1, (ahora - inicio) / 650);
+      setMostrado(valor * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) cuadro = requestAnimationFrame(paso);
+    };
+    cuadro = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(cuadro);
+  }, [valor]);
+  return <>{formato(mostrado)}</>;
+}
+
+export function Kpi({ etiqueta, valor, numero, formato, detalle, tono = "acento", icono }: {
+  etiqueta: ReactNode; valor?: ReactNode; numero?: number | null; formato?: (v: number) => string; detalle?: ReactNode;
+  tono?: "acento" | "naranja" | "verde" | "morado" | "amarillo"; icono?: ReactNode;
 }) {
   return (
-    <div className={`tarjeta kpi ${tono}`}>
-      <span className="etiqueta">{icono}{etiqueta}</span>
-      <span className="valor">{valor}</span>
+    <div className="tarjeta kpi" data-tono={tono}>
+      <div className="kpi-cabeza">{icono && <span className="kpi-icono">{icono}</span>}<span className="etiqueta">{etiqueta}</span></div>
+      <span className="valor">{numero !== undefined && numero !== null && formato ? <NumeroAnimado valor={numero} formato={formato} /> : valor}</span>
       {detalle && <span className="detalle">{detalle}</span>}
     </div>
   );
@@ -78,6 +101,82 @@ export function Vacio({ children, icono }: { children: ReactNode; icono?: ReactN
 
 export function Esqueleto({ alto = 120 }: { alto?: number }) {
   return <div className="esqueleto" style={{ height: alto }} aria-busy="true" aria-label="Cargando" />;
+}
+
+/** Esqueletos con la forma del contenido final (indicadores, gráficas y tablas). */
+export function EsqueletoKpis({ n = 4 }: { n?: number }) {
+  return (
+    <div className="rejilla" aria-busy="true" aria-label="Cargando indicadores">
+      {Array.from({ length: n }, (_, i) => (
+        <div key={i} className="c3 tarjeta esq-kpi">
+          <div className="esqueleto esq-linea" style={{ width: "55%" }} />
+          <div className="esqueleto" style={{ height: 28, width: "70%" }} />
+          <div className="esqueleto esq-linea" style={{ width: "40%" }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function EsqueletoGrafica({ alto = 240 }: { alto?: number }) {
+  const barras = [55, 72, 40, 85, 63, 78, 50];
+  return (
+    <div className="esq-grafica" style={{ height: alto }} aria-busy="true" aria-label="Cargando gráfica">
+      {barras.map((h, i) => <div key={i} className="esqueleto" style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }} />)}
+    </div>
+  );
+}
+
+export function EsqueletoTabla({ filas = 5 }: { filas?: number }) {
+  return (
+    <div className="esq-tabla" aria-busy="true" aria-label="Cargando tabla">
+      {Array.from({ length: filas }, (_, i) => (
+        <div key={i}>{[0, 1, 2, 3].map((j) => <div key={j} className="esqueleto esq-linea" style={{ width: `${90 - ((i + j) % 3) * 18}%`, animationDelay: `${i * 60}ms` }} />)}</div>
+      ))}
+    </div>
+  );
+}
+
+/** Barra de carga superior: aparece si alguna solicitud tarda más de 150 ms. */
+export function BarraCarga() {
+  const [activa, setActiva] = useState(false);
+  useEffect(() => {
+    let temporizador: number | undefined;
+    const escuchar = (e: Event) => {
+      const n = (e as CustomEvent<number>).detail;
+      window.clearTimeout(temporizador);
+      if (n > 0) temporizador = window.setTimeout(() => setActiva(true), 150);
+      else setActiva(false);
+    };
+    window.addEventListener("nexo:carga", escuchar);
+    return () => window.removeEventListener("nexo:carga", escuchar);
+  }, []);
+  return <div className={`barra-carga ${activa ? "activa" : ""}`} role="progressbar" aria-hidden={!activa} />;
+}
+
+/** Guía breve de una pantalla: tres pasos en lenguaje sencillo; se puede ocultar y queda recordado. */
+export function GuiaRapida({ id, titulo, pasos }: { id: string; titulo: string; pasos: { titulo: string; texto: string }[] }) {
+  const clave = `nexo:guia:${id}`;
+  const [visible, setVisible] = useState(() => localStorage.getItem(clave) !== "oculta");
+  if (!visible) {
+    return <button className="boton fantasma pequeno" style={{ alignSelf: "flex-start" }} onClick={() => { localStorage.removeItem(clave); setVisible(true); }}>Mostrar la guía de esta pantalla</button>;
+  }
+  return (
+    <section className="tarjeta" aria-label={titulo}>
+      <header>
+        <div><span className="sobretitulo">Guía rápida</span><h3 style={{ marginTop: 4 }}>{titulo}</h3></div>
+        <button className="boton fantasma pequeno" onClick={() => { localStorage.setItem(clave, "oculta"); setVisible(false); }}>Ocultar</button>
+      </header>
+      <div className="guia">
+        {pasos.map((p, i) => (
+          <div key={p.titulo} className="paso-guia">
+            <span className="numero">{i + 1}</span>
+            <div><b>{p.titulo}</b><p className="pequeno suave" style={{ marginTop: 2 }}>{p.texto}</p></div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export function Modal({ titulo, onCerrar, children, ancho = false }: { titulo: ReactNode; onCerrar: () => void; children: ReactNode; ancho?: boolean }) {
@@ -186,11 +285,39 @@ export function Progreso({ valor, color }: { valor: number; color?: string }) {
 }
 
 export function Medidor({ valor, etiqueta }: { valor: number; etiqueta: string }) {
-  const color = valor >= 85 ? "#2f8f2f" : valor >= 65 ? "#0080ff" : valor >= 45 ? "#ff9f1a" : "#d92d20";
+  const color = valor >= 85 ? "#2b6a0f" : valor >= 65 ? "#0b4f96" : valor >= 45 ? "#b36b00" : "#b42318";
   return (
     <div className="medidor" style={{ background: `conic-gradient(${color} ${valor * 3.6}deg, #e8eef5 0)` }} aria-label={`${etiqueta}: ${valor} de 100`}>
       <div className="centro"><div><b>{valor}</b><div className="pequeno suave">{etiqueta}</div></div></div>
     </div>
+  );
+}
+
+function tamanoLegible(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** Selector de archivo en español: zona para arrastrar o pulsar, que muestra el nombre y el tamaño del archivo elegido. */
+export function SelectorArchivo({ archivo, onCambio, aceptar, ayuda }: {
+  archivo: File | null; onCambio: (f: File | null) => void; aceptar?: string; ayuda?: ReactNode;
+}) {
+  const [encima, setEncima] = useState(false);
+  const id = useId();
+  return (
+    <label htmlFor={id} className={`selector-archivo ${encima ? "encima" : ""} ${archivo ? "con-archivo" : ""}`}
+      onDragOver={(e) => { e.preventDefault(); setEncima(true); }} onDragLeave={() => setEncima(false)}
+      onDrop={(e) => { e.preventDefault(); setEncima(false); const f = e.dataTransfer.files?.[0]; if (f) onCambio(f); }}>
+      <input id={id} type="file" accept={aceptar} className="oculto-visual" onChange={(e) => onCambio(e.target.files?.[0] ?? null)} />
+      <FileUp aria-hidden />
+      {archivo ? (
+        <span><b>{archivo.name}</b><span className="pequeno suave"> · {tamanoLegible(archivo.size)} · pulse aquí para elegir otro</span></span>
+      ) : (
+        <span>
+          <b>Arrastre aquí su archivo</b> o <span style={{ color: "var(--acento)", textDecoration: "underline", textUnderlineOffset: 3 }}>pulse para seleccionarlo</span>
+          {ayuda && <span className="pequeno suave" style={{ display: "block", marginTop: 2 }}>{ayuda}</span>}
+        </span>
+      )}
+    </label>
   );
 }
 
@@ -235,7 +362,7 @@ export function Avisos() {
   }, []);
   return (
     <div style={{ position: "fixed", bottom: 20, right: 20, display: "flex", flexDirection: "column", gap: 8, zIndex: 200, maxWidth: 420 }} aria-live="polite">
-      {lista.map((m) => <Aviso key={m.id} tono={m.tono as any}>{m.texto}</Aviso>)}
+      {lista.map((m) => <div key={m.id} style={{ animation: "deslizar-der 300ms var(--ease-salida) both", boxShadow: "var(--sombra-16)", borderRadius: 10 }}><Aviso tono={m.tono as any}>{m.texto}</Aviso></div>)}
     </div>
   );
 }

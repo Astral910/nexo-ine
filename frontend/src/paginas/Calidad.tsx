@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Download, Upload } from "lucide-react";
 import { api, ErrorApi, fmt } from "../api";
-import { Aviso, Encabezado, Esqueleto, Insignia, Medidor, Severidad, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import { Aviso, Encabezado, EsqueletoTabla, GuiaRapida, Insignia, Medidor, SelectorArchivo, Severidad, Tabla, Tarjeta, useDatos } from "../componentes/ui";
 
 function Informe({ r }: { r: any }) {
   const tono = (e: string) => (e === "ok" ? "exito" : e === "falla" ? "critico" : e === "revisar" ? "alerta" : "");
   return (
     <div className="columna" style={{ gap: 16 }}>
-      {r.bloqueante && <Aviso tono="critico"><b>No publiques ni compartas este archivo.</b> Contiene posibles datos personales: protege el secreto estadístico eliminando o seudonimizando esas columnas.</Aviso>}
+      {r.bloqueante && <Aviso tono="critico"><b>No publique ni comparta este archivo.</b> Contiene posibles datos personales: proteja el secreto estadístico eliminando o seudonimizando esas columnas.</Aviso>}
       <div className="rejilla">
         <div className="c3 tarjeta" style={{ display: "grid", placeItems: "center" }}><Medidor valor={Math.round(r.puntaje)} etiqueta="Calidad" /></div>
         <div className="c9">
@@ -55,7 +55,7 @@ export default function Calidad() {
   const [informe, setInforme] = useState<any>(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
-  const { datos: historial, recargar } = useDatos<any[]>("/api/calidad/validaciones");
+  const { datos: historial, error: errorHistorial, recargar } = useDatos<any[]>("/api/calidad/validaciones");
   useEffect(() => { const v = params.get("v"); if (v) api(`/api/calidad/validaciones/${v}`).then(setInforme).catch(() => undefined); }, [params]);
   const validar = async () => {
     if (!archivo) return;
@@ -68,16 +68,21 @@ export default function Calidad() {
   return (
     <div className="columna" style={{ gap: 16 }}>
       <Encabezado titulo="Validador de calidad de datos" subtitulo="Crítica automática de bases antes de procesarlas o publicarlas: completitud, valores extremos, duplicados, códigos 98/99, pocos casos y datos personales. Flujo de crítica e inconsistencias de la DESA, con herramientas libres." />
+      <GuiaRapida id="calidad" titulo="Cómo validar una base de datos" pasos={[
+        { titulo: "Elija el archivo", texto: "Arrástrelo a la zona punteada o pulse para buscarlo. Acepta CSV y XLSX." },
+        { titulo: "Pulse «Validar archivo»", texto: "Nexo revisa completitud, duplicados, valores extremos, códigos 98/99 y datos personales." },
+        { titulo: "Revise el informe", texto: "Corrija lo marcado y descargue el reporte de inconsistencias para la fuente." },
+      ]} />
       <Tarjeta titulo="Validar un archivo" ayuda="CSV o XLSX hasta 10 MB. Se procesa en memoria y no se guarda: solo queda el informe con ejemplos enmascarados.">
-        <div className="fila">
-          <input type="file" accept=".csv,.xlsx" onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} aria-label="Archivo" />
-          <button className="boton" onClick={validar} disabled={!archivo || cargando}><Upload /> {cargando ? "Validando…" : "Validar"}</button>
+        <div className="fila" style={{ alignItems: "stretch" }}>
+          <SelectorArchivo archivo={archivo} onCambio={setArchivo} aceptar=".csv,.xlsx" ayuda="Formatos aceptados: CSV y XLSX, hasta 10 MB." />
+          <button className="boton" style={{ height: "auto", minHeight: 44, padding: "0 20px" }} onClick={validar} disabled={!archivo || cargando}><Upload /> {cargando ? "Validando…" : "Validar archivo"}</button>
         </div>
         {error && <div style={{ marginTop: 10 }}><Aviso tono="critico">{error}</Aviso></div>}
       </Tarjeta>
       {informe ? <Informe r={informe} /> : null}
       <Tarjeta titulo="Validaciones recientes">
-        {!historial ? <Esqueleto /> : <Tabla filas={historial} onFila={(v: any) => api(`/api/calidad/validaciones/${v.id}`).then(setInforme)} vacio="Aún no hay validaciones." columnas={[
+        {errorHistorial ? <Aviso tono="info">{errorHistorial}</Aviso> : !historial ? <EsqueletoTabla filas={4} /> : <Tabla filas={historial} onFila={(v: any) => api(`/api/calidad/validaciones/${v.id}`).then(setInforme)} vacio="Aún no hay validaciones." columnas={[
           { id: "a", titulo: "Archivo", valor: (v: any) => v.archivo },
           { id: "f", titulo: "Filas", num: true, valor: (v: any) => v.filas, celda: (v: any) => fmt.numero(v.filas) },
           { id: "p", titulo: "Puntaje", num: true, valor: (v: any) => v.puntaje },

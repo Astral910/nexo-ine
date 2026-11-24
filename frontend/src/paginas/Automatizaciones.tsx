@@ -32,9 +32,9 @@ function Nueva({ onCerrar }: { onCerrar: () => void }) {
       {!tareas ? <Esqueleto /> : (
         <form className="columna" onSubmit={enviar}>
           {error && <Aviso tono="critico">{error}</Aviso>}
-          <Campo etiqueta="¿Qué quieres automatizar?" ayuda={t?.descripcion}>
+          <Campo etiqueta="¿Qué desea automatizar?" ayuda={t?.descripcion}>
             <select required value={tarea} onChange={(e) => { setTarea(e.target.value); setParams({}); }}>
-              <option value="">Elige una tarea…</option>
+              <option value="">Elija una tarea…</option>
               {tareas.map((x) => <option key={x.clave} value={x.clave}>{x.nombre}</option>)}
             </select>
           </Campo>
@@ -107,11 +107,11 @@ export default function Automatizaciones() {
   ];
   return (
     <div className="columna" style={{ gap: 16 }}>
-      <Encabezado titulo="Automatizaciones" subtitulo="Tareas programadas o manuales que trabajan por ti: vigilar precios, recordar vencimientos, recalcular alertas, sincronizar el catálogo del INE, respaldar y revisar la seguridad. Solo se ejecutan tareas de una lista aprobada y cada ejecución queda en la bitácora."
+      <Encabezado titulo="Automatizaciones" subtitulo="Tareas programadas o manuales que trabajan por usted: vigilar precios, recordar vencimientos, recalcular alertas, sincronizar el catálogo del INE, respaldar y revisar la seguridad. Solo se ejecutan tareas de una lista aprobada y cada ejecución queda en la bitácora."
         acciones={puede("automatizaciones:gestionar") && <button className="boton" onClick={() => setNueva(true)}><Plus /> Nueva automatización</button>} />
       {!datos ? <Esqueleto alto={300} /> : (
         <>
-          <Tarjeta titulo="Mis automatizaciones">{<Tabla filas={mias} columnas={columnas} vacio="Aún no tienes automatizaciones. Crea una para que Nexo trabaje por ti." />}</Tarjeta>
+          <Tarjeta titulo="Mis automatizaciones">{<Tabla filas={mias} columnas={columnas} vacio="Aún no tiene automatizaciones. Cree una para que Nexo trabaje por usted." />}</Tarjeta>
           <Tarjeta titulo="Automatizaciones del sistema" ayuda="Agentes de seguridad y TI, retención de datos, integridad de la bitácora y sincronización con el INE.">
             <Tabla filas={sistema} columnas={columnas} />
           </Tarjeta>

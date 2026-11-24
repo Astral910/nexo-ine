@@ -90,7 +90,7 @@ def descargar(fuente: Fuente, forzar: bool = False, origen_local: Path | None = 
         return previo
     if origen_local is not None:
         if fecha_origen is None:
-            raise ValueError("Al reutilizar una descarga previa indica su fecha real (fecha_origen).")
+            raise ValueError("Al reutilizar una descarga previa indique su fecha real (fecha_origen).")
         shutil.copyfile(origen_local, destino)
         momento = fecha_origen.astimezone(UTC)
     else:

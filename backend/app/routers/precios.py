@@ -145,22 +145,22 @@ def avanzar(sol_id: int, datos: Comentario, ctx: Contexto = Depends(requiere("dp
     if sol.rechazada or sol.estado == "entregada":
         raise HTTPException(409, "La solicitud ya está cerrada.")
     if sol.solicitante_id == ctx.usuario.id:
-        raise HTTPException(409, "Segregación de funciones: no puedes atender una solicitud que tú mismo registraste.")
+        raise HTTPException(409, "Segregación de funciones: no puede atender una solicitud que usted mismo registró.")
     i = ORDEN.index(sol.estado)
     siguiente = ORDEN[i + 1]
     if siguiente == "analisis" and not bd.execute(select(func.count()).select_from(Cotizacion).where(
             Cotizacion.solicitud_id == sol.id, Cotizacion.incluida.is_(True))).scalar():
-        raise HTTPException(409, "Antes del análisis incluye al menos una fuente de precio.")
+        raise HTTPException(409, "Antes del análisis incluya al menos una fuente de precio.")
     if siguiente == "informe":
         precios_ref.analizar_solicitud(bd, sol)
         r = sol.resultado or {}
         if not r.get("precio_referencia"):
-            raise HTTPException(409, "El análisis no produjo un precio. Revisa las fuentes incluidas.")
+            raise HTTPException(409, "El análisis no produjo un precio. Revise las fuentes incluidas.")
         if not r.get("cumple_mercado_relevante") and not r.get("justificacion_mercado"):
-            raise HTTPException(409, "Menos del 50 % de las fuentes son cotizaciones del mercado relevante: agrega "
-                                     "cotizaciones o escribe una justificación en el análisis (quedará en el informe).")
+            raise HTTPException(409, "Menos del 50 % de las fuentes son cotizaciones del mercado relevante: agregue "
+                                     "cotizaciones o escriba una justificación en el análisis (quedará en el informe).")
     if siguiente == "entregada" and not sol.informe_sha256:
-        raise HTTPException(409, "Genera el informe técnico antes de entregar.")
+        raise HTTPException(409, "Genere el informe técnico antes de entregar.")
     de = sol.estado
     sol.estado = siguiente
     sol.actualizada_en = ahora()
@@ -169,7 +169,7 @@ def avanzar(sol_id: int, datos: Comentario, ctx: Contexto = Depends(requiere("dp
     if siguiente == "entregada":
         sol.entregada_en = ahora()
         if sol.solicitante_id:
-            notificar(bd, sol.solicitante_id, f"Tu precio de referencia {sol.codigo} está listo",
+            notificar(bd, sol.solicitante_id, f"Su precio de referencia {sol.codigo} está listo",
                       f"Precio de referencia: Q{sol.resultado.get('precio_referencia'):,.2f} por {sol.unidad}.", "exito",
                       f"/precios/{sol.id}")
             solicitante = bd.get(Usuario, sol.solicitante_id)
@@ -203,7 +203,7 @@ def rechazar(sol_id: int, datos: Comentario, ctx: Contexto = Depends(requiere("d
              bd: Session = Depends(obtener_bd)):
     sol = _obtener(bd, ctx, sol_id)
     if not datos.comentario.strip():
-        raise HTTPException(422, "Indica el motivo del rechazo.")
+        raise HTTPException(422, "Indique el motivo del rechazo.")
     sol.rechazada = True
     _evento(bd, sol, ctx, sol.estado, sol.estado, f"Rechazada: {datos.comentario}")
     bd.commit()
@@ -319,7 +319,7 @@ def informe(sol_id: int, ctx: Contexto = Depends(requiere("dpir:ver", "dpir:soli
     if not ctx.puede("dpir:ver") and sol.estado != "entregada":
         raise HTTPException(403, "El informe estará disponible cuando la DPIR lo entregue.")
     if not sol.resultado:
-        raise HTTPException(409, "Primero analiza las fuentes de la solicitud.")
+        raise HTTPException(409, "Primero analice las fuentes de la solicitud.")
     cot = bd.execute(select(Cotizacion).where(Cotizacion.solicitud_id == sol.id)).scalars().all()
     if ctx.puede("dpir:gestionar") and sol.estado in ("informe", "analisis"):
         sol.informe_sha256 = precios_ref.huella_datos(sol, cot)

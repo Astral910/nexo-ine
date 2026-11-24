@@ -52,7 +52,7 @@ def sincronizar(ctx: Contexto = Depends(requiere("datos:sincronizar")), bd: Sess
     except Exception as e:
         bitacora.registrar("datos.sincronizacion", usuario=ctx.usuario, modulo="datos", resultado="error",
                            detalle={"error": str(e)[:200]}, ip=ctx.ip)
-        raise HTTPException(502, "No se pudo consultar el portal del INE. Intenta más tarde.") from e
+        raise HTTPException(502, "No se pudo consultar el portal del INE. Intente más tarde.") from e
     bitacora.registrar("datos.sincronizacion", usuario=ctx.usuario, modulo="datos", detalle=r["metricas"], ip=ctx.ip)
     return r
 

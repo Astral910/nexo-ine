@@ -21,7 +21,7 @@ export default function Bitacora() {
         </>} />
       {verificacion && (verificacion.integra
         ? <Aviso tono="exito">Cadena íntegra: {fmt.numero(verificacion.registros)} registros verificados. Último hash {verificacion.ultimo_hash?.slice(0, 16)}… anclado {fmt.relativo(verificacion.ancla?.ts)}.</Aviso>
-        : <Aviso tono="critico">La cadena se rompe en el registro {verificacion.roto_en}: {verificacion.motivo}. Trátalo como incidente de seguridad.</Aviso>)}
+        : <Aviso tono="critico">La cadena se rompe en el registro {verificacion.roto_en}: {verificacion.motivo}. Trátelo como incidente de seguridad.</Aviso>)}
       <Tarjeta>
         <div className="fila" style={{ marginBottom: 10 }}>
           <select className="entrada" style={{ width: 180 }} value={modulo} onChange={(e) => { setModulo(e.target.value); setPagina(1); }} aria-label="Módulo">

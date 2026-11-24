@@ -5,7 +5,7 @@ import { ExternalLink, Plus, Search } from "lucide-react";
 import { api, ErrorApi, fmt } from "../api";
 import { useSesion } from "../auth";
 import { Grafica, opcionBarras } from "../componentes/Grafica";
-import { Aviso, avisar, Campo, Encabezado, Esqueleto, FuenteCita, Insignia, Kpi, Modal, Pestanas, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import { Aviso, avisar, Campo, Encabezado, Esqueleto, FuenteCita, GuiaRapida, Insignia, Kpi, Modal, Pestanas, Tabla, Tarjeta, useDatos } from "../componentes/ui";
 
 export function NuevaSolicitud({ onCerrar }: { onCerrar: () => void }) {
   const { puede, usuario } = useSesion();
@@ -53,7 +53,7 @@ function Bandeja() {
         {datos.etapas.map((e: any) => <button key={e.id} className={`chip ${filtro === e.id ? "fijo" : ""}`} onClick={() => setFiltro(e.id)}>{e.etiqueta} <b>{conteo(e.id)}</b></button>)}
       </div>
       <Tabla filas={filas} onFila={(s: any) => navegar(`/precios/${s.id}`)} vacio="No hay solicitudes en esta etapa." columnas={[
-        { id: "c", titulo: "Código", valor: (s: any) => s.codigo, celda: (s: any) => <b>{s.codigo}</b> },
+        { id: "c", titulo: "Código", valor: (s: any) => s.codigo, celda: (s: any) => <b style={{ whiteSpace: "nowrap" }}>{s.codigo}</b> },
         { id: "p", titulo: "Bien o servicio", valor: (s: any) => s.producto },
         { id: "e", titulo: "Entidad", valor: (s: any) => s.entidad },
         { id: "q", titulo: "Cantidad", num: true, valor: (s: any) => s.cantidad, celda: (s: any) => `${fmt.numero(s.cantidad)} ${s.unidad}` },
@@ -90,14 +90,14 @@ function Explorador() {
   const hist = useMemo(() => histograma((r?.compras ?? []).filter((c: any) => !c.atipico).map((c: any) => c.precio_ajustado)), [r]);
   return (
     <div className="columna" style={{ gap: 16 }}>
-      <Tarjeta titulo="Explorador de mercado" ayuda="Busca un bien en 214 mil compras públicas de un solo artículo (Guatecompras) y en los precios de referencia históricos del INE. Los precios se llevan a quetzales del último mes del IPC.">
+      <Tarjeta titulo="Explorador de mercado" ayuda="Busque un bien en 214 mil compras públicas de un solo artículo (Guatecompras) y en los precios de referencia históricos del INE. Los precios se llevan a quetzales del último mes del IPC.">
         <form className="fila" onSubmit={(e) => { e.preventDefault(); buscar(null); }}>
           <input className="entrada" style={{ flex: 1, minWidth: 240 }} value={terminos} onChange={(e) => setTerminos(e.target.value)} aria-label="Producto" />
           <button className="boton" disabled={cargando}><Search /> {cargando ? "Buscando…" : "Investigar"}</button>
         </form>
         {r?.grupos?.length > 0 && (
           <div className="fila" style={{ marginTop: 10 }}>
-            <span className="pequeno suave">Afina por clasificación UNSPSC:</span>
+            <span className="pequeno suave">Afine por clasificación UNSPSC:</span>
             {r.grupos.map((g: any) => <button key={g.unspsc + g.unidad} className={`chip ${unspsc === g.unspsc ? "fijo" : ""}`} title={g.ejemplo} onClick={() => buscar(g.unspsc)}>{g.unspsc} · {g.unidad || "sin unidad"} <b>{g.n}</b></button>)}
             {unspsc && <button className="chip" onClick={() => buscar(null)}>Quitar filtro</button>}
           </div>
@@ -116,7 +116,7 @@ function Explorador() {
             <Grafica opcion={opcionBarras(hist.etiquetas, hist.conteos)} />
             <FuenteCita>Guatecompras OCDS 2025 (CC BY 4.0), precio unitario calculado por Nexo; IPC del INE.</FuenteCita>
           </Tarjeta>
-          <Tarjeta titulo="Compras encontradas" ayuda="Revisa que sean comparables: misma unidad y especificaciones.">
+          <Tarjeta titulo="Compras encontradas" ayuda="Revise que sean comparables: misma unidad y especificaciones.">
             <Tabla maximo={100} filas={r.compras} columnas={[
               { id: "f", titulo: "Fecha", valor: (c: any) => c.fecha, celda: (c: any) => fmt.fecha(c.fecha) },
               { id: "d", titulo: "Descripción", valor: (c: any) => c.descripcion, celda: (c: any) => <span className="pequeno">{c.descripcion}</span> },
@@ -153,12 +153,19 @@ export default function Precios() {
   return (
     <div className="columna" style={{ gap: 18 }}>
       <Encabezado titulo={soloEntidad || ubicacion.pathname === "/mis-solicitudes" ? "Mis solicitudes de precio de referencia" : "Precios de Referencia"}
-        subtitulo={soloEntidad ? "Registra lo que tu entidad necesita comprar y da seguimiento a cada etapa hasta recibir el informe técnico."
+        subtitulo={soloEntidad ? "Registre lo que su entidad necesita comprar y dé seguimiento a cada etapa hasta recibir el informe técnico."
           : "El proceso de 6 pasos de la DPIR digitalizado: la investigación de mercado se automatiza con Guatecompras y los precios del INE, y el informe sale trazable."}
         acciones={(puede("dpir:solicitar") || puede("dpir:gestionar")) && <button className="boton" onClick={() => setNueva(true)}><Plus /> Nueva solicitud</button>} />
+      {!soloEntidad && (
+        <GuiaRapida id="dpir" titulo="Cómo atender una solicitud de precio de referencia" pasos={[
+          { titulo: "Abra la solicitud", texto: "Pulse el código en la lista. Las vencidas aparecen en rojo; use los filtros de etapa para ordenar el trabajo." },
+          { titulo: "Investigue el mercado", texto: "En la etapa 3, pulse «Investigar»: Nexo busca compras comparables en Guatecompras y precios del INE. Agregue cotizaciones si hace falta." },
+          { titulo: "Analice y entregue", texto: "Calcule los estadísticos, justifique si hay menos de 50 % de cotizaciones y descargue el informe técnico en PDF." },
+        ]} />
+      )}
       {!soloEntidad && <Pestanas opciones={[{ id: "bandeja", etiqueta: "Solicitudes" }, { id: "mercado", etiqueta: "Explorador de mercado" }]} activa={pestana} onCambio={setPestana} />}
       {pestana === "bandeja" || soloEntidad ? <Bandeja /> : <Explorador />}
-      {soloEntidad && <p className="pequeno suave">¿Dudas sobre el proceso? <Link to="/privacidad">Consulta cómo tratamos tus datos</Link>.</p>}
+      {soloEntidad && <p className="pequeno suave">¿Dudas sobre el proceso? <Link to="/privacidad">Consulte cómo tratamos sus datos</Link>.</p>}
       {nueva && <NuevaSolicitud onCerrar={() => setNueva(false)} />}
     </div>
   );

@@ -158,17 +158,17 @@ def _tipo_grafica(dimension: str | None, fuente: str) -> str:
 def generar(peticion: str, permisos: set[str]) -> dict:
     t = normalizar(peticion)
     if len(t) < 3:
-        raise ValueError("Describe qué quieres ver, por ejemplo: «precio de laptops por mes en 2025».")
+        raise ValueError("Describa qué desea ver, por ejemplo: «precio de laptops por mes en 2025».")
     puntos = _puntuar_fuentes(t)
     candidatas = [f for f, p in sorted(puntos.items(), key=lambda x: -x[1]) if FUENTES[f].permiso in permisos]
     if not candidatas:
-        raise ValueError("No tienes acceso a fuentes de datos para generar tableros.")
+        raise ValueError("No tiene acceso a fuentes de datos para generar tableros.")
     if puntos[candidatas[0]] > 0:
         fuente_id = candidatas[0]
     elif re.search(PALABRAS_PRECIO, t) and "compras" in candidatas:
         fuente_id = "compras"
     else:  # umbral de confianza: mejor decir que no se sabe que responder otra pregunta
-        raise ValueError("No encontré datos oficiales para responder esa pregunta. Prueba con temas como precios de "
+        raise ValueError("No encontré datos oficiales para responder esa pregunta. Pruebe con temas como precios de "
                          "compras públicas, IPC, canasta básica, población, materiales de construcción o alertas de precios.")
     fuente = FUENTES[fuente_id]
 
@@ -226,7 +226,7 @@ def generar(peticion: str, permisos: set[str]) -> dict:
         serie = "clave"
         if "texto" not in filtros:
             filtros["texto"] = "cemento gris"
-            interpretacion.append({"tipo": "Busca", "valor": "cemento gris (ejemplo; escribe el material)"})
+            interpretacion.append({"tipo": "Busca", "valor": "cemento gris (ejemplo; escriba el material)"})
 
     m = fuente.medidas[medida]
     interpretacion.append({"tipo": "Medida", "valor": m.etiqueta})
@@ -257,7 +257,7 @@ def generar(peticion: str, permisos: set[str]) -> dict:
         advertencias.append("El departamento es la sede de la entidad compradora (cerca del 79 % está en Guatemala), "
                             "no el lugar de entrega.")
     if hay_texto and fuente_id in ("compras", "precios_referencia"):
-        advertencias.append("La búsqueda es por palabras en la descripción: revisa que los artículos sean comparables "
+        advertencias.append("La búsqueda es por palabras en la descripción: revise que los artículos sean comparables "
                             "(misma unidad y especificaciones) antes de usar la cifra.")
     return {"titulo": titulo_base[:1].upper() + titulo_base[1:], "peticion": peticion[:300], "widgets": widgets,
             "interpretacion": interpretacion, "advertencias": advertencias}

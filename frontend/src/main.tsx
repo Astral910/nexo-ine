@@ -5,6 +5,11 @@ import "./estilos/tema.css";
 import { App } from "./App";
 import { ProveedorSesion } from "./auth";
 
+// Preferencias de accesibilidad guardadas: tamaño de letra y movimiento reducido.
+const escala = localStorage.getItem("nexo:escala");
+if (escala) document.documentElement.dataset.escala = escala;
+if (localStorage.getItem("nexo:sin-animacion") === "1") document.documentElement.classList.add("sin-animacion");
+
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>
     <BrowserRouter>

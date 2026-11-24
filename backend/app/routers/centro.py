@@ -27,7 +27,7 @@ MODULOS = [
     {"id": "calidad", "titulo": "Validador de calidad", "ruta": "/calidad", "permiso": ["calidad:usar"],
      "descripcion": "Crítica de bases, códigos 98/99, pocos casos y datos personales.", "area": "DESA · DCE"},
     {"id": "tableros", "titulo": "Tableros generativos", "ruta": "/tableros", "permiso": ["tableros:ver"],
-     "descripcion": "Escribe lo que quieres ver y Nexo arma el tablero con datos oficiales.", "area": "Todas"},
+     "descripcion": "Escriba lo que desea ver y Nexo arma el tablero con datos oficiales.", "area": "Todas"},
     {"id": "automatizaciones", "titulo": "Automatizaciones", "ruta": "/automatizaciones",
      "permiso": ["automatizaciones:ver"], "descripcion": "Tareas programadas y manuales con historial.", "area": "Todas"},
     {"id": "datos", "titulo": "Catálogo y linaje de datos", "ruta": "/datos", "permiso": ["datos:ver"],

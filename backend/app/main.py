@@ -83,7 +83,7 @@ def crear_app() -> FastAPI:
     async def _validacion(_req: Request, exc: RequestValidationError):
         errores = [{"campo": ".".join(str(x) for x in e.get("loc", [])[1:]), "mensaje": e.get("msg", "")}
                    for e in exc.errors()]
-        return JSONResponse({"detalle": "Revisa los datos enviados.", "errores": errores}, status_code=422)
+        return JSONResponse({"detalle": "Revise los datos enviados.", "errores": errores}, status_code=422)
 
     @app.exception_handler(Exception)
     async def _error(_req: Request, exc: Exception):
@@ -101,7 +101,7 @@ def _montar_frontend(app: FastAPI) -> None:
     if not (dist / "index.html").exists():
         @app.get("/", include_in_schema=False)
         def sin_frontend():
-            return JSONResponse({"mensaje": "API de Nexo en línea. Compila el frontend con: cd frontend && npm run build"})
+            return JSONResponse({"mensaje": "API de Nexo en línea. Compile el frontend con: cd frontend && npm run build"})
         return
 
     app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

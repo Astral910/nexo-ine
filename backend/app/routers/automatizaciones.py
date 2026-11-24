@@ -65,7 +65,7 @@ class Programacion(BaseModel):
 def _validar(datos: Programacion, ctx: Contexto) -> dict:
     tarea = TAREAS.get(datos.tarea)
     if tarea is None or not ctx.puede(tarea.permiso):
-        raise HTTPException(422, "Tarea no disponible para tu rol.")
+        raise HTTPException(422, "Tarea no disponible para su rol.")
     params = {}
     for k, v in datos.parametros.items():
         if k not in tarea.parametros:
@@ -77,9 +77,9 @@ def _validar(datos: Programacion, ctx: Contexto) -> dict:
     if datos.frecuencia == "intervalo" and (not v.isdigit() or not 15 <= int(v) <= 10080):
         raise HTTPException(422, "El intervalo debe estar entre 15 minutos y 7 días.")
     if datos.frecuencia == "diaria" and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", v):
-        raise HTTPException(422, "Indica la hora como HH:MM.")
+        raise HTTPException(422, "Indique la hora como HH:MM.")
     if datos.frecuencia == "semanal" and not re.fullmatch(r"[0-6]@([01]\d|2[0-3]):[0-5]\d", v):
-        raise HTTPException(422, "Indica el día y la hora como D@HH:MM (0 = lunes).")
+        raise HTTPException(422, "Indique el día y la hora como D@HH:MM (0 = lunes).")
     return params
 
 
@@ -127,7 +127,7 @@ def ejecutar(aid: int, ctx: Contexto = Depends(requiere("automatizaciones:gestio
         raise HTTPException(404, "Automatización no encontrada.")
     tarea = TAREAS.get(a.tarea)
     if not (_puede_editar(ctx, a) or (a.sistema and tarea and ctx.puede(tarea.permiso))):
-        raise HTTPException(403, "No puedes ejecutar esta automatización.")
+        raise HTTPException(403, "No puede ejecutar esta automatización.")
     return ejecutar_automatizacion(a.id, disparada_por=f"usuario:{ctx.usuario.id}", usuario=ctx.usuario)
 
 

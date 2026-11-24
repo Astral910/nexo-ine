@@ -102,3 +102,20 @@ def test_validador_rechaza_bombas_zip():
         z.writestr("xl/worksheets/sheet1.xml", b"0" * 20_000_000)
     with pytest.raises(ArchivoInvalido):
         validar("bomba.xlsx", buffer.getvalue())
+
+
+def test_tableros_base_usan_consultas_validas():
+    """Regresión TAB-1: cada widget de datos de los tableros base debe ser aceptado por la capa semántica.
+    Antes, «limite» viajaba como filtro y el tablero de Censos y Encuestas mostraba un error."""
+    from app.catalogos import PERMISOS
+    from app.services.tableros_base import TABLEROS_POR_ROL
+
+    todos = {p[0] for p in PERMISOS}
+    with SesionLocal() as bd:
+        for rol, spec in TABLEROS_POR_ROL.items():
+            for w in spec["widgets"]:
+                if w.get("consulta"):
+                    try:
+                        semantica.ejecutar(bd, w["consulta"], todos)
+                    except semantica.ErrorConsulta as e:
+                        pytest.fail(f"Tablero base de {rol}, widget «{w['titulo']}»: {e}")

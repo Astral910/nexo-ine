@@ -13,7 +13,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
-from sqlalchemy import Integer, String, and_, cast, distinct, extract, func, select
+from sqlalchemy import Integer, String, and_, cast, distinct, extract, func, select, true
 from sqlalchemy.orm import Session
 
 from ..config import obtener_config
@@ -135,7 +135,7 @@ FUENTES: dict[str, Fuente] = {
         ["texto", "departamento", "anio", "mes"], k_columna="cod_fuente", k_minimo=5, requiere_producto=True,
         notas=["Celdas con menos de 5 informantes o boletas distintas se suprimen por secreto estadístico (en 2023 "
                "el archivo público no trae código de informante y se usa la boleta, de forma conservadora).",
-               "Comparar precios entre artículos distintos no tiene sentido: filtra por un artículo."],
+               "Comparar precios entre artículos distintos no tiene sentido: filtre por un artículo."],
         sinonimos=["precios recolectados", "recoleccion", "informantes", "precios del ipc", "boletas"]),
     "alertas": Fuente(
         "alertas", "Alertas de precios atípicos", AlertaPrecio, "Cálculo propio con el método Hidiroglou-Berthelot",
@@ -303,7 +303,7 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
         raise ErrorConsulta("Fuente desconocida.")
     fuente = FUENTES[fid]
     if permisos is not None and fuente.permiso not in permisos:
-        raise ErrorConsulta("No tienes permiso para consultar esta fuente.")
+        raise ErrorConsulta("No tiene permiso para consultar esta fuente.")
     medida_id = consulta.get("medida") or next(iter(fuente.medidas))
     if medida_id not in fuente.medidas:
         raise ErrorConsulta("Medida no disponible para esta fuente.")
@@ -318,7 +318,7 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
     notas_rigor: list[str] = []
     medidas_precio = medida.agregacion in ("median", "avg") and medida.formato == "moneda"
     if fuente.requiere_producto and medidas_precio and not (filtros.get("texto") or filtros.get("unspsc")):
-        raise ErrorConsulta("Para calcular precios indica un producto: promediar bienes distintos no tiene sentido.")
+        raise ErrorConsulta("Para calcular precios indique un producto: promediar bienes distintos no tiene sentido.")
     # Series distintas (regiones, divisiones, artículos, áreas) nunca se promedian entre sí.
     if fuente.modelo is SerieIndice and "clave" not in (dimension, serie) and not (
             isinstance(filtros.get("clave"), str) or (isinstance(filtros.get("clave"), list) and len(filtros["clave"]) == 1)):
@@ -373,7 +373,7 @@ def _ultimo_periodo(bd: Session, fuente: Fuente, filtros: dict) -> tuple[int, in
     if fuente.stock == "anio":
         from ..db import ahora as _ahora
 
-        anios = [a for (a,) in bd.execute(select(m.anio).where(and_(*conds)).distinct())]
+        anios = [a for (a,) in bd.execute(select(m.anio).where(and_(true(), *conds)).distinct())]
         if not anios:
             return None
         actual = _ahora().year

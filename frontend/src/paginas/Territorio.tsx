@@ -36,7 +36,7 @@ function Pais() {
             ]} /></div>}
           </Tarjeta>
           <div style={{ height: 16 }} />
-          <Tarjeta titulo="Departamentos" ayuda="Toca uno para ver sus municipios">
+          <Tarjeta titulo="Departamentos" ayuda="Seleccione un departamento para ver sus municipios">
             <Tabla filas={datos.departamentos} onFila={(d: any) => setDepto(d.departamento)} columnas={[
               { id: "d", titulo: "Departamento", valor: (d: any) => d.departamento },
               { id: "p", titulo: "2018", num: true, valor: (d: any) => d.poblacion_2018, celda: (d: any) => fmt.numero(d.poblacion_2018) },
@@ -114,12 +114,12 @@ function Operativos() {
         {datos.departamentos.map((d: any) => (
           <button key={d.departamento} className="c3 tarjeta" style={{ textAlign: "left", cursor: "pointer", border: depto === d.departamento ? "2px solid var(--ine-celeste)" : undefined }} onClick={() => setDepto(depto === d.departamento ? "" : d.departamento)}>
             <div className="fila espaciado"><b>{d.departamento}</b><span className="pequeno">{fmt.pct(d.avance_pct)}</span></div>
-            <Progreso valor={d.avance_pct} color={d.avance_pct < 50 ? "#FF5500" : d.avance_pct < 80 ? "#0080FF" : "#2f8f2f"} />
+            <Progreso valor={d.avance_pct} color={d.avance_pct < 50 ? "#c4320a" : d.avance_pct < 80 ? "#0b4f96" : "#2b6a0f"} />
             <div className="pequeno suave" style={{ marginTop: 4 }}>{fmt.numero(d.completados)} de {fmt.numero(d.meta)} lugares · {d.municipios} municipios</div>
           </button>
         ))}
       </div>
-      <Tarjeta titulo={depto ? `Municipios de ${depto}` : "Municipios más rezagados"} ayuda={puede("territorio:gestionar") ? "Toca un municipio para registrar su avance." : undefined}>
+      <Tarjeta titulo={depto ? `Municipios de ${depto}` : "Municipios más rezagados"} ayuda={puede("territorio:gestionar") ? "Seleccione un municipio para registrar su avance." : undefined}>
         <Tabla maximo={60} filas={datos.municipios.filter((m: any) => !depto || m.departamento === depto).sort((a: any, b: any) => a.avance_pct - b.avance_pct)}
           onFila={puede("territorio:gestionar") ? actualizar : undefined} columnas={[
             { id: "m", titulo: "Municipio", valor: (m: any) => m.municipio, celda: (m: any) => <span>{m.municipio}<br /><span className="pequeno suave">{m.departamento}</span></span> },

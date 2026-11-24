@@ -36,13 +36,13 @@ router = APIRouter(prefix="/api/privacidad", tags=["privacidad"])
 AVISO = {
     "version": VERSION_CONSENTIMIENTO,
     "responsable": "Instituto Nacional de Estadística (en una adopción institucional). En este prototipo: el equipo del Datatón.",
-    "finalidad": "Gestionar tu acceso a la plataforma, registrar las acciones para auditoría y enviarte avisos del sistema.",
+    "finalidad": "Gestionar su acceso a la plataforma, registrar las acciones para auditoría y enviarle avisos del sistema.",
     "datos": ["Nombre", "correo institucional", "unidad", "roles", "registros de acceso (fecha, IP y navegador)",
               "acciones realizadas (bitácora)"],
     "no_recopilamos": ["Datos sensibles", "ubicación", "cookies de seguimiento o publicidad", "datos de terceros"],
     "cookies": "Solo dos cookies estrictamente necesarias: la de sesión (HttpOnly) y la de protección CSRF.",
     "conservacion": "Según las políticas de retención publicadas en esta misma página.",
-    "derechos": "Puedes ver y exportar tus datos, pedir su rectificación o la eliminación de tu cuenta desde «Mis datos».",
+    "derechos": "Puede ver y exportar sus datos, pedir su rectificación o la eliminación de su cuenta desde «Mis datos».",
     "marco": ["Ley de Acceso a la Información Pública (Decreto 57-2008): protección de datos personales",
               "Ley Orgánica del INE: confidencialidad de la información estadística",
               "Principios Fundamentales de las Estadísticas Oficiales de la ONU (principio 6)"],
@@ -191,7 +191,7 @@ def resolver(sid: int, datos: Resolucion, ctx: Contexto = Depends(requiere("priv
         u.estado, u.mfa_activo, u.mfa_secreto_cifrado, u.preferencias = "desactivado", False, None, None
     bd.commit()
     if u is not None and s.tipo != "eliminar":
-        notificar(bd, u.id, "Tu solicitud de privacidad fue atendida", datos.respuesta, "info", "/privacidad")
+        notificar(bd, u.id, "Su solicitud de privacidad fue atendida", datos.respuesta, "info", "/privacidad")
     bitacora.registrar("privacidad.solicitud_resuelta", usuario=ctx.usuario, modulo="privacidad",
                        objeto=f"solicitud:{s.id}", detalle={"tipo": s.tipo, "aprobada": datos.aprobar}, ip=ctx.ip)
     return {"ok": True}

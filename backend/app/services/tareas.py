@@ -87,7 +87,7 @@ def _atipicos(bd: Session, p: dict, _a: Automatizacion) -> dict:
     r = alertas.detectar(bd, anio, mes, c=c)
     if r["alertas"]:
         notificar_permiso(bd, "indices:alertas", f"{r['alertas']} alertas de precios en {r['periodo']}",
-                          f"Método: {r['metodo']}. Revisa las de severidad alta primero.", "alerta", "/indices/alertas")
+                          f"Método: {r['metodo']}. Revise las de severidad alta primero.", "alerta", "/indices/alertas")
     return {"resumen": f"{r['alertas']} alertas en {r['periodo']} ({r['proporcion'] * 100:.1f} % de "
                        f"{r['evaluadas']} observaciones evaluadas) · método {r['metodo']}.", "metricas": r}
 
@@ -97,7 +97,7 @@ def _vigilar_producto(bd: Session, p: dict, a: Automatizacion) -> dict:
     umbral = max(1.0, min(float(p.get("umbral_pct", 10)), 100.0))
     conds = [CompraItem.texto_norm.like(f"%{t}%") for t in fichas(terminos)[:6]]
     if not conds:
-        raise ValueError("Indica los términos del producto a vigilar.")
+        raise ValueError("Indique los términos del producto a vigilar.")
     desde = (ahora() - timedelta(days=365)).date()
     ultima = bd.execute(select(func.max(CompraItem.fecha))).scalar() or date.today()
     desde = min(desde, ultima - timedelta(days=365))

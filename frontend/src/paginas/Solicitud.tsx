@@ -40,7 +40,7 @@ function Investigacion({ sol, alTerminar }: { sol: any; alTerminar: () => void }
   };
   const hist = useMemo(() => histograma((r?.compras ?? []).filter((c: any) => !c.atipico).map((c: any) => c.precio_ajustado)), [r]);
   return (
-    <Tarjeta titulo="3. Investigación de mercado automática" ayuda="Busca compras comparables en Guatecompras (fuente secundaria) y precios de referencia históricos del INE. Después agrega cotizaciones del mercado relevante (fuente primaria).">
+    <Tarjeta titulo="3. Investigación de mercado automática" ayuda="Busque compras comparables en Guatecompras (fuente secundaria) y precios de referencia históricos del INE. Después agregue cotizaciones del mercado relevante (fuente primaria).">
       <form className="fila" onSubmit={(e) => { e.preventDefault(); investigar(null); }}>
         <input className="entrada" style={{ flex: 1, minWidth: 220 }} value={terminos} onChange={(e) => setTerminos(e.target.value)} aria-label="Términos de búsqueda" />
         <button className="boton" disabled={cargando}><Search /> {cargando ? "Investigando…" : "Investigar"}</button>
@@ -50,7 +50,7 @@ function Investigacion({ sol, alTerminar }: { sol: any; alTerminar: () => void }
         <div className="columna" style={{ marginTop: 12 }}>
           {r.grupos.length > 1 && (
             <div className="fila">
-              <span className="pequeno suave">Afina por clasificación UNSPSC para comparar lo mismo:</span>
+              <span className="pequeno suave">Afine por clasificación UNSPSC para comparar lo mismo:</span>
               {r.grupos.map((g: any) => <button key={g.unspsc + g.unidad} className={`chip ${unspsc === g.unspsc ? "fijo" : ""}`} title={g.ejemplo} onClick={() => investigar(g.unspsc)}>{g.unspsc} · {g.unidad || "s/u"} <b>{g.n}</b></button>)}
             </div>
           )}
@@ -149,9 +149,9 @@ export default function Solicitud() {
         <div className="c8 columna" style={{ gap: 16 }}>
           {gestiona && sol.estado === "investigacion" && <Investigacion sol={sol} alTerminar={recargar} />}
           {gestiona && ["investigacion", "analisis", "informe", "entregada"].includes(sol.estado) && (
-            <Tarjeta titulo="Fuentes de precio" ayuda="Activa o desactiva cada fuente. Las primarias (cotizaciones y catálogos) deben ser más de la mitad."
+            <Tarjeta titulo="Fuentes de precio" ayuda="Active o desactive cada fuente. Las primarias (cotizaciones y catálogos) deben ser más de la mitad."
               acciones={sol.estado !== "entregada" && <button className="boton secundario pequeno" onClick={() => setFuenteNueva(true)}><Plus /> Cotización</button>}>
-              <Tabla maximo={80} filas={sol.fuentes} vacio="Aún no hay fuentes. Usa la investigación automática y agrega cotizaciones." columnas={[
+              <Tabla maximo={80} filas={sol.fuentes} vacio="Aún no hay fuentes. Use la investigación automática y agregue cotizaciones." columnas={[
                 { id: "i", titulo: "Usar", celda: (f: any) => <input type="checkbox" checked={f.incluida} disabled={sol.estado === "entregada"} onChange={() => alternar(f)} aria-label="Incluir fuente" /> },
                 { id: "t", titulo: "Tipo", valor: (f: any) => f.tipo, celda: (f: any) => <Insignia tono={["cotizacion", "catalogo"].includes(f.tipo) ? "exito" : "info"}>{f.tipo.replace("_", " ")}</Insignia> },
                 { id: "o", titulo: "Origen", valor: (f: any) => f.origen, celda: (f: any) => <span className="pequeno">{f.origen}<br /><span className="suave">{f.descripcion.slice(0, 90)}</span></span> },
@@ -173,7 +173,7 @@ export default function Solicitud() {
           {sol.estado === "entregada" && (
             <Aviso tono="exito">Entregada el {fmt.fecha(sol.entregada_en)}. Precio de referencia: <b>{fmt.moneda(sol.precio_referencia)}</b> por {sol.unidad.toLowerCase()}.</Aviso>
           )}
-          {!gestiona && sol.estado !== "entregada" && <Aviso tono="info">La DPIR está trabajando en tu solicitud. Te avisaremos por notificación y correo cuando el informe esté listo.</Aviso>}
+          {!gestiona && sol.estado !== "entregada" && <Aviso tono="info">La DPIR está trabajando en su solicitud. Le avisaremos por notificación y correo cuando el informe esté listo.</Aviso>}
           {gestiona && !sol.rechazada && sol.estado !== "entregada" && (
             <Tarjeta titulo="Siguiente paso">
               <Campo etiqueta="Comentario (queda en el historial)"><textarea value={comentario} onChange={(e) => setComentario(e.target.value)} /></Campo>

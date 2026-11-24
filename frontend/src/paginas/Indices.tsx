@@ -55,7 +55,7 @@ function Alertas() {
   const [detectando, setDetectando] = useState(false);
   useEffect(() => setPagina(1), [periodo, severidad, estado, texto]);
   const detectar = async () => {
-    if (!periodo) { avisar("Elige un periodo para recalcular.", "alerta"); return; }
+    if (!periodo) { avisar("Elija un periodo para recalcular.", "alerta"); return; }
     setDetectando(true);
     try { const r: any = await api("/api/indices/alertas/detectar", { cuerpo: { periodo, c: 4 } }); avisar(`${r.alertas} alertas (${(r.proporcion * 100).toFixed(1)} %) con ${r.metodo}.`); recargar(); }
     finally { setDetectando(false); }
@@ -140,7 +140,7 @@ function Catalogo() {
   return (
     <div className="columna">
       <Aviso tono="info">Catálogo digital de artículos del IPC con su cobertura: base para el «Manual de Características» en dispositivos móviles que propuso la DIEC.</Aviso>
-      <input className="entrada" placeholder="Busca un artículo: frijol, gas propano, cuaderno…" value={texto} onChange={(e) => setTexto(e.target.value)} />
+      <input className="entrada" placeholder="Busque un artículo: frijol, gas propano, cuaderno…" value={texto} onChange={(e) => setTexto(e.target.value)} />
       {!datos ? <Esqueleto alto={300} /> : (
         <Tabla maximo={150} filas={datos} onFila={(a: any) => navegar(`/indices/articulo/${a.codigo}`)} columnas={[
           { id: "c", titulo: "Código", valor: (a: any) => a.codigo, celda: (a: any) => <span className="mono">{a.codigo}</span> },

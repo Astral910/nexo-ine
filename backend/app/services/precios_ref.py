@@ -129,7 +129,7 @@ def investigar(bd: Session, terminos: str, unspsc: str | None = None, meses: int
     """Busca compras comparables en Guatecompras y precios de referencia históricos del INE."""
     conds = _condiciones(CompraItem.texto_norm, terminos)
     if not conds:
-        raise ValueError("Escribe al menos una palabra para buscar el producto.")
+        raise ValueError("Escriba al menos una palabra para buscar el producto.")
     ultima = bd.execute(select(func.max(CompraItem.fecha))).scalar() or date.today()
     desde = ultima - timedelta(days=30 * meses)
     conds.append(CompraItem.fecha >= desde)

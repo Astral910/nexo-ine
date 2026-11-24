@@ -35,7 +35,7 @@ from ..security.sesiones import borrar_cookies, crear_sesion, escribir_cookies, 
 router = APIRouter(prefix="/api/auth", tags=["autenticación"])
 VERSION_CONSENTIMIENTO = "2026-11-v1"
 MENSAJE_GENERICO = "Correo o contraseña incorrectos."
-MENSAJE_DEMASIADOS = "Demasiados intentos fallidos. Espera unos minutos antes de volver a intentar."
+MENSAJE_DEMASIADOS = "Demasiados intentos fallidos. Espere unos minutos antes de volver a intentar."
 UMBRAL_GLOBAL = 20  # fallos de una cuenta desde cualquier IP antes de bloquearla para todos
 
 
@@ -43,7 +43,7 @@ def _limitar(request: Request, accion: str, maximo: int, ventana_s: int) -> None
     if not limitador.permitir(f"{accion}:{ip_cliente(request)}", maximo, ventana_s):
         bitacora.registrar("seguridad.limite_excedido", modulo="seguridad", objeto=accion,
                            resultado="denegado", ip=ip_cliente(request))
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Demasiados intentos. Espera unos minutos.")
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Demasiados intentos. Espere unos minutos.")
 
 
 def _crear_token(bd: Session, usuario: Usuario, tipo: str, minutos: int) -> str:
@@ -126,24 +126,24 @@ def registrar(datos: Registro, request: Request, bd: Session = Depends(obtener_b
     cfg = obtener_config()
     email = datos.email.lower().strip()
     if not datos.acepta_privacidad:
-        raise HTTPException(422, "Debes aceptar el aviso de privacidad para continuar.")
+        raise HTTPException(422, "Debe aceptar el aviso de privacidad para continuar.")
     dominio = email.rsplit("@", 1)[-1]
     if cfg.dominios_permitidos and dominio not in cfg.dominios_permitidos:
-        raise HTTPException(422, "Usa tu correo institucional: " + ", ".join(cfg.dominios_permitidos))
+        raise HTTPException(422, "Use su correo institucional: " + ", ".join(cfg.dominios_permitidos))
     rol = bd.execute(select(Rol).where(Rol.codigo == datos.rol_solicitado, Rol.autoregistro.is_(True))).scalar()
     if rol is None:
         raise HTTPException(422, "El rol solicitado no está disponible para registro.")
     problemas = evaluar_password(datos.password, email, datos.nombre)
     if problemas:
         raise HTTPException(422, " ".join(problemas))
-    respuesta = {"mensaje": "Si los datos son válidos, recibirás un correo para verificar tu cuenta."}
+    respuesta = {"mensaje": "Si los datos son válidos, recibirá un correo para verificar su cuenta."}
     existente = bd.execute(select(Usuario).where(Usuario.email == email)).scalar()
     hash_nuevo = hash_password(datos.password)  # se calcula siempre: el tiempo de respuesta no revela si existe
     if existente:
         # No se revela si el correo ya existe: se avisa al titular por correo.
-        enviar_correo(bd, email, "Intento de registro con tu correo",
-                      "Alguien intentó crear una cuenta en Nexo con tu correo. Si fuiste tú, inicia sesión "
-                      "o restablece tu contraseña. Si no, puedes ignorar este mensaje.")
+        enviar_correo(bd, email, "Intento de registro con su correo",
+                      "Alguien intentó crear una cuenta en Nexo con su correo. Si fue usted, inicie sesión "
+                      "o restablezca su contraseña. Si no, puede ignorar este mensaje.")
         bitacora.registrar("auth.registro_duplicado", modulo="acceso", ip=ip_cliente(request))
         return respuesta
     usuario = Usuario(
@@ -154,8 +154,8 @@ def registrar(datos: Registro, request: Request, bd: Session = Depends(obtener_b
     bd.add(usuario)
     bd.commit()
     token = _crear_token(bd, usuario, "verificar_correo", 60 * 24)
-    clave_buzon = enviar_correo(bd, email, "Verifica tu correo en Nexo",
-                                f"Hola {usuario.nombre}: confirma tu correo para continuar con tu solicitud de acceso "
+    clave_buzon = enviar_correo(bd, email, "Verifique su correo en Nexo",
+                                f"Estimado(a) {usuario.nombre}: confirme su correo para continuar con su solicitud de acceso "
                                 f"como «{rol.nombre}». El enlace vence en 24 horas.",
                                 f"{cfg.url_publica}/verificar?token={token}", visible_en_demo=True)
     if clave_buzon:
@@ -183,7 +183,7 @@ def verificar_correo(datos: TokenEntrada, request: Request, bd: Session = Depend
         bitacora.registrar("auth.correo_verificado", usuario=usuario, modulo="acceso",
                            objeto=f"usuario:{usuario.id}", ip=ip_cliente(request))
     return {"estado": usuario.estado,
-            "mensaje": "Correo verificado. Un administrador revisará tu solicitud y te avisará por correo."}
+            "mensaje": "Correo verificado. Un administrador revisará su solicitud y le avisará por correo."}
 
 
 # ---------------------------------------------------------------------------
@@ -241,10 +241,10 @@ def login(datos: Login, request: Request, response: Response, bd: Session = Depe
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, MENSAJE_GENERICO)
 
     estados = {
-        "pendiente_verificacion": "Primero verifica tu correo con el enlace que te enviamos.",
-        "pendiente_aprobacion": "Tu solicitud está pendiente de aprobación por un administrador.",
-        "rechazado": "Tu solicitud de acceso no fue aprobada.",
-        "desactivado": "Tu cuenta está desactivada. Contacta a Informática.",
+        "pendiente_verificacion": "Primero verifique su correo con el enlace que le enviamos.",
+        "pendiente_aprobacion": "Su solicitud está pendiente de aprobación por un administrador.",
+        "rechazado": "Su solicitud de acceso no fue aprobada.",
+        "desactivado": "Su cuenta está desactivada. Contacte a Informática.",
     }
     if usuario.estado != "activo":
         _registrar_intento(bd, email, ip, False, usuario.estado)
@@ -296,8 +296,8 @@ def _secreto(cifrado: str) -> str:
     try:
         return descifrar(cifrado)
     except (InvalidTag, ValueError) as e:
-        raise HTTPException(409, "No se pudo leer tu segundo factor (la llave del servidor cambió). "
-                                 "Pide a Informática que lo restablezca.") from e
+        raise HTTPException(409, "No se pudo leer su segundo factor (la llave del servidor cambió). "
+                                 "Pida a Informática que lo restablezca.") from e
 
 
 def _rotar(bd: Session, request: Request, response: Response, ses: Sesion, usuario: Usuario) -> Sesion:
@@ -316,9 +316,9 @@ def mfa_verificar(datos: CodigoMfa, request: Request, response: Response,
     if not limitador.permitir(f"mfa-cuenta:{usuario.id}", 10, 900):  # tope por cuenta aunque rote la IP
         revocar(bd, ses)
         bitacora.registrar("auth.mfa_fuerza_bruta", usuario=usuario, modulo="seguridad", resultado="denegado", ip=ctx.ip)
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Demasiados códigos incorrectos. Inicia sesión de nuevo más tarde.")
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Demasiados códigos incorrectos. Inicie sesión de nuevo más tarde.")
     if not usuario.mfa_activo or not usuario.mfa_secreto_cifrado:
-        raise HTTPException(400, "Tu cuenta no tiene segundo factor configurado.")
+        raise HTTPException(400, "Su cuenta no tiene segundo factor configurado.")
     ok = _verificar_totp(usuario, datos.codigo, _secreto(usuario.mfa_secreto_cifrado))
     via = "totp"
     if not ok and _usar_codigo_recuperacion(usuario, datos.codigo):
@@ -345,7 +345,7 @@ def mfa_iniciar(datos: Reconfirmacion | None = None, ctx: Contexto = Depends(con
     if usuario.mfa_activo:
         # Cambiar un segundo factor existente exige sesión verificada y la contraseña actual.
         if not ctx.sesion.mfa_ok or not datos or not verificar_password(datos.password, usuario.password_hash):
-            raise HTTPException(403, "Para reemplazar tu segundo factor confirma tu contraseña actual.")
+            raise HTTPException(403, "Para reemplazar su segundo factor confirme su contraseña actual.")
     secreto = pyotp.random_base32()
     usuario.mfa_pendiente_cifrado = cifrar(secreto)
     bd.commit()
@@ -362,11 +362,11 @@ def mfa_activar(datos: CodigoMfa, request: Request, response: Response,
     usuario = bd.get(Usuario, ctx.usuario.id)
     ses = bd.get(Sesion, ctx.sesion.id)
     if not usuario.mfa_pendiente_cifrado:
-        raise HTTPException(400, "Primero genera el código QR.")
+        raise HTTPException(400, "Primero genere el código QR.")
     secreto = _secreto(usuario.mfa_pendiente_cifrado)
     if not _verificar_totp(usuario, datos.codigo, secreto):
         bd.commit()
-        raise HTTPException(400, "El código no coincide. Revisa la hora de tu teléfono e intenta de nuevo.")
+        raise HTTPException(400, "El código no coincide. Revise la hora de su teléfono e intente de nuevo.")
     crudos = [secrets.token_hex(10).upper() for _ in range(8)]  # 80 bits cada uno
     codigos = ["-".join(c[i:i + 5] for i in range(0, 20, 5)) for c in crudos]
     usuario.mfa_secreto_cifrado = cifrar(secreto)
@@ -427,12 +427,12 @@ def olvide(datos: Olvide, request: Request, bd: Session = Depends(obtener_bd)):
     usuario = bd.execute(select(Usuario).where(Usuario.email == datos.email.lower().strip())).scalar()
     if usuario and usuario.estado == "activo":
         token = _crear_token(bd, usuario, "restablecer_password", 30)
-        enviar_correo(bd, usuario.email, "Restablece tu contraseña de Nexo",
-                      "Recibimos una solicitud para restablecer tu contraseña. El enlace vence en 30 minutos. "
-                      "Si no fuiste tú, ignora este mensaje y avisa a Informática.",
+        enviar_correo(bd, usuario.email, "Restablezca su contraseña de Nexo",
+                      "Recibimos una solicitud para restablecer su contraseña. El enlace vence en 30 minutos. "
+                      "Si no fue usted, ignore este mensaje y avise a Informática.",
                       f"{obtener_config().url_publica}/restablecer?token={token}")
         bitacora.registrar("auth.reset_solicitado", usuario=usuario, modulo="acceso", ip=ip_cliente(request))
-    return {"mensaje": "Si el correo existe, recibirás instrucciones para restablecer tu contraseña."}
+    return {"mensaje": "Si el correo existe, recibirá instrucciones para restablecer su contraseña."}
 
 
 class Restablecer(BaseModel):
@@ -458,10 +458,10 @@ def restablecer(datos: Restablecer, request: Request, bd: Session = Depends(obte
     usuario.bloqueado_hasta = None
     bd.commit()
     revocar_todas(bd, usuario.id)
-    enviar_correo(bd, usuario.email, "Tu contraseña de Nexo cambió",
-                  "Tu contraseña se restableció y se cerraron todas tus sesiones abiertas.")
+    enviar_correo(bd, usuario.email, "Su contraseña de Nexo cambió",
+                  "Su contraseña se restableció y se cerraron todas sus sesiones abiertas.")
     bitacora.registrar("auth.password_restablecida", usuario=usuario, modulo="acceso", ip=ip_cliente(request))
-    return {"mensaje": "Contraseña actualizada. Ya puedes iniciar sesión."}
+    return {"mensaje": "Contraseña actualizada. Ya puede iniciar sesión."}
 
 
 class CambioPassword(BaseModel):

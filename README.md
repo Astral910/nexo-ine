@@ -92,6 +92,7 @@ flowchart LR
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2, Pydantic 2 | Estándar en ciencia de datos y gobierno; documentación OpenAPI automática |
 | Base de datos | PostgreSQL 16 (producción y Docker) o SQLite (un solo comando) | Libre, robusta y probada con ambas en CI |
 | Frontend | React 19, TypeScript, Vite, Apache ECharts, Lucide | Ecosistema más difundido; gráficas libres que funcionan sin internet |
+| Diseño | Sistema propio con los tokens de elevación, radios y movimiento de Microsoft Fluent 2, patrones del U.S. Web Design System y la paleta y tipografía del INE | Aspecto institucional y sobrio; tamaño de letra ajustable, guías por pantalla, esqueletos de carga y respeto a `prefers-reduced-motion` |
 | Seguridad | Argon2id, TOTP (pyotp), AES-256-GCM (cryptography), HMAC-SHA256 | Algoritmos recomendados por OWASP y NIST |
 | PDF | ReportLab | Informes sin dependencias del sistema |
 | Despliegue | Docker Compose: una imagen con la aplicación más PostgreSQL | Una sola máquina virtual con software libre |

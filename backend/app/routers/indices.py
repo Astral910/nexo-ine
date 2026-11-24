@@ -89,7 +89,7 @@ def revisar_alerta(alerta_id: int, datos: Revision, ctx: Contexto = Depends(requ
     if a is None:
         raise HTTPException(404, "Alerta no encontrada.")
     if datos.estado in ("confirmada", "descartada") and not datos.comentario.strip():
-        raise HTTPException(422, "Explica brevemente la decisión (queda en la bitácora).")
+        raise HTTPException(422, "Explique brevemente la decisión (queda en la bitácora).")
     a.estado, a.comentario = datos.estado, datos.comentario
     a.revisada_por, a.revisada_en = ctx.usuario.id, ahora()
     bd.commit()

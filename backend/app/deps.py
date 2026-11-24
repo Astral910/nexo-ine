@@ -56,7 +56,7 @@ def contexto_parcial(request: Request, bd: Session = Depends(obtener_bd)) -> Con
     """Sesión válida aunque falte completar el segundo factor (para las rutas de MFA)."""
     ses = obtener_sesion(bd, request)
     if ses is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Tu sesión no es válida o expiró.")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Su sesión no es válida o expiró.")
     usuario = bd.get(Usuario, ses.usuario_id)
     if usuario is None or usuario.estado != "activo":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Cuenta no habilitada.")
@@ -82,7 +82,7 @@ def requiere(*permisos: str):
             bitacora.registrar("acceso.denegado", usuario=ctx.usuario, modulo="seguridad",
                                objeto=request.url.path, detalle={"requiere": list(permisos)},
                                resultado="denegado", ip=ctx.ip)
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permiso para esta acción.")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "No tiene permiso para esta acción.")
         return ctx
 
     return _dep

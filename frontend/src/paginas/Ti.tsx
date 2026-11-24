@@ -31,7 +31,7 @@ export default function Ti() {
             ]} /></div>
             <div className="c6"><h3 style={{ marginBottom: 8 }}>Frontend (JavaScript)</h3><Tabla filas={comp.javascript} columnas={[
               { id: "n", titulo: "Paquete", valor: (c: any) => c.nombre }, { id: "v", titulo: "Versión", valor: (c: any) => c.version }, { id: "l", titulo: "Licencia", valor: (c: any) => c.licencia },
-            ]} vacio="Compila el frontend para ver su inventario." /></div>
+            ]} vacio="Compile el frontend para ver su inventario." /></div>
           </div>
         )}
         <div style={{ marginTop: 10 }}><Aviso tono="info">Sin servicios de pago ni en la nube: Nexo funciona en un servidor del INE con software libre.</Aviso></div>

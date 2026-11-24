@@ -29,18 +29,24 @@ def productos(ctx: Contexto = Depends(requiere("hba:ver")), bd: Session = Depend
         produccion, importaciones = v.get("Producción", 0), v.get("Importaciones", 0)
         exportaciones, existencias = v.get("Exportaciones", 0), v.get("Cambio de existencias", 0)
         suministro = produccion + importaciones - exportaciones - existencias
+        # Coeficientes del manual de Hojas de Balance de Alimentos de la FAO (2001): se calculan sobre
+        # producción + importaciones − exportaciones, sin el cambio de existencias. Así la dependencia y la
+        # autosuficiencia suman 100 % cuando no hay exportaciones, y no superan 100 % por acumulación de inventario.
+        base_fao = produccion + importaciones - exportaciones
         alimentos = v.get("Alimentos", 0)
         salida.append({
             "producto": p.producto, "grupo": p.grupo, "es_grupo": p.es_grupo, "valores": v,
             "suministro_interno": round(suministro, 1),
-            "dependencia_importaciones": round(importaciones / suministro * 100, 1) if suministro > 0 else None,
-            "autosuficiencia": round(produccion / suministro * 100, 1) if suministro > 0 else None,
+            "dependencia_importaciones": round(importaciones / base_fao * 100, 1) if base_fao > 0 else None,
+            "autosuficiencia": round(produccion / base_fao * 100, 1) if base_fao > 0 else None,
             "kg_persona_anio": round(alimentos * 1000 / poblacion, 2) if poblacion else None,
             "g_persona_dia": round(alimentos * 1e6 / poblacion / 365, 1) if poblacion else None,
         })
     return {"anio": ANIO_HBA, "poblacion": poblacion, "unidad": "toneladas métricas",
             "nota": "Suministro interno = producción + importaciones − exportaciones − cambio de existencias. "
-                    "Disponibilidad per cápita con la población proyectada por el INE para 2024.",
+                    "Disponibilidad per cápita con la población proyectada por el INE para 2024. "
+                    "Dependencia de importaciones = importaciones ÷ (producción + importaciones − exportaciones), "
+                    "según el manual de Hojas de Balance de Alimentos de la FAO.",
             "productos": salida}
 
 

@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Calculator } from "lucide-react";
 import { api, fmt } from "../api";
 import { Grafica, opcionBarras } from "../componentes/Grafica";
-import { Aviso, Campo, Encabezado, Esqueleto, FuenteCita, Insignia, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import { Aviso, Campo, Encabezado, Esqueleto, FuenteCita, Tabla, Tarjeta, useDatos } from "../componentes/ui";
 
 export default function Hba() {
   const { datos } = useDatos<any>("/api/hba/productos");
@@ -45,16 +45,24 @@ export default function Hba() {
           </Tarjeta>
         </div>
       </div>
-      <Tarjeta titulo="Balance por producto" ayuda={datos.nota} acciones={<label className="casilla"><input type="checkbox" checked={soloGrupos} onChange={(e) => setSoloGrupos(e.target.checked)} /> Solo grupos</label>}>
+      <Tarjeta titulo="Balance por producto" ayuda={datos.nota} acciones={<label className="casilla" style={{ whiteSpace: "nowrap" }}><input type="checkbox" checked={soloGrupos} onChange={(e) => setSoloGrupos(e.target.checked)} /> Solo grupos</label>}>
         <Tabla filas={datos.productos.filter((p: any) => !soloGrupos || p.es_grupo)} columnas={[
           { id: "p", titulo: "Producto", valor: (p: any) => p.producto, celda: (p: any) => (p.es_grupo ? <b>{p.producto}</b> : <span style={{ paddingLeft: 12 }}>{p.producto}</span>) },
           { id: "pr", titulo: "Producción (t)", num: true, valor: (p: any) => p.valores["Producción"], celda: (p: any) => fmt.numero(p.valores["Producción"]) },
           { id: "im", titulo: "Importaciones (t)", num: true, valor: (p: any) => p.valores["Importaciones"], celda: (p: any) => fmt.numero(p.valores["Importaciones"]) },
+          { id: "ex", titulo: "Exportaciones (t)", num: true, valor: (p: any) => p.valores["Exportaciones"], celda: (p: any) => fmt.numero(p.valores["Exportaciones"]) },
           { id: "s", titulo: "Suministro interno (t)", num: true, valor: (p: any) => p.suministro_interno, celda: (p: any) => fmt.numero(p.suministro_interno) },
-          { id: "d", titulo: "Depende de importación", num: true, valor: (p: any) => p.dependencia_importaciones, celda: (p: any) => (p.dependencia_importaciones === null ? "—" : <Insignia tono={p.dependencia_importaciones > 50 ? "alerta" : "exito"}>{fmt.pct(p.dependencia_importaciones)}</Insignia>) },
+          { id: "d", titulo: "Depende de importación", num: true, valor: (p: any) => p.dependencia_importaciones, celda: (p: any) => (p.dependencia_importaciones === null ? "—" : (
+            <span className="medida-celda" title="Importaciones ÷ (producción + importaciones − exportaciones)">
+              <span className="barra-celda" aria-hidden><span style={{ width: `${Math.min(100, p.dependencia_importaciones)}%` }} /></span>
+              {fmt.pct(p.dependencia_importaciones)}{p.dependencia_importaciones > 100 && <sup>1</sup>}
+            </span>)) },
           { id: "k", titulo: "kg/persona/año", num: true, valor: (p: any) => p.kg_persona_anio, celda: (p: any) => fmt.numero(p.kg_persona_anio, 1) },
           { id: "g", titulo: "g/persona/día", num: true, valor: (p: any) => p.g_persona_dia, celda: (p: any) => fmt.numero(p.g_persona_dia, 0) },
         ]} />
+        <p className="pequeno suave" style={{ marginTop: 10 }}>
+          <sup>1</sup> Mayor a 100 %: las importaciones superan el uso interno porque una parte se reexporta (por ejemplo, trigo importado que sale del país como harina o pastas). Es el comportamiento esperado del coeficiente de la FAO.
+        </p>
       </Tarjeta>
     </div>
   );

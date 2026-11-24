@@ -104,7 +104,7 @@ class GuardarTablero(BaseModel):
 @router.post("/tableros", status_code=201)
 def crear(datos: GuardarTablero, ctx: Contexto = Depends(requiere("tableros:crear")), bd: Session = Depends(obtener_bd)):
     if bd.execute(select(func.count()).select_from(Tablero).where(Tablero.propietario_id == ctx.usuario.id)).scalar() >= 50:
-        raise HTTPException(409, "Llegaste al máximo de 50 tableros propios.")
+        raise HTTPException(409, "Llegó al máximo de 50 tableros propios.")
     spec = _validar_spec({**datos.spec, "titulo": datos.titulo})
     t = Tablero(titulo=datos.titulo, propietario_id=ctx.usuario.id, origen="generado" if datos.consulta_texto else "usuario",
                 consulta_texto=datos.consulta_texto, spec=spec, fijado=datos.fijado)
@@ -153,7 +153,7 @@ class Peticion(BaseModel):
 @router.post("/tableros/generar")
 def generar(datos: Peticion, ctx: Contexto = Depends(requiere("tableros:crear")), bd: Session = Depends(obtener_bd)):
     if not limitador.permitir(f"generar:{ctx.usuario.id}", 60, 60):
-        raise HTTPException(429, "Demasiadas solicitudes; espera un momento.")
+        raise HTTPException(429, "Demasiadas solicitudes; espere un momento.")
     try:
         spec = generador.generar(datos.peticion, ctx.permisos)
     except ValueError as e:
@@ -177,7 +177,7 @@ class Consulta(BaseModel):
 def consultar(datos: Consulta, ctx: Contexto = Depends(requiere("tableros:ver", "dpir:solicitar")),
               bd: Session = Depends(obtener_bd)):
     if not limitador.permitir(f"consulta:{ctx.usuario.id}", 600, 60):
-        raise HTTPException(429, "Demasiadas consultas; espera un momento.")
+        raise HTTPException(429, "Demasiadas consultas; espere un momento.")
     try:
         return semantica.ejecutar(bd, datos.consulta, ctx.permisos)
     except semantica.ErrorConsulta as e:
@@ -193,7 +193,7 @@ def consultar(datos: Consulta, ctx: Contexto = Depends(requiere("tableros:ver", 
 
 def _exigir(ctx: Contexto, *permisos: str) -> None:
     if not any(ctx.puede(p) for p in permisos):
-        raise HTTPException(403, "No tienes permiso para este componente.")
+        raise HTTPException(403, "No tiene permiso para este componente.")
 
 
 @router.get("/componentes/{nombre}")

@@ -25,16 +25,16 @@ export default function Perfil() {
         <div className="c6">
           <Tarjeta titulo="Mis roles">
             <div className="fila">{usuario.roles.map((r) => <Insignia key={r.codigo} tono="info">{r.nombre} · {r.area}</Insignia>)}</div>
-            <p className="pequeno suave" style={{ marginTop: 10 }}>Último acceso: {fmt.fechaHora(usuario.ultimo_acceso)}. Para cambiar tus roles, pídelo a Informática.</p>
+            <p className="pequeno suave" style={{ marginTop: 10 }}>Último acceso: {fmt.fechaHora(usuario.ultimo_acceso)}. Para cambiar sus roles, pídalo a Informática.</p>
           </Tarjeta>
           <div style={{ height: 16 }} />
           <Tarjeta titulo={<><ShieldCheck size={18} style={{ verticalAlign: -3 }} /> Segundo factor</>}>
-            {usuario.mfa_activo ? <Aviso tono="exito">Activo. Cada inicio de sesión pide un código de tu aplicación.</Aviso>
-              : <><Aviso tono="alerta">No tienes segundo factor. Te recomendamos activarlo.</Aviso><Link className="boton" style={{ marginTop: 10 }} to="/configurar-mfa">Configurar ahora</Link></>}
+            {usuario.mfa_activo ? <Aviso tono="exito">Activo. Cada inicio de sesión pide un código de su aplicación.</Aviso>
+              : <><Aviso tono="alerta">No tiene segundo factor. Le recomendamos activarlo.</Aviso><Link className="boton" style={{ marginTop: 10 }} to="/configurar-mfa">Configurar ahora</Link></>}
           </Tarjeta>
         </div>
         <div className="c6">
-          <Tarjeta titulo="Cambiar contraseña" ayuda="Mínimo 15 caracteres. Al cambiarla se cierran tus otras sesiones.">
+          <Tarjeta titulo="Cambiar contraseña" ayuda="Mínimo 15 caracteres. Al cambiarla se cierran sus otras sesiones.">
             <form className="columna" onSubmit={cambiar}>
               {error && <Aviso tono="critico">{error}</Aviso>}
               <Campo etiqueta="Contraseña actual"><input type="password" autoComplete="current-password" value={actual} onChange={(e) => setActual(e.target.value)} required /></Campo>
@@ -44,7 +44,7 @@ export default function Perfil() {
           </Tarjeta>
         </div>
       </div>
-      <Tarjeta titulo="Sesiones abiertas" ayuda="Si no reconoces una sesión, ciérrala y cambia tu contraseña.">
+      <Tarjeta titulo="Sesiones abiertas" ayuda="Si no reconoce una sesión, ciérrela y cambie su contraseña.">
         {!sesiones ? <Esqueleto /> : <Tabla filas={sesiones} columnas={[
           { id: "a", titulo: "Navegador", valor: (s: any) => s.agente, celda: (s: any) => <span className="pequeno">{s.agente.slice(0, 90)} {s.actual && <Insignia tono="exito">esta sesión</Insignia>}</span> },
           { id: "i", titulo: "IP", valor: (s: any) => s.ip },

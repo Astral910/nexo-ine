@@ -14,9 +14,9 @@ function MisDatos() {
   return (
     <div className="columna" style={{ gap: 16 }}>
       <div className="rejilla">
-        <div className="c4"><Kpi etiqueta="Tu cuenta" valor={<span style={{ fontSize: "1.1rem" }}>{p.nombre}</span>} detalle={`${p.email} · ${p.roles.join(", ")}`} /></div>
+        <div className="c4"><Kpi etiqueta="Su cuenta" valor={<span style={{ fontSize: "1.1rem" }}>{p.nombre}</span>} detalle={`${p.email} · ${p.roles.join(", ")}`} /></div>
         <div className="c4"><Kpi tono="verde" etiqueta="Consentimiento" valor={<span style={{ fontSize: "1.1rem" }}>Versión {p.consentimiento.version ?? "—"}</span>} detalle={`Aceptado ${fmt.fecha(p.consentimiento.fecha)}`} /></div>
-        <div className="c4"><Kpi tono="morado" etiqueta="Lo que guardamos de ti" valor={fmt.numero(datos.actividad.length)} detalle={`eventos recientes · ${datos.sesiones_activas} sesiones · ${datos.tableros_propios} tableros · ${datos.automatizaciones} automatizaciones`} /></div>
+        <div className="c4"><Kpi tono="morado" etiqueta="Lo que guardamos de usted" valor={fmt.numero(datos.actividad.length)} detalle={`eventos recientes · ${datos.sesiones_activas} sesiones · ${datos.tableros_propios} tableros · ${datos.automatizaciones} automatizaciones`} /></div>
       </div>
       <div className="fila">
         <a className="boton" href="/api/privacidad/mis-datos/exportar"><Download /> Descargar mis datos (JSON)</a>
@@ -27,7 +27,7 @@ function MisDatos() {
         { id: "t", titulo: "Tipo", valor: (s: any) => s.tipo }, { id: "e", titulo: "Estado", valor: (s: any) => s.estado, celda: (s: any) => <Severidad valor={s.estado} /> },
         { id: "f", titulo: "Fecha", valor: (s: any) => s.creada_en, celda: (s: any) => fmt.fecha(s.creada_en) }, { id: "r", titulo: "Respuesta", valor: (s: any) => s.respuesta },
       ]} /></Tarjeta>}
-      <Tarjeta titulo="Tu actividad registrada" ayuda="Lo que la bitácora guarda de tus acciones (últimos 200 eventos).">
+      <Tarjeta titulo="Su actividad registrada" ayuda="Lo que la bitácora guarda de sus acciones (últimos 200 eventos).">
         <Tabla maximo={60} filas={datos.actividad} columnas={[
           { id: "f", titulo: "Fecha", valor: (a: any) => a.ts, celda: (a: any) => fmt.fechaHora(a.ts) },
           { id: "a", titulo: "Acción", valor: (a: any) => a.accion, celda: (a: any) => <span className="mono">{a.accion}</span> },
@@ -36,9 +36,9 @@ function MisDatos() {
         ]} />
       </Tarjeta>
       {solicitud && (
-        <Modal titulo={solicitud === "eliminar" ? "Pedir la eliminación de tu cuenta" : "Pedir rectificación de tus datos"} onCerrar={() => setSolicitud(null)}>
+        <Modal titulo={solicitud === "eliminar" ? "Pedir la eliminación de su cuenta" : "Pedir rectificación de sus datos"} onCerrar={() => setSolicitud(null)}>
           <div className="columna">
-            {solicitud === "eliminar" && <Aviso tono="alerta">Se borrarán tus datos personales. La bitácora conserva solo tu identificador numérico por rendición de cuentas.</Aviso>}
+            {solicitud === "eliminar" && <Aviso tono="alerta">Se borrarán sus datos personales. La bitácora conserva solo su identificador numérico por rendición de cuentas.</Aviso>}
             <Campo etiqueta="Detalle"><textarea value={detalle} onChange={(e) => setDetalle(e.target.value)} /></Campo>
             <button className="boton" onClick={async () => { await api("/api/privacidad/solicitudes", { cuerpo: { tipo: solicitud, detalle } }); avisar("Solicitud enviada al responsable de privacidad."); setSolicitud(null); }}>Enviar solicitud</button>
           </div>
@@ -97,7 +97,7 @@ function Solicitudes() {
         { id: "a", titulo: "", celda: (s: any) => s.estado === "pendiente" && (
           <div className="fila" style={{ gap: 4 }}>
             <button className="boton pequeno" onClick={async () => { await api(`/api/privacidad/solicitudes/${s.id}/resolver`, { cuerpo: { aprobar: true, respuesta: "Atendida según lo solicitado." } }); recargar(); }}>Atender</button>
-            <button className="boton secundario pequeno" onClick={async () => { await api(`/api/privacidad/solicitudes/${s.id}/resolver`, { cuerpo: { aprobar: false, respuesta: "No procede; contáctanos para más detalle." } }); recargar(); }}>Rechazar</button>
+            <button className="boton secundario pequeno" onClick={async () => { await api(`/api/privacidad/solicitudes/${s.id}/resolver`, { cuerpo: { aprobar: false, respuesta: "No procede; contáctenos para más detalle." } }); recargar(); }}>Rechazar</button>
           </div>
         ) },
       ]} />
@@ -111,7 +111,7 @@ export default function Privacidad() {
   const { datos: aviso } = useDatos<any>("/api/privacidad/aviso");
   return (
     <div className="columna" style={{ gap: 16 }}>
-      <Encabezado titulo="Privacidad y mis datos" subtitulo="Transparencia sobre qué datos personales trata Nexo, para qué, por cuánto tiempo y cómo ejercer tus derechos. Los datos estadísticos se protegen con el secreto estadístico." />
+      <Encabezado titulo="Privacidad y mis datos" subtitulo="Transparencia sobre qué datos personales trata Nexo, para qué, por cuánto tiempo y cómo ejercer sus derechos. Los datos estadísticos se protegen con el secreto estadístico." />
       <Pestanas opciones={[{ id: "mis", etiqueta: "Mis datos" }, { id: "aviso", etiqueta: "Aviso y tratamientos" }, { id: "politicas", etiqueta: "Retención" },
         ...(puede("privacidad:administrar") ? [{ id: "solicitudes" as const, etiqueta: "Solicitudes" }] : [])]} activa={pestana} onCambio={setPestana} />
       {pestana === "mis" && <MisDatos />}

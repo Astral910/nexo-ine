@@ -6,13 +6,13 @@ import { Encabezado, Esqueleto, Insignia, Kpi, Tarjeta, useDatos } from "../comp
 
 const RECORRIDO = [
   ["Centro de mando", "Súper resumen de toda la plataforma y espacio de trabajo por rol.", "/"],
-  ["Precios de Referencia", "Abre una solicitud, investiga el mercado en un clic y genera el informe técnico.", "/precios"],
-  ["Tablero generativo", "Escribe «IPC de Quetzaltenango» o «precio de cemento gris por mes en 2025».", "/tableros?q=IPC%20de%20Quetzaltenango"],
+  ["Precios de Referencia", "Abra una solicitud, investigue el mercado en un clic y genere el informe técnico.", "/precios"],
+  ["Tablero generativo", "Escriba «IPC de Quetzaltenango» o «precio de cemento gris por mes en 2025».", "/tableros?q=IPC%20de%20Quetzaltenango"],
   ["Alertas de precios", "Hidiroglou-Berthelot sobre los precios recolectados del IPC.", "/indices/alertas?periodo=2022-07"],
   ["Territorio", "El país dibujado con 20 mil lugares poblados y fichas municipales.", "/territorio"],
-  ["Validador", "Sube un CSV y mira cómo detecta datos personales y códigos 98/99.", "/calidad"],
+  ["Validador", "Suba un CSV y observe cómo detecta datos personales y códigos 98/99.", "/calidad"],
   ["Ciberseguridad", "Agente, riesgos, incidentes y 22 controles con su evidencia en el código.", "/seguridad"],
-  ["Bitácora", "Verifica la integridad de la cadena HMAC.", "/bitacora"],
+  ["Bitácora", "Verifique la integridad de la cadena HMAC.", "/bitacora"],
 ];
 
 export default function Jurado() {

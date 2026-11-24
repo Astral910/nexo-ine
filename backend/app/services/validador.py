@@ -102,7 +102,7 @@ def _leer_xlsx(datos: bytes) -> tuple[list[str], list[list[str]]]:
     if total > 150 * 1024 * 1024 or total > 120 * max(len(datos), 1):
         raise ArchivoInvalido("El archivo comprimido se expande demasiado (posible bomba zip).")
     if any(i.filename.lower().endswith(".bin") and "vba" in i.filename.lower() for i in z.infolist()):
-        raise ArchivoInvalido("El archivo contiene macros; usa .xlsx sin macros.")
+        raise ArchivoInvalido("El archivo contiene macros; use .xlsx sin macros.")
     wb = openpyxl.load_workbook(io.BytesIO(datos), read_only=True, data_only=True)
     ws = wb.worksheets[0]
     filas_it = ws.iter_rows(values_only=True)

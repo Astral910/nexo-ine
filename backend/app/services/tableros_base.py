@@ -12,8 +12,10 @@ def w(id_, tipo, titulo, ancho=6, **extra) -> dict:
     return {"id": id_, "tipo": tipo, "titulo": titulo, "ancho": ancho, **extra}
 
 
-def q(fuente, medida, dimension=None, serie=None, **filtros) -> dict:
+def q(fuente, medida, dimension=None, serie=None, limite=None, **filtros) -> dict:
     c = {"fuente": fuente, "medida": medida, "filtros": filtros}
+    if limite:  # «limite» es un parámetro de la consulta, no un filtro de la fuente
+        c["limite"] = limite
     if dimension:
         c["dimension"] = dimension
     if serie:

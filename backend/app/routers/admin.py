@@ -72,11 +72,11 @@ def aprobar(uid: int, datos: Roles, ctx: Contexto = Depends(requiere("usuarios:a
     u.estado, u.aprobado_por, u.aprobado_en = "activo", ctx.usuario.id, ahora()
     bd.commit()
     mfa = obtener_config().roles_mfa.intersection(asignados)
-    enviar_correo(bd, u.email, "Tu acceso a Nexo fue aprobado",
-                  f"Ya puedes iniciar sesión. Roles: {', '.join(asignados)}."
-                  + (" Al entrar, configura tu segundo factor (MFA)." if mfa else ""),
+    enviar_correo(bd, u.email, "Su acceso a Nexo fue aprobado",
+                  f"Ya puede iniciar sesión. Roles: {', '.join(asignados)}."
+                  + (" Al entrar, configure su segundo factor (MFA)." if mfa else ""),
                   f"{obtener_config().url_publica}/login")
-    notificar(bd, u.id, "Bienvenida a Nexo", "Tu cuenta fue aprobada.", "exito", "/")
+    notificar(bd, u.id, "Bienvenida a Nexo", "Su cuenta fue aprobada.", "exito", "/")
     bitacora.registrar("usuarios.aprobado", usuario=ctx.usuario, modulo="usuarios", objeto=f"usuario:{u.id}",
                        detalle={"roles": asignados}, ip=ctx.ip)
     return _json(u)
@@ -92,7 +92,7 @@ def rechazar(uid: int, datos: Motivo, ctx: Contexto = Depends(requiere("usuarios
     u = _usuario(bd, uid)
     u.estado = "rechazado"
     bd.commit()
-    enviar_correo(bd, u.email, "Tu solicitud de acceso a Nexo", f"No fue aprobada. Motivo: {datos.motivo}")
+    enviar_correo(bd, u.email, "Su solicitud de acceso a Nexo", f"No fue aprobada. Motivo: {datos.motivo}")
     bitacora.registrar("usuarios.rechazado", usuario=ctx.usuario, modulo="usuarios", objeto=f"usuario:{u.id}", ip=ctx.ip)
     return _json(u)
 
@@ -102,7 +102,7 @@ def cambiar_roles(uid: int, datos: Roles, ctx: Contexto = Depends(requiere("usua
                   bd: Session = Depends(obtener_bd)):
     u = _usuario(bd, uid)
     if u.id == ctx.usuario.id and "admin_ti" not in datos.roles:
-        raise HTTPException(409, "No puedes quitarte tu propio rol de administración.")
+        raise HTTPException(409, "No puede quitarse su propio rol de administración.")
     antes = [ur.rol.codigo for ur in u.roles]
     despues = _asignar(bd, u, datos.roles, ctx.usuario)
     bd.commit()
@@ -115,7 +115,7 @@ def cambiar_roles(uid: int, datos: Roles, ctx: Contexto = Depends(requiere("usua
 def desactivar(uid: int, ctx: Contexto = Depends(requiere("usuarios:administrar")), bd: Session = Depends(obtener_bd)):
     u = _usuario(bd, uid)
     if u.id == ctx.usuario.id:
-        raise HTTPException(409, "No puedes desactivar tu propia cuenta.")
+        raise HTTPException(409, "No puede desactivar su propia cuenta.")
     u.estado = "desactivado"
     bd.commit()
     cerradas = revocar_todas(bd, u.id)
@@ -151,9 +151,9 @@ def restablecer_mfa(uid: int, ctx: Contexto = Depends(requiere("usuarios:adminis
     u.mfa_activo, u.mfa_secreto_cifrado, u.codigos_recuperacion, u.mfa_ultimo_paso = False, None, None, None
     bd.commit()
     revocar_todas(bd, u.id)
-    enviar_correo(bd, u.email, "Tu segundo factor fue restablecido",
-                  "Informática restableció tu segundo factor. Al iniciar sesión deberás configurarlo de nuevo. "
-                  "Si no lo solicitaste, avisa de inmediato.")
+    enviar_correo(bd, u.email, "Su segundo factor fue restablecido",
+                  "Informática restableció su segundo factor. Al iniciar sesión deberá configurarlo de nuevo. "
+                  "Si no lo solicitó, avise de inmediato.")
     bitacora.registrar("usuarios.mfa_restablecido", usuario=ctx.usuario, modulo="seguridad", objeto=f"usuario:{u.id}",
                        ip=ctx.ip)
     return _json(u)

@@ -45,7 +45,7 @@ export default function Datos() {
             <input className="entrada" style={{ flex: 1 }} placeholder="Buscar: censo, IPC, educación, violencia…" value={texto} onChange={(e) => setTexto(e.target.value)} />
             <label className="casilla"><input type="checkbox" checked={usados} onChange={(e) => setUsados(e.target.checked)} /> Solo los que usa Nexo</label>
           </div>
-          {!cat ? <Esqueleto /> : <Tabla maximo={150} filas={cat.conjuntos} vacio="Sin resultados. Si el catálogo está vacío, sincronízalo." columnas={[
+          {!cat ? <Esqueleto /> : <Tabla maximo={150} filas={cat.conjuntos} vacio="Sin resultados. Si el catálogo está vacío, sincronícelo." columnas={[
             { id: "t", titulo: "Conjunto", valor: (c: any) => c.titulo, celda: (c: any) => <span><b>{c.titulo}</b> {c.usado_por_nexo && <Insignia tono="exito">en Nexo</Insignia>}<br /><span className="pequeno suave">{c.organizacion}</span></span> },
             { id: "r", titulo: "Recursos", num: true, valor: (c: any) => c.recursos },
             { id: "f", titulo: "Formatos", valor: (c: any) => c.formatos, celda: (c: any) => <span className="pequeno">{c.formatos}</span> },
