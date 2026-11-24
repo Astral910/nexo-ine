@@ -33,13 +33,11 @@ ACTIVIDAD = w("actividad", "sistema", "Actividad reciente en la plataforma", 6, 
 TABLEROS_POR_ROL: dict[str, dict] = {
     "direccion": {"titulo": "Vista de Dirección", "descripcion": "Resumen ejecutivo de todos los procesos.",
                   "widgets": [
-                      w("kpis", "sistema", "Indicadores clave", 12, componente="indicadores_clave"),
                       IPC_INTERANUAL, CBA,
                       w("sol-estado", "dona", "Solicitudes de precios por etapa", 4, consulta=q("solicitudes", "conteo", "estado")),
                       w("alertas-depto", "barras", "Alertas de precios por departamento", 8,
                         consulta=q("alertas", "conteo", "departamento")),
-                      w("postura", "sistema", "Seguridad y salud del sistema", 6, componente="postura_seguridad"),
-                      ACTIVIDAD]},
+                      w("postura", "sistema", "Seguridad y salud del sistema", 12, componente="postura_seguridad")]},
     "analista_dpir": {"titulo": "Precios de Referencia", "descripcion": "Solicitudes, mercado y precios públicos.",
                       "widgets": [
                           w("sol", "sistema", "Solicitudes en curso", 12, componente="solicitudes_activas"),
@@ -98,7 +96,6 @@ TABLEROS_POR_ROL: dict[str, dict] = {
     "jurado": {"titulo": "Modo Jurado", "descripcion": "Cómo Nexo cumple cada criterio de evaluación.",
                "widgets": [
                    w("rubrica", "sistema", "Rúbrica del Datatón y evidencia", 12, componente="rubrica_jurado"),
-                   w("kpis", "sistema", "Indicadores clave", 12, componente="indicadores_clave"),
                    IPC_INTERANUAL, CBA]},
     "consulta": {"titulo": "Consulta", "descripcion": "Indicadores públicos del INE.",
                  "widgets": [IPC_INTERANUAL, CBA, IPC_REGIONES,

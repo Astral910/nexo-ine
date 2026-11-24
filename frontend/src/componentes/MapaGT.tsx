@@ -3,6 +3,16 @@ import { useMemo } from "react";
 import { Grafica, PALETA } from "./Grafica";
 import { Esqueleto, FuenteCita, useDatos } from "./ui";
 
+function agrupar(puntos: number[][]) {
+  const grupos = new Map<number, number[][]>();
+  for (const p of puntos) {
+    const k = p[3] ?? 0;
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k)!.push(p);
+  }
+  return grupos;
+}
+
 export function MapaGT({ departamento, alto = 460, puntos: propios }: { departamento?: string; alto?: number; puntos?: number[][] }) {
   const ruta = propios ? null : `/api/territorio/mapa${departamento ? `?departamento=${encodeURIComponent(departamento)}` : ""}`;
   const { datos } = useDatos<{ puntos: number[][] }>(ruta);
@@ -16,11 +26,12 @@ export function MapaGT({ departamento, alto = 460, puntos: propios }: { departam
       grid: { left: 0, right: 0, top: 0, bottom: 0 },
       xAxis: { type: "value", show: false, min: Math.min(...lons) - margen, max: Math.max(...lons) + margen },
       yAxis: { type: "value", show: false, min: Math.min(...lats) - margen, max: Math.max(...lats) + margen },
-      series: [{
-        type: "scatter", large: true, largeThreshold: 3000, data: puntos,
+      // Una serie por departamento (color fijo): el modo "large" de ECharts no admite estilos por punto.
+      series: [...agrupar(puntos).entries()].map(([depto, pts]) => ({
+        type: "scatter", data: pts, progressive: 0,
         symbolSize: (v: number[]) => Math.max(2, Math.min(14, Math.sqrt(v[2] || 1) / 9)),
-        itemStyle: { color: (p: any) => PALETA[(p.value[3] ?? 0) % PALETA.length], opacity: 0.75 },
-      }],
+        itemStyle: { color: PALETA[depto % PALETA.length], opacity: 0.72 },
+      })),
     };
   }, [puntos]);
   if (!opcion) return <Esqueleto alto={alto} />;

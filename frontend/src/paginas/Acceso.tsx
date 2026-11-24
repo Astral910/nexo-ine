@@ -21,7 +21,7 @@ function Plantilla({ children }: { children: ReactNode }) {
           <div><ShieldCheck size={18} /> Segundo factor, roles, bitácora a prueba de manipulación y secreto estadístico.</div>
         </div>
         <img className="dibujo" src="/marca/ilustracion-campo.svg" alt="" />
-        <div className="pequeno" style={{ marginTop: "auto", color: "#bcd7f5", maxWidth: 460 }}>
+        <div className="pequeno" style={{ marginTop: "auto", color: "#bcd7f5", maxWidth: "50%" }}>
           Prototipo del Datatón INE 2026 · Categoría Tecnológica y ciencia de datos. No es un sistema oficial del INE. Fuente de los datos: Instituto Nacional de Estadística.
         </div>
       </section>

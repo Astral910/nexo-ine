@@ -11,6 +11,7 @@ echarts.use([BarChart, LineChart, PieChart, ScatterChart, HeatmapChart, GridComp
 export const PALETA = ["#0080FF", "#004080", "#FF5500", "#9DD926", "#A97EFF", "#FFD500", "#4D4D4D", "#5FB3FF", "#2E6FB5", "#FF9966"];
 
 const BASE = {
+  animation: false, // gráficas inmediatas: más rápidas, accesibles y estables en presentaciones
   color: PALETA,
   textStyle: { fontFamily: "Ubuntu Sans, system-ui, sans-serif", color: "#14243a" },
   grid: { left: 12, right: 18, top: 28, bottom: 8, containLabel: true },
