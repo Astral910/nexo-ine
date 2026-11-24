@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import threading
+import time
+from functools import lru_cache
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from ..db import ahora, obtener_bd
+from ..db import SesionLocal, ahora, obtener_bd
 from ..deps import Contexto, contexto, requiere
 from ..models import ConjuntoCkan, LugarPoblado, Notificacion, PrecioRecolectado, SolicitudPrecio
 from ..services.centro import actividad, resumen_general
-from ..texto import fichas
+from ..texto import fichas, normalizar
 
 router = APIRouter(prefix="/api", tags=["centro de mando"])
 
@@ -54,6 +58,7 @@ def modulos_de(ctx: Contexto) -> list[dict]:
 @router.get("/centro/resumen")
 def resumen(ctx: Contexto = Depends(requiere("centro:ver")), bd: Session = Depends(obtener_bd)):
     datos = resumen_general(bd)
+    calentar_busqueda()
     datos["modulos"] = modulos_de(ctx)
     datos["actividad"] = actividad(bd, 12)
     return datos
@@ -90,6 +95,33 @@ def leer(datos: Lectura, ctx: Contexto = Depends(contexto), bd: Session = Depend
     return {"ok": True}
 
 
+@lru_cache(maxsize=2)
+def _articulos_ipc(_ventana: int) -> list[tuple[str, str, str]]:
+    """Artículos del IPC (código, nombre, nombre normalizado) en memoria durante 6 horas (cambian solo al recargar datos).
+    Buscar con LIKE en el medio millón de precios recolectados tomaba más de un segundo por tecla; la lista de artículos
+    tiene unos cientos de nombres y, normalizada, permite buscar sin tildes."""
+    with SesionLocal() as bd:
+        filas = bd.execute(select(PrecioRecolectado.cod_articulo, func.max(PrecioRecolectado.articulo))
+                           .group_by(PrecioRecolectado.cod_articulo)).all()
+    return [(cod, art, normalizar(art)) for cod, art in filas if art]
+
+
+_VENTANA_S = 6 * 3600
+_calentada = -1
+
+
+def _ventana() -> int:
+    return int(time.time() // _VENTANA_S)
+
+
+def calentar_busqueda() -> None:
+    """Precarga la lista de artículos en segundo plano: así la primera búsqueda no espera la lectura completa."""
+    global _calentada
+    if _calentada != _ventana():
+        _calentada = _ventana()
+        threading.Thread(target=_articulos_ipc, args=(_calentada,), daemon=True).start()
+
+
 @router.get("/buscar")
 def buscar(q: str = Query(min_length=2, max_length=100), ctx: Contexto = Depends(contexto),
            bd: Session = Depends(obtener_bd)):
@@ -109,10 +141,8 @@ def buscar(q: str = Query(min_length=2, max_length=100), ctx: Contexto = Depends
                                "detalle": f"{lp.departamento} · {lp.poblacion or 0:,} habitantes (2018)",
                                "ruta": f"/territorio/municipio/{lp.cod_municipio}"})
     if ctx.puede("indices:ver"):
-        aq = select(PrecioRecolectado.cod_articulo, func.max(PrecioRecolectado.articulo))
-        for p in palabras:
-            aq = aq.where(func.lower(PrecioRecolectado.articulo).like(f"%{p}%"))
-        for cod, art in bd.execute(aq.group_by(PrecioRecolectado.cod_articulo).limit(5)).all():
+        coinciden = [(cod, art) for cod, art, norm in _articulos_ipc(_ventana()) if all(p in norm for p in palabras)]
+        for cod, art in coinciden[:5]:
             resultados.append({"tipo": "Artículo del IPC", "titulo": art, "detalle": f"Código {cod}",
                                "ruta": f"/indices/articulo/{cod}"})
     if ctx.puede("dpir:ver"):

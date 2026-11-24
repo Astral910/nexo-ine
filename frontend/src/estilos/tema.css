@@ -127,7 +127,7 @@ html.sin-animacion *, html.sin-animacion *::before, html.sin-animacion *::after 
 .app { min-height: 100vh; padding-left: calc(var(--ancho-lateral) + 24px); transition: padding-left var(--lento) var(--ease-estandar); }
 .app.colapsada { --ancho-lateral: 76px; }
 .lateral { position: fixed; z-index: 40; top: 12px; bottom: 12px; left: 12px; width: var(--ancho-lateral);
-  background: var(--vidrio-fuerte); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
+  background: var(--vidrio-fuerte); -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
   border: 1px solid var(--vidrio-borde); border-radius: 18px; box-shadow: var(--vidrio-sombra);
   display: flex; flex-direction: column; overflow: hidden; transition: width var(--lento) var(--ease-estandar); }
 .lateral .cabeza { display: flex; align-items: center; gap: 10px; padding: 16px 14px 12px 16px; min-height: 64px; }
@@ -183,8 +183,13 @@ html.sin-animacion *, html.sin-animacion *::before, html.sin-animacion *::after 
 
 .principal { min-width: 0; display: flex; flex-direction: column; }
 .barra-superior { position: sticky; top: 12px; z-index: 30; margin: 12px 12px 0 0; display: flex; align-items: center; gap: 14px;
-  padding: 8px 10px 8px 18px; background: var(--vidrio); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
+  padding: 8px 10px 8px 18px; background: var(--vidrio); -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
   border: 1px solid var(--vidrio-borde); border-radius: 14px; box-shadow: var(--vidrio-sombra); }
+/* Franja con el mismo fondo de la página sobre la barra flotante: el contenido no se asoma por encima al desplazarse. */
+.barra-superior::before { content: ""; position: absolute; left: -12px; right: -12px; top: -13px; height: 13px; pointer-events: none;
+  background: radial-gradient(1100px 620px at -8% -12%, rgba(0, 64, 128, 0.075), transparent 62%),
+    radial-gradient(900px 520px at 108% 0%, rgba(0, 128, 255, 0.06), transparent 60%), var(--fondo);
+  background-attachment: fixed; }
 .barra-superior .ruta { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--texto-3); white-space: nowrap; min-width: 0; }
 .barra-superior .ruta b { color: var(--texto); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 .barra-superior .buscador { flex: 1; max-width: 460px; margin: 0 auto; display: flex; align-items: center; gap: 10px; height: 36px;
@@ -210,7 +215,7 @@ html.sin-animacion *, html.sin-animacion *::before, html.sin-animacion *::after 
   padding: 18px 20px; min-width: 0; transition: box-shadow var(--normal) var(--ease-estandar), transform var(--normal) var(--ease-estandar); }
 .tarjeta > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .tarjeta > header .ayuda { font-size: 0.82rem; color: var(--texto-3); margin-top: 3px; }
-.vidrio { background: var(--vidrio); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+.vidrio { background: var(--vidrio); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid var(--vidrio-borde); border-radius: 16px; box-shadow: var(--vidrio-sombra); }
 a.tarjeta, .tarjeta.interactiva { text-decoration: none; color: inherit; cursor: pointer; }
 a.tarjeta:hover, .tarjeta.interactiva:hover { box-shadow: var(--sombra-16); transform: translateY(-2px); }
@@ -335,7 +340,7 @@ table.tabla { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 .chip b { font-weight: 600; color: var(--texto); }
 
 /* Diálogos */
-.velo { position: fixed; inset: 0; background: rgba(15, 28, 46, 0.32); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+.velo { position: fixed; inset: 0; background: rgba(15, 28, 46, 0.32); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; animation: aparecer var(--normal) both; }
 .modal { background: var(--superficie); border-radius: 14px; box-shadow: var(--sombra-64); width: min(640px, 100%); max-height: 90vh; overflow: auto;
   padding: 22px 24px; animation: elevar var(--lento) var(--ease-salida) both; border: 1px solid var(--borde); }
@@ -396,8 +401,8 @@ a.modulo:hover .ir { transform: translateX(4px); color: var(--acento); }
 .punto.denegado, .punto.error { background: var(--ine-naranja); box-shadow: 0 0 0 3px #fff0e6; }
 .punto.vivo { background: #2f8f2f; animation: pulso 1.6s infinite; }
 
-.popover { position: absolute; right: 0; top: calc(100% + 8px); background: var(--vidrio-fuerte); backdrop-filter: blur(22px) saturate(170%);
-  -webkit-backdrop-filter: blur(22px) saturate(170%); border: 1px solid var(--vidrio-borde); border-radius: 14px; box-shadow: var(--sombra-16);
+.popover { position: absolute; right: 0; top: calc(100% + 8px); background: var(--vidrio-fuerte); -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%); border: 1px solid var(--vidrio-borde); border-radius: 14px; box-shadow: var(--sombra-16);
   width: 360px; max-height: 70vh; overflow: auto; z-index: 60; animation: elevar var(--normal) var(--ease-salida) both; }
 .popover.arriba { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; }
 .relativo { position: relative; }
@@ -408,7 +413,7 @@ a.modulo:hover .ir { transform: translateX(4px); color: var(--acento); }
 
 .paleta { position: fixed; inset: 0; background: rgba(15, 28, 46, 0.32); backdrop-filter: blur(3px); z-index: 120; display: flex;
   justify-content: center; padding-top: 12vh; animation: aparecer var(--rapido) both; }
-.paleta .caja { background: var(--vidrio-fuerte); backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+.paleta .caja { background: var(--vidrio-fuerte); -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
   width: min(660px, 92vw); border-radius: 14px; box-shadow: var(--sombra-64); overflow: hidden; height: fit-content; border: 1px solid var(--vidrio-borde);
   animation: elevar var(--normal) var(--ease-salida) both; }
 .paleta input { width: 100%; border: 0; border-bottom: 1px solid var(--borde); padding: 16px 18px; font-size: 1.02rem; outline: none; background: transparent; }

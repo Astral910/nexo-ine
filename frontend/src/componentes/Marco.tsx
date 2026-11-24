@@ -221,13 +221,13 @@ function Notificaciones() {
 
 function PaletaBusqueda({ onCerrar }: { onCerrar: () => void }) {
   const [q, setQ] = useState("");
-  const [res, setRes] = useState<any[]>([]);
+  const [res, setRes] = useState<any[] | null>([]);  // null = buscando
   const [sel, setSel] = useState(0);
   const navegar = useNavigate();
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
   useEffect(() => {
-    if (q.trim().length < 2) { setRes([]); return; }
+    if (q.trim().length < 2) { setRes([]); return; } setRes(null);
     const t = window.setTimeout(() => api<any[]>(`/api/buscar?q=${encodeURIComponent(q)}`).then((r) => { setRes(r); setSel(0); }).catch(() => setRes([])), 220);
     return () => window.clearTimeout(t);
   }, [q]);
@@ -238,12 +238,12 @@ function PaletaBusqueda({ onCerrar }: { onCerrar: () => void }) {
         <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busque un módulo, municipio, artículo del IPC, solicitud o conjunto de datos"
           onKeyDown={(e) => {
             if (e.key === "Escape") onCerrar();
-            if (e.key === "ArrowDown") setSel((s) => Math.min(s + 1, res.length - 1));
+            if (e.key === "ArrowDown") setSel((s) => Math.min(s + 1, (res?.length ?? 1) - 1));
             if (e.key === "ArrowUp") setSel((s) => Math.max(s - 1, 0));
-            if (e.key === "Enter" && res[sel]) ir(res[sel]);
+            if (e.key === "Enter" && res?.[sel]) ir(res[sel]);
           }} />
         <ul>
-          {res.map((r, i) => (
+          {(res ?? []).map((r, i) => (
             <li key={i} className={i === sel ? "activo" : ""}>
               <a href={r.ruta} onClick={(e) => { e.preventDefault(); ir(r); }}>
                 <span><Insignia>{r.tipo}</Insignia> <b>{r.titulo}</b></span>
@@ -251,7 +251,7 @@ function PaletaBusqueda({ onCerrar }: { onCerrar: () => void }) {
               </a>
             </li>
           ))}
-          {q.length >= 2 && res.length === 0 && <li className="vacio pequeno">Sin resultados.</li>}
+          {q.length >= 2 && (res === null ? <li className="pequeno suave" style={{ padding: 12 }}>Buscando…</li> : res.length === 0 && <li className="vacio pequeno">Sin resultados.</li>)}
           {q.length < 2 && <li className="pequeno suave" style={{ padding: 12 }}>Escriba al menos 2 letras. Use las flechas y Enter para abrir.</li>}
         </ul>
       </div>
