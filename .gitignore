@@ -1,0 +1,38 @@
+# Entornos y secretos (nunca se versionan)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.demo-credentials*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+htmlcov/
+.coverage
+
+# Node / frontend
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Datos: los crudos se descargan con el pipeline (no se versionan)
+data/crudos/
+data/tmp/
+*.db
+*.sqlite
+*.sqlite3
+var/
+
+# Sistema
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
