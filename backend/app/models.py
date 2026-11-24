@@ -174,7 +174,7 @@ class Bitacora(Base):
     detalle: Mapped[dict | None] = mapped_column(JSON)
     resultado: Mapped[str] = mapped_column(String(20), default="ok")  # ok | denegado | error
     ip: Mapped[str] = mapped_column(String(64), default="")
-    hash_previo: Mapped[str] = mapped_column(String(64))
+    hash_previo: Mapped[str] = mapped_column(String(64), unique=True)  # impide bifurcaciones de la cadena
     hash: Mapped[str] = mapped_column(String(64), unique=True)
 
 
