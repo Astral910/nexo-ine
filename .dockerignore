@@ -1,0 +1,13 @@
+# Contexto de construcción de la imagen: solo lo que el Dockerfile copia.
+# Sin esto, construir desde una copia de trabajo metería node_modules y .venv del equipo (binarios de otro sistema).
+.git
+.github
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+.env
+var
+frontend/dist
+data/crudos
+docs

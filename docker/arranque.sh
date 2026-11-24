@@ -13,5 +13,5 @@ with SesionLocal() as bd:
 open("/tmp/nexo-vacia", "w").write("1" if vacia else "0")
 PY
 if [ "$(cat /tmp/nexo-vacia)" = "1" ]; then python -m app.cli datos; fi
-if [ "${NEXO_CREAR_DEMO:-false}" = "true" ]; then python -m app.cli demo; fi
+if [ "${NEXO_CREAR_DEMO:-false}" = "true" ] && [ "${NEXO_ENTORNO:-desarrollo}" != "produccion" ]; then python -m app.cli demo; fi
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="${NEXO_PROXIES_CONFIABLES:-127.0.0.1}"

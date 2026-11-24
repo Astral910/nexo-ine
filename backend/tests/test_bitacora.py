@@ -61,4 +61,4 @@ def test_borrado_del_final_se_detecta_con_el_ancla():
         bd.delete(ultimo)
         bd.commit()
         r = bitacora.verificar_cadena(bd)
-        assert r["integra"] is False and "ancla" in r["motivo"] or "anclados" in r["motivo"]
+        assert r["integra"] is False and "ancla" in r["motivo"]  # «ancla» también cubre «anclados»
