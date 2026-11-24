@@ -60,7 +60,7 @@ Cada alerta se confirma, se descarta o queda en revisión, con un comentario obl
 | **Precios solo con producto**: la mediana o el promedio de precios exige un producto (texto o UNSPSC) | Promediar lápices con ambulancias |
 | **IPC por departamento**: el INE lo publica por región, así que se muestra la región oficial y se avisa | «IPC de Quetzaltenango» que en silencio mostraba el de la República |
 | **Umbral de confianza** del generador: si no reconoce una fuente, responde que no hay datos | Responder otra pregunta |
-| **Secreto estadístico**: se suprimen las celdas con menos de k = 3 observaciones; en precios recolectados, menos de 5 informantes o boletas distintas | Identificar a un comercio informante |
+| **Secreto estadístico**: en los microdatos con informantes (precios recolectados del IPC) se suprime toda celda con menos de 5 informantes o boletas distintas, y tampoco se entrega su conteo. Las demás fuentes son cifras agregadas que el INE ya publica o contrataciones públicas. El validador marca las celdas con menos de 3 casos en las bases que se suben | Identificar a un comercio informante |
 
 ## 4. Territorio
 - **Población 2018:** Cuadro A1.3 del Censo, unido a los centroides por código de lugar poblado (20,036 lugares; suma nacional 14,901,286, igual a la cifra oficial).

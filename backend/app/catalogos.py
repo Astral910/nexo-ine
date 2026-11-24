@@ -38,7 +38,7 @@ ROLES: list[dict] = [
      "autoregistro": False, "descripcion": "Administra cuentas, roles, automatizaciones y la plataforma. Por "
                                           "segregación de funciones no gestiona seguridad, privacidad ni la bitácora.",
      "permisos": [p[0] for p in PERMISOS if p[0] not in (
-         "jurado:ver", "dpir:solicitar", "seguridad:gestionar", "privacidad:administrar", "bitacora:ver")]},
+         "jurado:ver", "dpir:solicitar", "seguridad:gestionar", "privacidad:administrar", "bitacora:ver", "indices:alertas")]},
     {"codigo": "seguridad", "nombre": "Oficial de seguridad", "area": "Seguridad de la información",
      "privilegiado": True, "autoregistro": False,
      "descripcion": "Supervisa la postura de seguridad, riesgos, incidentes, privacidad y la bitácora.",

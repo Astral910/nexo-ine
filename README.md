@@ -62,7 +62,7 @@ En el arranque del Datatón, las Direcciones del INE describieron procesos manua
 ```mermaid
 flowchart LR
   subgraph Fuentes["Fuentes oficiales"]
-    INE["Portal de datos abiertos del INE<br/>(CKAN, 16 conjuntos)"]
+    INE["Portal de datos abiertos del INE<br/>(CKAN, 8 conjuntos, 25 archivos)"]
     OCDS["Guatecompras OCDS<br/>(CC BY 4.0)"]
   end
   subgraph ETL["Pipeline reproducible (python -m app.etl)"]

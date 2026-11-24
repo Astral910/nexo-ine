@@ -4,7 +4,7 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 
 | Lineamiento | Evidencia | Estado |
 |---|---|---|
-| Usar como fuente principal al menos una base pública del portal del INE | 16 conjuntos de datos.ine.gob.gt (portal de datos abiertos del INE): [docs/DATOS.md](DATOS.md) | Cumplido |
+| Usar como fuente principal al menos una base pública del portal del INE | 25 archivos de 8 conjuntos de datos.ine.gob.gt (portal de datos abiertos del INE): [docs/DATOS.md](DATOS.md) | Cumplido |
 | Citar correctamente otras fuentes abiertas | Guatecompras OCDS con atribución CC BY 4.0 en la interfaz, el PDF y la documentación | Cumplido |
 | Indicar las bases utilizadas y su fecha de descarga | `data/manifiesto.json` y [docs/DATOS.md](DATOS.md): URL, fecha y hora (Guatemala), licencia y SHA-256 | Cumplido |
 | Tecnologías libres o sin licencia, y declarar servicios de pago o nube | Todo el software es libre; ningún servicio de pago ni en la nube (README §9) | Cumplido |
@@ -27,7 +27,7 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 
 | Criterio | Peso | Evidencia principal |
 |---|---|---|
-| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial, tableros por rol y generados desde texto, 19 pruebas automáticas |
+| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial, tableros por rol y generados desde texto, 22 pruebas automáticas |
 | Aplicabilidad institucional (desempate) | 20 % | Responde a lo que presentaron la DPIR, la DIEC, la DCE y la DCR; usa su metodología (regla del 50 %, media, mediana y moda, 6 reglas de la DCE); adopción con software libre |
 | Calidad técnica | 20 % | Arquitectura modular, capa semántica única, CI con pruebas en SQLite y PostgreSQL, documentación completa |
 | Innovación | 15 % | Tableros generativos deterministas, agentes de seguridad y TI, bitácora HMAC con anclas, precio unitario de 214 mil compras ajustado con el IPC |

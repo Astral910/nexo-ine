@@ -28,7 +28,7 @@ Reparto: **una persona habla y otra opera**. Si algo falla más de 15 segundos, 
 
 1. **¿Qué escribió la IA y qué ustedes?** Usamos Claude Code durante el evento y está declarado en el README. Dos agentes revisaron cumplimiento y seguridad, y corregimos lo que encontraron. Cada módulo tiene un responsable que lo explica (docs/ARQUITECTURA.md).
 2. **¿Por qué datos.ine.gob.gt?** Es el portal oficial de datos abiertos del INE, tiene API para automatizar y reproducir, y cada archivo queda con su URL, fecha y SHA-256 (docs/DATOS.md).
-3. **¿Cómo garantizan el secreto estadístico?** Suprimimos celdas con menos de 3 informantes (5 en precios recolectados). El informante solo aparece como código y solo para la DIEC. El validador detecta datos personales y no guarda archivos. No cargamos proveedores de Guatecompras.
+3. **¿Cómo garantizan el secreto estadístico?** En los precios recolectados suprimimos toda celda con menos de 5 informantes, y también su conteo. El informante solo aparece como código y solo lo ve quien revisa alertas de precios (DIEC); ni Informática lo ve. El validador detecta datos personales y no guarda archivos. No cargamos proveedores de Guatecompras.
 4. **¿El precio es oficial?** No: es un borrador que acelera los pasos 3 a 5. Decide el analista, y el informe dice «prototipo · no oficial».
 5. **¿Qué pasa cuando publiquemos el mes siguiente?** La automatización sincroniza el catálogo y el pipeline descarga, verifica la huella y recarga. El agente de TI avisa si una fuente está desactualizada.
 6. **¿Sin internet?** Funciona sin conexión con los datos procesados incluidos y su manifiesto.
