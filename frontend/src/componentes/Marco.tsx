@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  Bell, ChevronDown, ChevronRight, ChevronsUpDown, CircleHelp, Database, FileCheck2, Gavel, House, LayoutDashboard, Lock, LogOut, Map,
-  Menu, PanelLeftClose, PanelLeftOpen, ScrollText, Search, Server, ShieldCheck, Tags, TrendingUp, Type, User, Users, Wheat, Workflow,
+  Bell, ChevronDown, ChevronRight, ChevronsUpDown, CircleHelp, Database, FileCheck2, Gavel, Globe, House, LayoutDashboard, Lock, LogOut, Map,
+  Menu, PanelLeftClose, PanelLeftOpen, Route, ScrollText, Search, Server, ShieldCheck, Tags, TrendingUp, Type, User, Users, Wheat, Workflow,
 } from "lucide-react";
 import { api, fmt } from "../api";
 import { useSesion } from "../auth";
+import { RECORRIDOS, useRecorrido } from "./Recorrido";
 import { BarraCarga, Insignia, Modal } from "./ui";
+import { SelectorVista } from "./vista";
 
 type Item = { ruta: string; texto: string; icono: any; permiso: string[]; soloSin?: string; cuenta?: string; descripcion: string };
 const MENU: { grupo: string; items: Item[] }[] = [
@@ -166,6 +168,7 @@ function Lateral({ abierto, colapsada, onPlegar, onCerrar, onGuia }: {
               <div className="columna" style={{ padding: 8, gap: 2 }}>
                 <Link className="boton fantasma" style={{ justifyContent: "flex-start" }} to="/perfil" onClick={() => setMenuUsuario(false)}><User /> Mi perfil y seguridad</Link>
                 <Link className="boton fantasma" style={{ justifyContent: "flex-start" }} to="/privacidad" onClick={() => setMenuUsuario(false)}><Lock /> Privacidad y mis datos</Link>
+                <Link className="boton fantasma" style={{ justifyContent: "flex-start" }} to="/abierto" onClick={() => setMenuUsuario(false)}><Globe /> Ver Nexo Abierto (público)</Link>
                 <div className="separador" />
                 <div className="pequeno suave" style={{ padding: "2px 10px" }}><Type size={13} style={{ verticalAlign: -2 }} /> Tamaño de letra</div>
                 <div className="fila" style={{ padding: "2px 8px 6px", gap: 6 }}>
@@ -261,10 +264,19 @@ function PaletaBusqueda({ onCerrar }: { onCerrar: () => void }) {
 
 function Bienvenida({ onCerrar }: { onCerrar: () => void }) {
   const { usuario, puede } = useSesion();
+  const { iniciar } = useRecorrido();
   const disponibles = MENU.flatMap((g) => g.items).filter((i) => (!i.permiso.length || puede(...i.permiso)) && !(i.soloSin && puede(i.soloSin)));
+  const recorrido = RECORRIDOS.general;
   return (
     <Modal titulo={`Bienvenido a Nexo, ${usuario?.nombre.split(" ")[0]}`} onCerrar={onCerrar} ancho>
       <div className="columna">
+        <div className="vidrio bienvenida-recorrido">
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <b>{recorrido.titulo}</b>
+            <p className="pequeno suave" style={{ marginTop: 2 }}>{recorrido.descripcion} Puede salir en cualquier momento.</p>
+          </div>
+          <button className="boton" onClick={() => { onCerrar(); iniciar("general"); }}><Route /> Empezar el recorrido</button>
+        </div>
         <p className="suave">Nexo reúne en un solo lugar los procesos del INE. Esto es lo que puede hacer con su perfil ({usuario?.roles.map((r) => r.nombre).join(", ")}):</p>
         <div className="rejilla escalonada">
           {disponibles.map((i) => (
@@ -274,8 +286,8 @@ function Bienvenida({ onCerrar }: { onCerrar: () => void }) {
             </Link>
           ))}
         </div>
-        <div className="aviso info"><CircleHelp /><div>Consejos: use <b>Ctrl + K</b> para buscar cualquier cosa; cambie el <b>tamaño de letra</b> desde su nombre, abajo a la izquierda; y vuelva a esta guía con <b>Guía de uso</b>.</div></div>
-        <div className="fila" style={{ justifyContent: "flex-end" }}><button className="boton" onClick={onCerrar}>Comenzar</button></div>
+        <div className="aviso info"><CircleHelp /><div>Consejos: arriba elija la vista <b>Resumen</b> (lo esencial) o <b>Completa</b> (todo el detalle); en cada pantalla, <b>Cómo leer esta pantalla</b> explica qué ve; use <b>Ctrl + K</b> para buscar; y cambie el <b>tamaño de letra</b> desde su nombre, abajo a la izquierda.</div></div>
+        <div className="fila" style={{ justifyContent: "flex-end" }}><button className="boton secundario" onClick={onCerrar}>Explorar por mi cuenta</button></div>
       </div>
     </Modal>
   );
@@ -325,6 +337,7 @@ export function Marco() {
           </div>
           <div className="acciones">
             {usuario?.es_demo && <Insignia tono="demo">Cuenta de demostración</Insignia>}
+            <SelectorVista />
             <Notificaciones />
           </div>
         </header>

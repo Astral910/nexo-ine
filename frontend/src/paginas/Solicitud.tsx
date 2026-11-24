@@ -1,12 +1,43 @@
 // Detalle de una solicitud de precio de referencia: los 6 pasos de la DPIR con investigación automática.
-import { useMemo, useState, type FormEvent } from "react";
+// Vista «Resumen»: en qué paso va, el precio si ya existe, qué falta y un solo botón para el siguiente paso.
+// Vista «Completa»: investigación de mercado, fuentes, análisis, informe, historial, devolver y rechazar.
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowRight, Ban, Download, ExternalLink, FileText, Plus, Search, Undo2 } from "lucide-react";
 import { api, ErrorApi, fmt } from "../api";
 import { useSesion } from "../auth";
 import { Grafica, opcionBarras } from "../componentes/Grafica";
-import { Aviso, avisar, Campo, Encabezado, Esqueleto, FuenteCita, Insignia, Kpi, Modal, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import { Aviso, avisar, Campo, Encabezado, EsqueletoKpis, EsqueletoTabla, FuenteCita, Insignia, Kpi, Modal, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import {
+  BotonAyuda, CifraClara, EnPocasPalabras, ListaSimple, PasosSimples, PieResumen, SegunVista, useVista, type AyudaPantalla, type ElementoLista,
+} from "../componentes/vista";
 import { histograma } from "./Precios";
+
+type Paso = Parameters<typeof PasosSimples>[0]["pasos"][number];
+const PRIMARIAS = ["cotizacion", "catalogo"];
+
+const AYUDA: AyudaPantalla = {
+  titulo: "Cómo leer una solicitud",
+  que: "Una solicitud de precio de referencia: en qué etapa va, qué fuentes de precio tiene, el análisis estadístico y el informe técnico.",
+  datos: "Lo que registraron la entidad y la DPIR en Nexo. Las fuentes secundarias vienen de Guatecompras OCDS y de la base de Precios de Referencia del INE; las primarias son cotizaciones y catálogos que agrega la DPIR. Todos los precios se llevan a quetzales del último mes con el IPC del INE.",
+  pasos: [
+    "Revise la descripción, la cantidad y las especificaciones, y avance a «Investigación de mercado».",
+    "Pulse «Investigar» para traer compras comparables y agregue cotizaciones de proveedores.",
+    "Calcule los estadísticos, justifique si hay menos de 50 % de cotizaciones y genere el informe en PDF.",
+  ],
+  resumen: "En qué paso va, el precio si ya existe, qué falta para avanzar y el botón del siguiente paso.",
+  completa: "La investigación de mercado, la tabla de fuentes para incluir o excluir, el análisis con media, mediana y moda, el historial y las acciones de devolver o rechazar.",
+  terminos: [
+    ["Fuente primaria", "Cotización directa de un proveedor o precio de un catálogo: el mercado relevante."],
+    ["Fuente secundaria", "Precio de una compra pública en Guatecompras o un precio de referencia histórico del INE."],
+    ["Media", "El promedio de los precios. Se afecta si hay precios muy altos o muy bajos."],
+    ["Mediana", "El precio del medio: la mitad cuesta menos y la otra mitad más. No se deja afectar por precios extremos."],
+    ["Moda", "El precio que más se repite."],
+    ["CV (coeficiente de variación)", "Qué tan dispersos están los precios. Con más de 25 %, o si hay atípicos, se usa la mediana."],
+    ["Atípica", "Fuente con un precio muy alejado de los demás; se excluye del cálculo."],
+    ["Huella de datos (SHA-256)", "Código único calculado con los datos del informe: si alguien cambia un dato, la huella cambia."],
+  ],
+};
 
 const PASOS = ["recibida", "revision", "investigacion", "analisis", "informe", "entregada"];
 const NOMBRES = ["Solicitud", "Revisión", "Investigación de mercado", "Análisis", "Informe", "Entrega"];
@@ -120,6 +151,115 @@ function Analisis({ sol, recargar }: { sol: any; recargar: () => void }) {
   );
 }
 
+function ResumenSolicitud({ sol, gestiona, avanzar, recargar }: { sol: any; gestiona: boolean; avanzar: () => void; recargar: () => void }) {
+  const { cambiar } = useVista();
+  const i = PASOS.indexOf(sol.estado);
+  const r = sol.resultado;
+  const entregada = sol.estado === "entregada";
+  const fuentes = ((sol.fuentes ?? []) as any[]).filter((f) => f.incluida);
+  const primarias = fuentes.filter((f) => PRIMARIAS.includes(f.tipo)).length;
+  const secundarias = fuentes.length - primarias;
+  const pctPrimarias = r ? r.porcentaje_primarias : fuentes.length ? (primarias / fuentes.length) * 100 : 0;
+  const pdf = `/api/precios/solicitudes/${sol.id}/informe.pdf`;
+  const pasos: Paso[] = NOMBRES.map((n, j) => ({ titulo: n, estado: entregada || j < i ? "hecho" : j === i ? "actual" : "pendiente" }));
+  const verCompleta = () => { cambiar("completa"); window.scrollTo({ top: 0 }); };
+  const calcular = async () => {
+    try { await api(`/api/precios/solicitudes/${sol.id}/analizar`, { cuerpo: { justificacion: null } }); avisar("Análisis calculado."); recargar(); }
+    catch (e) { avisar((e as Error).message, "critico"); }
+  };
+
+  const dias = sol.dias_restantes as number | null;
+  const plazo = sol.vencida ? <>Venció el {fmt.fecha(sol.fecha_limite)}: atiéndala cuanto antes.</>
+    : sol.fecha_limite ? <>Vence el {fmt.fecha(sol.fecha_limite)}{dias !== null ? ` (${dias === 0 ? "hoy" : dias === 1 ? "mañana" : `en ${dias} días`})` : ""}.</> : null;
+  let frase: ReactNode;
+  if (sol.rechazada) frase = <>Esta solicitud fue rechazada. El motivo quedó en el historial (vista Completa).</>;
+  else if (entregada) frase = <>Entregada el {fmt.fecha(sol.entregada_en)}. Precio de referencia: <b>{fmt.moneda(sol.precio_referencia)}</b> por {String(sol.unidad).toLowerCase()}.</>;
+  else frase = (
+    <>
+      <p>Va en el paso <b>{i + 1} de 6</b>: «{NOMBRES[i]}». {plazo}</p>
+      {!gestiona && <p>La DPIR está trabajando en su solicitud. Le avisaremos por notificación y correo cuando el informe esté listo.</p>}
+    </>
+  );
+
+  // Qué falta para avanzar (solo para la DPIR).
+  const faltas: ElementoLista[] = [];
+  if (gestiona && !sol.rechazada && !entregada) {
+    if (i <= 1) {
+      faltas.push({ estado: "atencion", titulo: "Revisar que la descripción, la cantidad y las especificaciones estén completas",
+        texto: sol.especificaciones ? `Especificaciones: ${String(sol.especificaciones).slice(0, 160)}` : "La solicitud no trae especificaciones técnicas: pídalas a la entidad." });
+    }
+    if (i >= 2) {
+      faltas.push(secundarias > 0
+        ? { estado: "ok", titulo: `${fmt.numero(secundarias)} precios de Guatecompras o del INE incluidos` }
+        : { estado: "atencion", titulo: "Hacer la investigación de mercado automática", texto: "Trae compras comparables de Guatecompras y precios históricos del INE." });
+      if (pctPrimarias > 50) faltas.push({ estado: "ok", titulo: `Las cotizaciones y catálogos son ${fmt.pct(pctPrimarias)} de las fuentes (más de la mitad)` });
+      else if (r?.justificacion_mercado) faltas.push({ estado: "ok", titulo: "Justificación registrada por tener menos de 50 % de cotizaciones", texto: r.justificacion_mercado });
+      else faltas.push({ estado: "atencion", titulo: primarias === 0 ? "Agregar cotizaciones de proveedores" : `Las cotizaciones son ${fmt.pct(pctPrimarias)} de las fuentes: agregue más o justifique`,
+        texto: "La DPIR recomienda que más de la mitad de las fuentes sean cotizaciones o catálogos del mercado relevante." });
+      if (fuentes.length < 5) faltas.push({ estado: "atencion", titulo: `Hay ${fmt.numero(fuentes.length)} ${fuentes.length === 1 ? "fuente" : "fuentes"}: se recomiendan al menos 5`, texto: "La DPIR consulta 5 o más proveedores." });
+    }
+    if (i >= 3) {
+      faltas.push(r ? { estado: "ok", titulo: "Estadísticos calculados", texto: `Media ${fmt.moneda(r.estadisticos.media)} · mediana ${fmt.moneda(r.estadisticos.mediana)} · moda ${fmt.moneda(r.estadisticos.moda)}` }
+        : { estado: "atencion", titulo: "Calcular media, mediana y moda" });
+    }
+    if (sol.estado === "informe") faltas.push(sol.informe_sha256 ? { estado: "ok", titulo: "Informe técnico generado" } : { estado: "atencion", titulo: "Generar el informe técnico en PDF" });
+    (r?.advertencias ?? []).filter((a: string) => !a.startsWith("Solo ") && !a.startsWith("Se recomiendan al menos 5"))
+      .forEach((a: string) => faltas.push({ estado: "info", titulo: a }));
+  }
+
+  // Un solo botón para lo que sigue.
+  let accion: ReactNode = null;
+  if (!sol.rechazada) {
+    if (entregada) accion = <a className="boton" href={pdf} target="_blank" rel="noopener"><FileText /> Descargar el informe técnico (PDF)</a>;
+    else if (gestiona && sol.estado === "informe" && !sol.informe_sha256) accion = <a className="boton" href={pdf} target="_blank" rel="noopener" onClick={() => setTimeout(recargar, 1500)}><Download /> Generar y abrir el informe (PDF)</a>;
+    else if (gestiona && sol.estado === "investigacion" && secundarias === 0) accion = <button className="boton" onClick={verCompleta}><Search /> Hacer la investigación de mercado</button>;
+    else if (gestiona && sol.estado === "analisis" && !r) accion = <button className="boton" onClick={calcular}>Calcular media, mediana y moda</button>;
+    else if (gestiona && i < PASOS.length - 1) accion = <button className="boton" onClick={avanzar}>Avanzar a «{NOMBRES[i + 1]}» <ArrowRight /></button>;
+  }
+
+  return (
+    <>
+      <EnPocasPalabras>{frase}</EnPocasPalabras>
+      <Tarjeta><PasosSimples pasos={pasos} /></Tarjeta>
+      <div className="rejilla escalonada">
+        <div className="c4">
+          {r?.precio_referencia != null
+            ? <CifraClara etiqueta="Precio de referencia" valor={fmt.moneda(r.precio_referencia)} detalle={`${r.estadistico_recomendado} · a precios de ${r.ipc_periodo}`}
+                significa={<>Calculado con {fmt.numero(r.fuentes_incluidas)} fuentes. {r.razon}</>} />
+            : <CifraClara etiqueta="Precio de referencia" valor="Aún no" significa="Se calcula en la etapa 4, «Análisis», con las fuentes que la DPIR incluya." />}
+        </div>
+        {gestiona ? (
+          <>
+            <div className="c4">
+              <CifraClara tono="morado" etiqueta="Fuentes incluidas" numero={fuentes.length} formato={(v) => fmt.numero(v)}
+                detalle={`${fmt.numero(primarias)} cotizaciones o catálogos · ${fmt.numero(secundarias)} de Guatecompras o del INE`}
+                significa="La DPIR consulta 5 o más proveedores; se recomiendan al menos 5 fuentes." />
+            </div>
+            <div className="c4">
+              <CifraClara tono={pctPrimarias > 50 ? "verde" : "naranja"} etiqueta="Del mercado relevante" valor={fuentes.length || r ? fmt.pct(pctPrimarias) : "—"}
+                significa={pctPrimarias > 50 ? "Más de la mitad de las fuentes son cotizaciones o catálogos, como recomienda la DPIR."
+                  : "La DPIR recomienda que más de la mitad sean cotizaciones o catálogos. Agregue cotizaciones o escriba la justificación."} />
+            </div>
+          </>
+        ) : r?.monto_estimado != null ? (
+          <div className="c4">
+            <CifraClara tono="verde" etiqueta="Monto estimado de la compra" valor={fmt.moneda(r.monto_estimado)}
+              significa={`${fmt.numero(sol.cantidad)} ${sol.unidad} por el precio de referencia.`} />
+          </div>
+        ) : null}
+      </div>
+      {faltas.length > 0 && <Tarjeta titulo="Qué falta para avanzar"><ListaSimple elementos={faltas} /></Tarjeta>}
+      {(accion || gestiona) && (
+        <div className="fila">
+          {accion}
+          {gestiona && !entregada && !sol.rechazada && <span className="pequeno suave">Agregar cotizaciones, incluir o excluir fuentes, devolver o rechazar: en la vista Completa.</span>}
+        </div>
+      )}
+      <PieResumen fuente="registro de la solicitud en Nexo; precios de Guatecompras OCDS y del INE, ajustados con el IPC" />
+    </>
+  );
+}
+
 export default function Solicitud() {
   const { id } = useParams();
   const { puede } = useSesion();
@@ -129,7 +269,7 @@ export default function Solicitud() {
   const [rechazo, setRechazo] = useState(false);
   const gestiona = puede("dpir:gestionar");
   if (error) return <Aviso tono="critico">{error}</Aviso>;
-  if (!sol) return <Esqueleto alto={400} />;
+  if (!sol) return <div className="columna" style={{ gap: 16 }}><div className="esqueleto" style={{ height: 56, width: "55%" }} /><div className="tarjeta"><div className="esqueleto" style={{ height: 64 }} /></div><EsqueletoKpis n={3} /><div className="tarjeta"><EsqueletoTabla filas={4} /></div></div>;
   const i = PASOS.indexOf(sol.estado);
   const accion = async (ruta: string, cuerpo: any = { comentario }) => {
     try { await api(`/api/precios/solicitudes/${sol.id}/${ruta}`, { cuerpo }); setComentario(""); recargar(); avisar("Solicitud actualizada."); }
@@ -141,9 +281,13 @@ export default function Solicitud() {
       <Encabezado migas={<><Link to={gestiona ? "/precios" : "/mis-solicitudes"}>Precios de Referencia</Link> ›</>}
         titulo={<>{sol.codigo} · {sol.producto}</>}
         subtitulo={<>{sol.entidad} · {fmt.numero(sol.cantidad)} {sol.unidad} · vence {fmt.fecha(sol.fecha_limite)} {sol.vencida && <Insignia tono="critico">vencida</Insignia>} {sol.rechazada && <Insignia tono="critico">rechazada</Insignia>}</>}
-        acciones={sol.resultado && (gestiona || sol.estado === "entregada") && sol.estado !== "recibida" && (
-          <a className="boton secundario" href={`/api/precios/solicitudes/${sol.id}/informe.pdf`} target="_blank" rel="noopener"><FileText /> Informe técnico (PDF)</a>
-        )} />
+        acciones={<>
+          <BotonAyuda ayuda={AYUDA} />
+          {sol.resultado && (gestiona || sol.estado === "entregada") && sol.estado !== "recibida" && (
+            <a className="boton secundario" href={`/api/precios/solicitudes/${sol.id}/informe.pdf`} target="_blank" rel="noopener"><FileText /> Informe técnico (PDF)</a>
+          )}
+        </>} />
+      <SegunVista resumen={<ResumenSolicitud sol={sol} gestiona={gestiona} avanzar={() => accion("avanzar", { comentario: "" })} recargar={recargar} />} completa={<>
       <Tarjeta><Pasos estado={sol.estado} /></Tarjeta>
       <div className="rejilla">
         <div className="c8 columna" style={{ gap: 16 }}>
@@ -203,6 +347,7 @@ export default function Solicitud() {
           </Tarjeta>
         </div>
       </div>
+      </>} />
       {fuenteNueva && <NuevaFuente sol={sol} onCerrar={() => { setFuenteNueva(false); recargar(); }} />}
       {rechazo && (
         <Modal titulo="Rechazar solicitud" onCerrar={() => setRechazo(false)}>

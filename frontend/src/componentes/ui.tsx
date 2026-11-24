@@ -1,5 +1,6 @@
 // Componentes base de la interfaz (sin dependencias externas).
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { CircleCheck, CircleX, FileUp, Info, Inbox, TriangleAlert, X } from "lucide-react";
 import { api, ErrorApi } from "../api";
 
@@ -185,7 +186,8 @@ export function Modal({ titulo, onCerrar, children, ancho = false }: { titulo: R
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
   }, [onCerrar]);
-  return (
+  // Se dibuja en <body>: así ningún contenedor con animación o transformación la deja detrás del contenido.
+  return createPortal(
     <div className="velo" onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}>
       <div className={`modal ${ancho ? "ancho" : ""}`} role="dialog" aria-modal="true">
         <header>
@@ -194,7 +196,8 @@ export function Modal({ titulo, onCerrar, children, ancho = false }: { titulo: R
         </header>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

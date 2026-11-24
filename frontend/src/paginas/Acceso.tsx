@@ -1,7 +1,7 @@
 // Acceso: inicio de sesión con segundo factor, registro con verificación y aprobación, recuperación y MFA.
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { CircleCheck, Eye, EyeOff, Fingerprint, Info, KeyRound, LayoutDashboard, Mail, ShieldCheck, Smartphone, Workflow } from "lucide-react";
+import { ArrowRight, CircleCheck, Eye, EyeOff, Fingerprint, Globe, Info, KeyRound, LayoutDashboard, Mail, ShieldCheck, Smartphone, Workflow } from "lucide-react";
 import { api, ErrorApi } from "../api";
 import { useSesion, type Usuario } from "../auth";
 import { Aviso, Campo, Modal } from "../componentes/ui";
@@ -37,6 +37,11 @@ function Plantilla({ children }: { children: ReactNode }) {
       <section className="formulario">
         <div className="aviso-prototipo" role="note"><Info size={15} /> Prototipo del Datatón INE 2026. No es un sistema oficial del Gobierno de Guatemala.</div>
         <div className="caja">{children}</div>
+        <Link to="/abierto" className="tarjeta modulo" style={{ width: "min(460px, 100%)", padding: "14px 16px" }}>
+          <span className="icono-modulo"><Globe size={20} /></span>
+          <span style={{ minWidth: 0 }}><b>¿Busca datos públicos del INE?</b><span className="pequeno suave" style={{ display: "block", marginTop: 2 }}>Entre a Nexo Abierto sin cuenta: precios que pagó el Estado, su municipio en datos y preguntas a las cifras oficiales.</span></span>
+          <ArrowRight className="ir" size={18} />
+        </Link>
         <div className="pequeno suave" style={{ textAlign: "center", maxWidth: 440 }}>¿Necesita ayuda para entrar? Comuníquese con la Unidad de Informática de su dirección.</div>
       </section>
     </div>

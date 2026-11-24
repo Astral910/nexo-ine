@@ -22,11 +22,14 @@ const Privacidad = lazy(() => import("./paginas/Privacidad"));
 const Admin = lazy(() => import("./paginas/Admin"));
 const Jurado = lazy(() => import("./paginas/Jurado"));
 const Perfil = lazy(() => import("./paginas/Perfil"));
+const Abierto = lazy(() => import("./paginas/Abierto"));
 
 function Protegida({ children }: { children: ReactNode }) {
   const { usuario, cargando } = useSesion();
   const ubicacion = useLocation();
   if (cargando) return <div className="contenido"><Esqueleto alto={300} /></div>;
+  // La puerta de entrada sin cuenta es Nexo Abierto; el personal del INE entra desde ahí o desde /login.
+  if (!usuario && ubicacion.pathname === "/") return <Navigate to="/abierto" replace />;
   if (!usuario) return <Navigate to="/login" replace state={{ desde: ubicacion.pathname }} />;
   if (usuario.mfa_por_verificar) return <Navigate to="/login" replace />;
   if (usuario.mfa_por_configurar) return <Navigate to="/configurar-mfa" replace />;
@@ -51,6 +54,7 @@ export function App() {
           <Route path="/olvide" element={<Olvide />} />
           <Route path="/restablecer" element={<Restablecer />} />
           <Route path="/configurar-mfa" element={<ConfigurarMfa />} />
+          <Route path="/abierto/*" element={<Abierto />} />
           <Route element={<Protegida><Marco /></Protegida>}>
             <Route path="/" element={<InicioSegunRol />} />
             <Route path="/tableros" element={<Tableros />} />

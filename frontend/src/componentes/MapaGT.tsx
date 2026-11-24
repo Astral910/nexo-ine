@@ -13,8 +13,10 @@ function agrupar(puntos: number[][]) {
   return grupos;
 }
 
-export function MapaGT({ departamento, alto = 460, puntos: propios }: { departamento?: string; alto?: number; puntos?: number[][] }) {
-  const ruta = propios ? null : `/api/territorio/mapa${departamento ? `?departamento=${encodeURIComponent(departamento)}` : ""}`;
+export function MapaGT({ departamento, alto = 460, puntos: propios, base = "/api/territorio/mapa" }: {
+  departamento?: string; alto?: number; puntos?: number[][]; base?: string;
+}) {
+  const ruta = propios ? null : `${base}${departamento ? `?departamento=${encodeURIComponent(departamento)}` : ""}`;
   const { datos } = useDatos<{ puntos: number[][] }>(ruta);
   const puntos = propios ?? datos?.puntos;
   const opcion = useMemo(() => {

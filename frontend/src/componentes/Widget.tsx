@@ -1,11 +1,15 @@
 // Representa cualquier widget de un tablero: de datos (capa semántica) o de sistema (componentes vivos).
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { TriangleAlert } from "lucide-react";
 import { api, fmt } from "../api";
 import { Grafica, opcionBarras, opcionDona, opcionLinea } from "./Grafica";
 import { MapaGT } from "./MapaGT";
 import { Aviso, Esqueleto, FuenteCita, Insignia, Medidor, Progreso, Severidad, Tabla, Vacio, useDatos } from "./ui";
+import { useVista } from "./vista";
+
+/** Ruta que responde las consultas de los widgets: la interna (con sesión) o la pública de Nexo Abierto. */
+export const RutaConsulta = createContext("/api/analitica/consulta");
 
 export interface WidgetSpec {
   id: string; tipo: string; titulo: string; ancho: number; consulta?: any; componente?: string; texto?: string;
@@ -30,14 +34,15 @@ export function formateador(formato: string, unidad?: string) {
 function WidgetDatos({ w }: { w: WidgetSpec }) {
   const [r, setR] = useState<Resultado | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const ruta = useContext(RutaConsulta);
   const clave = JSON.stringify(w.consulta);
   useEffect(() => {
     let vivo = true;
     setR(null); setError(null);
-    api<Resultado>("/api/analitica/consulta", { cuerpo: { consulta: w.consulta } })
+    api<Resultado>(ruta, { cuerpo: { consulta: w.consulta } })
       .then((d) => vivo && setR(d)).catch((e) => vivo && setError(e.message));
     return () => { vivo = false; };
-  }, [clave]);
+  }, [clave, ruta]);
   const contenido = useMemo(() => {
     if (!r) return null;
     const f = formateador(r.medida.formato, r.medida.unidad);
@@ -248,13 +253,29 @@ export function Widget({ w }: { w: WidgetSpec }) {
   );
 }
 
-export function TableroVista({ spec }: { spec: { widgets: WidgetSpec[]; advertencias?: string[] } }) {
+/**
+ * Tablero completo o en resumen. En «Resumen» se muestran los primeros elementos que no son tablas (la cifra y la
+ * gráfica principal) y una sola nota; en «Completa», todos los elementos y todas las notas de método.
+ */
+export function TableroVista({ spec, vista: forzada }: { spec: { widgets: WidgetSpec[]; advertencias?: string[] }; vista?: "resumen" | "completa" }) {
+  const { vista: global, cambiar } = useVista();
+  const vista = forzada ?? global;
+  const widgets = vista === "resumen" ? spec.widgets.filter((w) => w.tipo !== "tabla").slice(0, 3) : spec.widgets;
+  const ocultos = spec.widgets.length - widgets.length;
+  const notas = spec.advertencias ?? [];
   return (
     <div className="columna" style={{ gap: 16 }}>
-      {spec.advertencias && spec.advertencias.length > 0 && (
-        <Aviso tono="info"><b>Para interpretar bien:</b><ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>{spec.advertencias.map((a, i) => <li key={i}>{a}</li>)}</ul></Aviso>
+      {notas.length > 0 && (
+        <Aviso tono="info"><b>Para interpretar bien:</b>{vista === "resumen" ? <> {notas[0]}{notas.length > 1 && <span className="suave"> ({notas.length - 1} nota{notas.length > 2 ? "s" : ""} más en la vista Completa)</span>}</>
+          : <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>{notas.map((a, i) => <li key={i}>{a}</li>)}</ul>}</Aviso>
       )}
-      <div className="rejilla">{spec.widgets.map((w) => <Widget key={w.id + JSON.stringify(w.consulta ?? w.componente)} w={w} />)}</div>
+      <div className="rejilla">{widgets.map((w) => <Widget key={w.id + JSON.stringify(w.consulta ?? w.componente)} w={w} />)}</div>
+      {vista === "resumen" && ocultos > 0 && !forzada && (
+        <div className="fila espaciado pequeno suave">
+          <span>Se muestran {widgets.length} de {spec.widgets.length} elementos, sin la tabla de datos.</span>
+          <button type="button" className="boton secundario pequeno" onClick={() => cambiar("completa")}>Ver el tablero completo</button>
+        </div>
+      )}
     </div>
   );
 }

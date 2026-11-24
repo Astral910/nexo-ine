@@ -1,0 +1,57 @@
+/* Vistas «Resumen» de Calidad, Datos, Tableros, Seguridad, TI, Bitácora, Privacidad, Usuarios, Perfil y Jurado.
+   Solo piezas propias de estas pantallas; la base (cifras claras, listas, pie del resumen) está en tema.css. */
+
+/* Medidor con su explicación en palabras (Seguridad y TI) */
+.medidor-explicado { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.medidor-explicado .texto { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.medidor-explicado .texto h3 { font-size: 1.05rem; }
+.medidor-explicado .texto p { color: var(--texto-2); line-height: 1.55; }
+.conteo-severidad { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.84rem; color: var(--texto-2); }
+.conteo-severidad b { color: var(--texto); font-variant-numeric: tabular-nums; }
+
+/* Fichas de conjuntos de datos (Catálogo y linaje) */
+.ficha-conjunto { display: flex; flex-direction: column; gap: 6px; }
+.ficha-conjunto h3 { line-height: 1.3; }
+.ficha-conjunto dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; margin: 4px 0 8px; font-size: 0.84rem; }
+.ficha-conjunto dt { color: var(--texto-3); }
+.ficha-conjunto dd { margin: 0; color: var(--texto); font-variant-numeric: tabular-nums; }
+.ficha-conjunto .boton { margin-top: auto; align-self: flex-start; }
+
+/* Verificación de la bitácora */
+.verificar-integridad { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.verificar-integridad p { color: var(--texto-2); line-height: 1.55; }
+.boton.grande { height: 44px; padding: 0 20px; font-size: 0.95rem; }
+.boton.grande svg { width: 19px; height: 19px; }
+
+/* Datos de la cuenta (Privacidad) */
+.datos-cuenta { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 0.9rem; }
+.datos-cuenta dt { color: var(--texto-3); }
+.datos-cuenta dd { margin: 0; color: var(--texto); }
+
+/* Cuentas por aprobar (Usuarios y roles) */
+.cuenta-pendiente { display: flex; flex-direction: column; gap: 8px; }
+.cuenta-pendiente .motivo { font-size: 0.86rem; color: var(--texto-2); padding: 8px 10px; border-radius: 8px; background: var(--superficie-2);
+  border: 1px solid var(--borde); line-height: 1.5; }
+.cuenta-pendiente .fila { margin-top: auto; }
+.personas-rol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.personas-rol li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #edf0f5; font-size: 0.88rem; }
+.personas-rol li:last-child { border-bottom: 0; }
+.personas-rol .cifra { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Modo Jurado */
+.recorridos-jurado { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); overflow: hidden; padding: 0; }
+.recorridos-jurado > div { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 18px 20px; }
+.recorridos-jurado > div + div { border-left: 1px solid var(--borde); }
+.recorridos-jurado p { color: var(--texto-2); font-size: 0.9rem; line-height: 1.5; }
+.criterios-resumen { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.criterios-resumen li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf0f5; }
+.criterios-resumen li:last-child { border-bottom: 0; }
+.criterios-resumen .peso { font-size: 1.35rem; font-weight: 700; color: var(--ine-azul); font-variant-numeric: tabular-nums; text-align: right; }
+.criterios-resumen .texto p { margin-top: 2px; line-height: 1.45; }
+
+@media (max-width: 960px) {
+  .recorridos-jurado { grid-template-columns: 1fr; }
+  .recorridos-jurado > div + div { border-left: 0; border-top: 1px solid var(--borde); }
+  .criterios-resumen li { grid-template-columns: 52px minmax(0, 1fr); }
+  .criterios-resumen li > .boton { grid-column: 2; justify-self: start; }
+}

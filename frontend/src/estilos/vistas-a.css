@@ -1,0 +1,27 @@
+/* Vistas «Resumen» de Centro de mando, Precios de Referencia, Índices, Balance de Alimentos y Territorio. */
+
+/* Respuesta en una frase (¿Cuánto cuesta?, calculadora de derivados) */
+.respuesta-precio { font-size: 1.02rem; line-height: 1.55; color: var(--texto); }
+
+/* Tarjeta de una solicitud para la entidad solicitante */
+.solicitud-simple { display: flex; flex-direction: column; gap: 6px; }
+.solicitud-simple h3 { font-size: 1rem; line-height: 1.3; }
+.solicitud-simple .que-sigue { color: var(--texto-2); line-height: 1.5; }
+.solicitud-simple .cifra-ir { margin-top: auto; padding-top: 4px; display: inline-flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 600; color: var(--acento); }
+
+/* Buscador grande (municipios, artículos) */
+.buscador-grande { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px; background: var(--superficie);
+  border: 1px solid var(--borde-fuerte); border-bottom-color: #8e9bb0; border-radius: var(--radio); cursor: text;
+  transition: border-color var(--rapido), box-shadow var(--rapido); }
+.buscador-grande:hover { border-color: #9aa7b8; }
+.buscador-grande:focus-within { border-color: var(--foco); box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.16); }
+.buscador-grande svg { flex: none; color: var(--texto-3); }
+.buscador-grande input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; font-size: 1rem; }
+
+/* Resultados de la búsqueda de municipios */
+.lista-municipios { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; }
+.lista-municipios li + li { border-top: 1px solid #edf0f5; }
+.lista-municipios button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px;
+  border: 0; border-radius: 8px; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: background var(--rapido); }
+.lista-municipios button:hover { background: var(--superficie-2); }
+.lista-municipios .poblacion { flex: none; font-size: 0.86rem; color: var(--texto-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
