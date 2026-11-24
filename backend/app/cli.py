@@ -3,6 +3,7 @@
     python -m app.cli init            # crea tablas y catálogos
     python -m app.cli admin           # crea una cuenta de administración (pide los datos)
     python -m app.cli demo            # cuentas, solicitudes y operativo de demostración
+    python -m app.cli admin-pruebas   # cuenta local con todos los roles internos (solo desarrollo)
     python -m app.cli datos           # carga las tablas procesadas y calcula alertas
     python -m app.cli verificar       # verifica la integridad de la bitácora
 """
@@ -20,6 +21,7 @@ from datetime import date, timedelta
 from sqlalchemy import func, select
 
 from . import bitacora
+from .catalogos import ROLES
 from .config import obtener_config
 from .db import SesionLocal, ahora
 from .etl.cargar import cargar_todo
@@ -118,6 +120,34 @@ def cmd_demo(_args) -> None:
     print("\nLas cuentas admin_ti y seguridad pedirán configurar el segundo factor al entrar.")
 
 
+def cmd_admin_pruebas(_args) -> None:
+    """Cuenta local con todos los roles internos para probar la plataforma completa (solo desarrollo).
+
+    Combina roles que en producción son incompatibles (administración y seguridad), por eso no se puede
+    crear con NEXO_ENTORNO=produccion. La contraseña es aleatoria y solo se guarda en var/ (permisos 600).
+    """
+    preparar_base()
+    cfg = obtener_config()
+    if cfg.es_produccion:
+        sys.exit("La cuenta de pruebas total no se crea en producción (rompería la segregación de funciones).")
+    roles = [r["codigo"] for r in ROLES if r["codigo"] != "entidad_solicitante"]
+    email = "admin.local@nexo.example.com"
+    clave = "-".join(secrets.token_urlsafe(5) for _ in range(4))
+    with SesionLocal() as bd:
+        u = _crear_usuario(bd, email, "Administración local (pruebas)", "Equipo Nexo", roles, clave, True)
+        u.mfa_activo, u.mfa_secreto_cifrado, u.mfa_pendiente_cifrado = False, None, None
+        u.codigos_recuperacion, u.mfa_ultimo_paso = None, None
+        bd.commit()
+    ruta = cfg.directorio_var / "credenciales-admin-local.txt"
+    ruta.write_text("Cuenta local de pruebas con todos los roles internos (no subir a ningún repositorio)\n\n"
+                    f"URL:        {cfg.url_publica}\nCorreo:     {email}\nContraseña: {clave}\n\n"
+                    "Al primer inicio de sesión se configura el segundo factor (código QR).\n")
+    os.chmod(ruta, 0o600)
+    bitacora.registrar("usuarios.admin_pruebas_creado", modulo="usuarios", objeto=f"usuario:{u.id}",
+                       detalle={"roles": roles})
+    print(f"Cuenta {email} lista con {len(roles)} roles. Credenciales en {ruta} (permisos 600).")
+
+
 def _sembrar_solicitudes(bd) -> None:
     if bd.execute(select(func.count()).select_from(SolicitudPrecio)).scalar():
         return
@@ -197,6 +227,7 @@ def main() -> None:
     sub.add_parser("init").set_defaults(f=lambda a: (preparar_base(), print("Base preparada.")))
     sub.add_parser("admin").set_defaults(f=cmd_admin)
     sub.add_parser("demo").set_defaults(f=cmd_demo)
+    sub.add_parser("admin-pruebas", help="Cuenta local con todos los roles (solo desarrollo)").set_defaults(f=cmd_admin_pruebas)
     sub.add_parser("datos").set_defaults(f=cmd_datos)
     sub.add_parser("verificar").set_defaults(f=cmd_verificar)
     args = p.parse_args()
