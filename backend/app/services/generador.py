@@ -95,7 +95,7 @@ def _dimension(t: str, fuente: str) -> str | None:
         (r"por area|urbana y rural|urbano y rural", "area"),
         (r"por severidad", "severidad"),
         (r"por estado", "estado"),
-        (r"por ano|por anos|anual", "anio"),
+        (r"por ano|por anos|\banual", "anio"),  # \b: «interanual» es una variación mensual, no una agrupación por año
         (r"por mes|mensual|en el tiempo|evolucion|tendencia|historic|ultimos meses|a lo largo", "__tiempo"),
     ]
     for patron, dim in reglas:

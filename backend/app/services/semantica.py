@@ -352,7 +352,7 @@ def ejecutar(bd: Session, consulta: dict[str, Any], permisos: set[str] | None = 
     suprimidas = sum(1 for f in filas if f.get("suprimido"))
     if suprimidas:
         advertencias.insert(0, f"{suprimidas} celda(s) suprimida(s) por tener menos de {k} informantes.")
-    total_n = sum(f.get("n", 0) for f in filas)
+    total_n = sum(f.get("n") or 0 for f in filas)  # sin las celdas suprimidas: restar no debe revelarlas
     return {
         "fuente": {"id": fuente.id, "titulo": fuente.titulo, "cita": fuente.cita},
         "medida": {"id": medida_id, "etiqueta": medida.etiqueta, "unidad": medida.unidad, "formato": medida.formato},
@@ -427,7 +427,7 @@ def _ejecutar_sql(bd, fuente, medida, dimension, serie, conds, limite, k, orden)
             "x": _formatear_x(fuente, dimension, r.get("x")) if dimension else "Total",
             "serie": r.get("s") if serie else None,
             "valor": None if suprimido or v is None else round(float(v), 6),
-            "n": n,
+            "n": None if suprimido else n,  # en un conteo, n es la cifra oculta: también se suprime
             "suprimido": suprimido,
         })
     if serie and _temporal(dimension) is False:
@@ -458,11 +458,11 @@ def _ejecutar_mediana(bd, fuente, medida, dimension, serie, conds, limite, k) ->
         suprimido = bool(fuente.k_columna and len(informantes[(x, s)]) < k)
         filas.append({"x": _formatear_x(fuente, dimension, x) if dimension else "Total", "serie": s,
                       "valor": None if suprimido else round(statistics.median(valores), 6),
-                      "n": len(valores), "suprimido": suprimido})
+                      "n": None if suprimido else len(valores), "suprimido": suprimido})
     if _temporal(dimension):
         filas.sort(key=lambda f: str(f["x"]))
     else:
-        filas.sort(key=lambda f: -f["n"])
+        filas.sort(key=lambda f: -(f["n"] or 0))
         filas = filas[:limite]
     return filas
 

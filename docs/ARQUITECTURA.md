@@ -14,7 +14,7 @@ nexo-ine/
 ├── backend/app/
 │   ├── main.py             arranque, middleware, routers y frontend
 │   ├── config.py           configuración por variables NEXO_* (sin secretos en el código)
-│   ├── models.py           modelo de datos (≈30 tablas)
+│   ├── models.py           modelo de datos (35 tablas)
 │   ├── security/           contraseñas, cifrado, sesiones, límites, cabeceras
 │   ├── deps.py             usuario actual, permisos (RBAC) y CSRF
 │   ├── bitacora.py         bitácora HMAC con anclas

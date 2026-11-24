@@ -74,7 +74,7 @@ class Usuario(Base):
     mfa_secreto_cifrado: Mapped[str | None] = mapped_column(Text)
     mfa_pendiente_cifrado: Mapped[str | None] = mapped_column(Text)
     mfa_ultimo_paso: Mapped[int | None] = mapped_column(Integer)  # evita reutilizar un código TOTP
-    codigos_recuperacion: Mapped[list | None] = mapped_column(JSON)  # hashes SHA-256
+    codigos_recuperacion: Mapped[list | None] = mapped_column(JSON)  # HMAC-SHA256 con llave del servidor
     intentos_fallidos: Mapped[int] = mapped_column(Integer, default=0)
     bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime)
     ultimo_acceso: Mapped[datetime | None] = mapped_column(DateTime)

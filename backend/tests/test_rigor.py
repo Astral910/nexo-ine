@@ -119,3 +119,29 @@ def test_tableros_base_usan_consultas_validas():
                         semantica.ejecutar(bd, w["consulta"], todos)
                     except semantica.ErrorConsulta as e:
                         pytest.fail(f"Tablero base de {rol}, widget «{w['titulo']}»: {e}")
+
+
+def test_interanual_se_agrupa_por_mes():
+    """Regresión GEN-2: «interanual» contiene «anual», pero es una variación mensual; no debe agrupar por año."""
+    spec = generador.generar("Inflación interanual desde 2022", TODOS)
+    dimensiones = [w["consulta"].get("dimension") for w in spec["widgets"] if w.get("consulta")]
+    assert "anio" not in dimensiones
+
+
+def test_celda_suprimida_no_revela_su_conteo():
+    """Regresión SEM-7: en una celda suprimida por secreto estadístico tampoco se entrega n (en un conteo, n es la cifra)."""
+    from app.models import PrecioRecolectado
+
+    with SesionLocal() as bd:
+        bd.add_all([PrecioRecolectado(anio=2023, mes=6, departamento="Zacapa", municipio="Zacapa", cod_articulo="T-1",
+                                      articulo="Producto de prueba", cod_fuente=f"F{i}", precio_actual=10.0 + i)
+                    for i in range(3)])  # 3 informantes: por debajo del mínimo de 5
+        bd.commit()
+        try:
+            r = semantica.ejecutar(bd, {"fuente": "precios_ipc", "medida": "conteo", "dimension": "departamento",
+                                        "filtros": {"texto": "producto de prueba"}}, TODOS)
+            fila = next(f for f in r["filas"] if f["x"] == "Zacapa")
+            assert fila["suprimido"] and fila["valor"] is None and fila["n"] is None
+        finally:
+            bd.execute(delete(PrecioRecolectado).where(PrecioRecolectado.cod_articulo == "T-1"))
+            bd.commit()
