@@ -144,6 +144,8 @@ def avanzar(sol_id: int, datos: Comentario, ctx: Contexto = Depends(requiere("dp
     sol = _obtener(bd, ctx, sol_id)
     if sol.rechazada or sol.estado == "entregada":
         raise HTTPException(409, "La solicitud ya está cerrada.")
+    if sol.solicitante_id == ctx.usuario.id:
+        raise HTTPException(409, "Segregación de funciones: no puedes atender una solicitud que tú mismo registraste.")
     i = ORDEN.index(sol.estado)
     siguiente = ORDEN[i + 1]
     if siguiente == "analisis" and not bd.execute(select(func.count()).select_from(Cotizacion).where(

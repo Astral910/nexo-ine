@@ -30,8 +30,8 @@ class Configuracion(BaseSettings):
     directorio_var: Path = RAIZ / "var"
     url_publica: str = "http://localhost:8000"
 
-    # Sesiones y acceso
-    sesion_inactividad_min: int = 30
+    # Sesiones y acceso (inactividad: 30 min en producción; 240 en desarrollo y demostración)
+    sesion_inactividad: int | None = None
     sesion_maxima_horas: int = 12
     login_max_intentos: int = 5
     bloqueo_minutos: int = 15
@@ -39,6 +39,13 @@ class Configuracion(BaseSettings):
     roles_con_mfa_obligatorio: str = "admin_ti,seguridad"
     cookie_segura: bool | None = None  # None = automático (sí en producción)
     buzon_demo: bool | None = None  # buzón de correos visible en pantalla (solo demostración)
+
+    # Correo saliente (opcional)
+    smtp_host: str = ""
+    smtp_puerto: int = 587
+    smtp_usuario: str = ""
+    smtp_clave: str = ""
+    smtp_remitente: str = "no-responder@localhost"
 
     # Datos y secreto estadístico
     subida_max_mb: int = 10
@@ -51,6 +58,12 @@ class Configuracion(BaseSettings):
     @property
     def es_produccion(self) -> bool:
         return self.entorno.lower() == "produccion"
+
+    @property
+    def sesion_inactividad_min(self) -> int:
+        if self.sesion_inactividad:
+            return self.sesion_inactividad
+        return 30 if self.es_produccion else 240
 
     @property
     def usar_cookie_segura(self) -> bool:
@@ -76,6 +89,11 @@ class Configuracion(BaseSettings):
         return f"sqlite:///{self.directorio_var / 'nexo.db'}"
 
 
+def _validar_entorno(cfg: Configuracion) -> None:
+    if cfg.entorno.lower() not in ("desarrollo", "produccion"):
+        raise RuntimeError(f"NEXO_ENTORNO inválido: {cfg.entorno!r}. Usa 'desarrollo' o 'produccion'.")
+
+
 def _resolver_clave(cfg: Configuracion) -> str:
     """En producción la clave es obligatoria. En desarrollo se genera una local (0600)."""
     if cfg.clave_secreta:
@@ -86,15 +104,19 @@ def _resolver_clave(cfg: Configuracion) -> str:
         raise RuntimeError("Falta NEXO_CLAVE_SECRETA: es obligatoria en producción.")
     cfg.directorio_var.mkdir(parents=True, exist_ok=True)
     archivo = cfg.directorio_var / ".clave_desarrollo"
-    if not archivo.exists():
-        archivo.write_text(secrets.token_urlsafe(48))
-        os.chmod(archivo, 0o600)
+    try:  # creación exclusiva con permisos 600 desde el primer byte (sin ventana de exposición)
+        fd = os.open(archivo, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(secrets.token_urlsafe(48))
         log.warning("Se generó una clave secreta local de desarrollo en %s", archivo)
+    except FileExistsError:
+        pass
     return archivo.read_text().strip()
 
 
 @lru_cache
 def obtener_config() -> Configuracion:
     cfg = Configuracion()
+    _validar_entorno(cfg)
     cfg.clave_secreta = _resolver_clave(cfg)
     return cfg

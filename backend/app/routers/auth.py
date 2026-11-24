@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import secrets
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import pyotp
 import segno
+from cryptography.exceptions import InvalidTag
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .. import bitacora
@@ -25,6 +26,7 @@ from ..security.passwords import (
     evaluar_password,
     hash_password,
     hash_token,
+    hmac_token,
     necesita_rehash,
     verificar_password,
 )
@@ -33,6 +35,8 @@ from ..security.sesiones import borrar_cookies, crear_sesion, escribir_cookies, 
 router = APIRouter(prefix="/api/auth", tags=["autenticación"])
 VERSION_CONSENTIMIENTO = "2026-11-v1"
 MENSAJE_GENERICO = "Correo o contraseña incorrectos."
+MENSAJE_DEMASIADOS = "Demasiados intentos fallidos. Espera unos minutos antes de volver a intentar."
+UMBRAL_GLOBAL = 20  # fallos de una cuenta desde cualquier IP antes de bloquearla para todos
 
 
 def _limitar(request: Request, accion: str, maximo: int, ventana_s: int) -> None:
@@ -134,6 +138,7 @@ def registrar(datos: Registro, request: Request, bd: Session = Depends(obtener_b
         raise HTTPException(422, " ".join(problemas))
     respuesta = {"mensaje": "Si los datos son válidos, recibirás un correo para verificar tu cuenta."}
     existente = bd.execute(select(Usuario).where(Usuario.email == email)).scalar()
+    hash_nuevo = hash_password(datos.password)  # se calcula siempre: el tiempo de respuesta no revela si existe
     if existente:
         # No se revela si el correo ya existe: se avisa al titular por correo.
         enviar_correo(bd, email, "Intento de registro con tu correo",
@@ -142,17 +147,19 @@ def registrar(datos: Registro, request: Request, bd: Session = Depends(obtener_b
         bitacora.registrar("auth.registro_duplicado", modulo="acceso", ip=ip_cliente(request))
         return respuesta
     usuario = Usuario(
-        email=email, nombre=datos.nombre.strip(), unidad=datos.unidad.strip(), password_hash=hash_password(datos.password),
+        email=email, nombre=datos.nombre.strip(), unidad=datos.unidad.strip(), password_hash=hash_nuevo,
         rol_solicitado=rol.codigo, motivo_solicitud=datos.motivo.strip(), estado="pendiente_verificacion",
         consentimiento_version=VERSION_CONSENTIMIENTO, consentimiento_en=ahora(),
     )
     bd.add(usuario)
     bd.commit()
     token = _crear_token(bd, usuario, "verificar_correo", 60 * 24)
-    enviar_correo(bd, email, "Verifica tu correo en Nexo",
-                  f"Hola {usuario.nombre}: confirma tu correo para continuar con tu solicitud de acceso como "
-                  f"«{rol.nombre}». El enlace vence en 24 horas.",
-                  f"{cfg.url_publica}/verificar?token={token}")
+    clave_buzon = enviar_correo(bd, email, "Verifica tu correo en Nexo",
+                                f"Hola {usuario.nombre}: confirma tu correo para continuar con tu solicitud de acceso "
+                                f"como «{rol.nombre}». El enlace vence en 24 horas.",
+                                f"{cfg.url_publica}/verificar?token={token}", visible_en_demo=True)
+    if clave_buzon:
+        respuesta["clave_buzon"] = clave_buzon
     bitacora.registrar("auth.registro", usuario=usuario, modulo="acceso", objeto=f"usuario:{usuario.id}",
                        detalle={"rol_solicitado": rol.codigo}, ip=ip_cliente(request))
     return respuesta
@@ -190,8 +197,17 @@ class Login(BaseModel):
 
 
 def _registrar_intento(bd: Session, email: str, ip: str, exito: bool, motivo: str) -> None:
-    bd.add(IntentoLogin(email_hash=hash_token(email), ip=ip, exito=exito, motivo=motivo))
+    bd.add(IntentoLogin(email_hash=hmac_token(email), ip=ip, exito=exito, motivo=motivo))
     bd.commit()
+
+
+def _fallos_recientes(bd: Session, email: str, ip: str | None) -> int:
+    desde = ahora() - timedelta(minutes=obtener_config().bloqueo_minutos)
+    q = select(func.count()).select_from(IntentoLogin).where(
+        IntentoLogin.email_hash == hmac_token(email), IntentoLogin.exito.is_(False), IntentoLogin.creado_en > desde)
+    if ip is not None:
+        q = q.where(IntentoLogin.ip == ip)
+    return bd.execute(q).scalar() or 0
 
 
 @router.post("/login")
@@ -201,26 +217,26 @@ def login(datos: Login, request: Request, response: Response, bd: Session = Depe
     ip = ip_cliente(request)
     email = datos.email.lower().strip()
     usuario = bd.execute(select(Usuario).where(Usuario.email == email)).scalar()
-    valida = verificar_password(datos.password, usuario.password_hash if usuario else None)
-
-    if usuario and usuario.bloqueado_hasta and usuario.bloqueado_hasta > ahora():
-        _registrar_intento(bd, email, ip, False, "cuenta_bloqueada")
+    # Bloqueo por cuenta + IP (un atacante no puede bloquear a la persona desde otro equipo) y bloqueo global
+    # tras muchos fallos desde varias IP. La respuesta es la misma exista o no la cuenta (sin enumeración).
+    if (_fallos_recientes(bd, email, ip) >= cfg.login_max_intentos
+            or _fallos_recientes(bd, email, None) >= UMBRAL_GLOBAL
+            or (usuario and usuario.bloqueado_hasta and usuario.bloqueado_hasta > ahora())):
+        verificar_password(datos.password, None)  # mismo costo de tiempo
+        _registrar_intento(bd, email, ip, False, "bloqueado")
         bitacora.registrar("auth.login_bloqueado", usuario=usuario, modulo="acceso", resultado="denegado", ip=ip)
-        raise HTTPException(status.HTTP_423_LOCKED,
-                            "La cuenta está bloqueada temporalmente por intentos fallidos. Intenta más tarde.")
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, MENSAJE_DEMASIADOS)
+    valida = verificar_password(datos.password, usuario.password_hash if usuario else None)
     if not usuario or not valida:
         _registrar_intento(bd, email, ip, False, "credenciales")
-        if usuario:
-            usuario.intentos_fallidos += 1
-            if usuario.intentos_fallidos >= cfg.login_max_intentos:
-                usuario.bloqueado_hasta = ahora() + timedelta(minutes=cfg.bloqueo_minutos)
-                usuario.intentos_fallidos = 0
-                bd.commit()
-                bitacora.registrar("auth.cuenta_bloqueada", usuario=usuario, modulo="seguridad",
-                                   detalle={"minutos": cfg.bloqueo_minutos}, resultado="denegado", ip=ip)
-                notificar_permiso(bd, "seguridad:gestionar", "Cuenta bloqueada por intentos fallidos",
-                                  f"Se bloqueó temporalmente la cuenta de {usuario.nombre}.", "alerta", "/seguridad")
+        if usuario and _fallos_recientes(bd, email, None) >= UMBRAL_GLOBAL:
+            usuario.bloqueado_hasta = ahora() + timedelta(minutes=cfg.bloqueo_minutos)
             bd.commit()
+            bitacora.registrar("auth.cuenta_bloqueada", usuario=usuario, modulo="seguridad",
+                               detalle={"minutos": cfg.bloqueo_minutos, "motivo": "fallos desde varias IP"},
+                               resultado="denegado", ip=ip)
+            notificar_permiso(bd, "seguridad:gestionar", "Posible ataque distribuido a una cuenta",
+                              f"Se bloqueó temporalmente la cuenta de {usuario.nombre}.", "critico", "/seguridad")
         bitacora.registrar("auth.login_fallido", usuario=usuario, modulo="acceso", resultado="denegado", ip=ip)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, MENSAJE_GENERICO)
 
@@ -236,7 +252,6 @@ def login(datos: Login, request: Request, response: Response, bd: Session = Depe
 
     if necesita_rehash(usuario.password_hash):
         usuario.password_hash = hash_password(datos.password)
-    usuario.intentos_fallidos = 0
     usuario.bloqueado_hasta = None
     bd.commit()
     token, ses = crear_sesion(bd, usuario.id, request, mfa_ok=not usuario.mfa_activo)
@@ -250,13 +265,13 @@ def login(datos: Login, request: Request, response: Response, bd: Session = Depe
 
 
 class CodigoMfa(BaseModel):
-    codigo: str = Field(min_length=6, max_length=20)
+    codigo: str = Field(min_length=6, max_length=40)
 
 
 def _verificar_totp(usuario: Usuario, codigo: str, secreto: str) -> bool:
     totp = pyotp.TOTP(secreto)
     codigo = codigo.replace(" ", "")
-    ahora_paso = totp.timecode(ahora().replace(tzinfo=None))
+    ahora_paso = totp.timecode(datetime.now(UTC))  # hora con zona: no depende de la hora local del servidor
     for desfase in (-1, 0, 1):
         paso = ahora_paso + desfase
         if usuario.mfa_ultimo_paso is not None and paso <= usuario.mfa_ultimo_paso:
@@ -268,13 +283,21 @@ def _verificar_totp(usuario: Usuario, codigo: str, secreto: str) -> bool:
 
 
 def _usar_codigo_recuperacion(usuario: Usuario, codigo: str) -> bool:
-    h = hash_token(codigo.strip().upper())
+    h = hmac_token(codigo.replace("-", "").replace(" ", "").strip().upper())
     codigos = list(usuario.codigos_recuperacion or [])
     if h in codigos:
         codigos.remove(h)
         usuario.codigos_recuperacion = codigos
         return True
     return False
+
+
+def _secreto(cifrado: str) -> str:
+    try:
+        return descifrar(cifrado)
+    except (InvalidTag, ValueError) as e:
+        raise HTTPException(409, "No se pudo leer tu segundo factor (la llave del servidor cambió). "
+                                 "Pide a Informática que lo restablezca.") from e
 
 
 def _rotar(bd: Session, request: Request, response: Response, ses: Sesion, usuario: Usuario) -> Sesion:
@@ -290,9 +313,13 @@ def mfa_verificar(datos: CodigoMfa, request: Request, response: Response,
     _limitar(request, f"mfa:{ctx.usuario.id}", 8, 300)
     usuario = bd.get(Usuario, ctx.usuario.id)
     ses = bd.get(Sesion, ctx.sesion.id)
+    if not limitador.permitir(f"mfa-cuenta:{usuario.id}", 10, 900):  # tope por cuenta aunque rote la IP
+        revocar(bd, ses)
+        bitacora.registrar("auth.mfa_fuerza_bruta", usuario=usuario, modulo="seguridad", resultado="denegado", ip=ctx.ip)
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Demasiados códigos incorrectos. Inicia sesión de nuevo más tarde.")
     if not usuario.mfa_activo or not usuario.mfa_secreto_cifrado:
         raise HTTPException(400, "Tu cuenta no tiene segundo factor configurado.")
-    ok = _verificar_totp(usuario, datos.codigo, descifrar(usuario.mfa_secreto_cifrado))
+    ok = _verificar_totp(usuario, datos.codigo, _secreto(usuario.mfa_secreto_cifrado))
     via = "totp"
     if not ok and _usar_codigo_recuperacion(usuario, datos.codigo):
         ok, via = True, "codigo_recuperacion"
@@ -307,11 +334,18 @@ def mfa_verificar(datos: CodigoMfa, request: Request, response: Response,
     return info_usuario(bd, usuario, nueva)
 
 
+class Reconfirmacion(BaseModel):
+    password: str = Field(default="", max_length=256)
+
+
 @router.post("/mfa/iniciar")
-def mfa_iniciar(ctx: Contexto = Depends(contexto_parcial), bd: Session = Depends(obtener_bd)):
+def mfa_iniciar(datos: Reconfirmacion | None = None, ctx: Contexto = Depends(contexto_parcial),
+                bd: Session = Depends(obtener_bd)):
     usuario = bd.get(Usuario, ctx.usuario.id)
-    if usuario.mfa_activo and not ctx.sesion.mfa_ok:
-        raise HTTPException(403, "Verifica primero tu segundo factor actual.")
+    if usuario.mfa_activo:
+        # Cambiar un segundo factor existente exige sesión verificada y la contraseña actual.
+        if not ctx.sesion.mfa_ok or not datos or not verificar_password(datos.password, usuario.password_hash):
+            raise HTTPException(403, "Para reemplazar tu segundo factor confirma tu contraseña actual.")
     secreto = pyotp.random_base32()
     usuario.mfa_pendiente_cifrado = cifrar(secreto)
     bd.commit()
@@ -328,15 +362,16 @@ def mfa_activar(datos: CodigoMfa, request: Request, response: Response,
     ses = bd.get(Sesion, ctx.sesion.id)
     if not usuario.mfa_pendiente_cifrado:
         raise HTTPException(400, "Primero genera el código QR.")
-    secreto = descifrar(usuario.mfa_pendiente_cifrado)
+    secreto = _secreto(usuario.mfa_pendiente_cifrado)
     if not _verificar_totp(usuario, datos.codigo, secreto):
         bd.commit()
         raise HTTPException(400, "El código no coincide. Revisa la hora de tu teléfono e intenta de nuevo.")
-    codigos = [secrets.token_hex(5).upper() for _ in range(8)]
+    crudos = [secrets.token_hex(10).upper() for _ in range(8)]  # 80 bits cada uno
+    codigos = ["-".join(c[i:i + 5] for i in range(0, 20, 5)) for c in crudos]
     usuario.mfa_secreto_cifrado = cifrar(secreto)
     usuario.mfa_pendiente_cifrado = None
     usuario.mfa_activo = True
-    usuario.codigos_recuperacion = [hash_token(c) for c in codigos]
+    usuario.codigos_recuperacion = [hmac_token(c) for c in crudos]
     usuario.ultimo_acceso = ahora()
     bd.commit()
     nueva = _rotar(bd, request, response, ses, usuario)
@@ -500,11 +535,12 @@ def cerrar_sesion(prefijo: str, ctx: Contexto = Depends(contexto), bd: Session =
 
 
 @router.get("/buzon")
-def buzon(para: EmailStr, request: Request, bd: Session = Depends(obtener_bd)):
-    if not obtener_config().mostrar_buzon_demo:
+def buzon(clave: str, request: Request, bd: Session = Depends(obtener_bd)):
+    """Muestra solo el correo de verificación de un registro hecho desde este navegador (con su clave)."""
+    if not obtener_config().mostrar_buzon_demo or len(clave) > 100:
         raise HTTPException(404, "No disponible.")
-    _limitar(request, "buzon", 60, 60)
-    filas = bd.execute(select(CorreoSaliente).where(CorreoSaliente.para == para.lower())
-                       .order_by(CorreoSaliente.id.desc()).limit(10)).scalars()
-    return [{"asunto": c.asunto, "cuerpo": c.cuerpo, "enlace": c.enlace, "fecha": c.creado_en.isoformat()}
-            for c in filas]
+    _limitar(request, "buzon", 30, 60)
+    c = bd.execute(select(CorreoSaliente).where(CorreoSaliente.clave_lectura == hash_token(clave))).scalar()
+    if c is None:
+        raise HTTPException(404, "No encontrado.")
+    return {"para": c.para, "asunto": c.asunto, "cuerpo": c.cuerpo, "enlace": c.enlace, "fecha": c.creado_en.isoformat()}

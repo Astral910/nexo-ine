@@ -14,17 +14,17 @@ from ..config import obtener_config
 
 
 @lru_cache
-def _llave(contexto: str) -> bytes:
+def llave(contexto: str) -> bytes:
     secreto = obtener_config().clave_secreta.encode()
     return HKDF(algorithm=hashes.SHA256(), length=32, salt=b"nexo-ine-2026", info=contexto.encode()).derive(secreto)
 
 
 def cifrar(texto: str, contexto: str = "mfa") -> str:
     nonce = os.urandom(12)
-    datos = AESGCM(_llave(contexto)).encrypt(nonce, texto.encode(), contexto.encode())
+    datos = AESGCM(llave(contexto)).encrypt(nonce, texto.encode(), contexto.encode())
     return base64.urlsafe_b64encode(nonce + datos).decode()
 
 
 def descifrar(token: str, contexto: str = "mfa") -> str:
     crudo = base64.urlsafe_b64decode(token.encode())
-    return AESGCM(_llave(contexto)).decrypt(crudo[:12], crudo[12:], contexto.encode()).decode()
+    return AESGCM(llave(contexto)).decrypt(crudo[:12], crudo[12:], contexto.encode()).decode()

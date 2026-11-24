@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from .. import bitacora
 from ..avisos import enviar_correo, notificar
+from ..catalogos import ROLES_INCOMPATIBLES
 from ..config import obtener_config
 from ..db import ahora, obtener_bd
 from ..deps import Contexto, requiere
@@ -48,6 +49,9 @@ class Roles(BaseModel):
 
 
 def _asignar(bd: Session, u: Usuario, codigos: list[str], por: Usuario) -> list[str]:
+    for a, b, motivo in ROLES_INCOMPATIBLES:
+        if a in codigos and b in codigos:
+            raise HTTPException(422, f"Roles incompatibles ({a} y {b}): {motivo}.")
     roles = bd.execute(select(Rol).where(Rol.codigo.in_(codigos))).scalars().all()
     if len(roles) != len(set(codigos)):
         raise HTTPException(422, "Algún rol no existe.")

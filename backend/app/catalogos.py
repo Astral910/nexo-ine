@@ -35,14 +35,16 @@ _LECTURA_GENERAL = ["centro:ver", "tableros:ver", "tableros:crear", "dpir:ver", 
 
 ROLES: list[dict] = [
     {"codigo": "admin_ti", "nombre": "Administración de TI", "area": "Informática", "privilegiado": True,
-     "autoregistro": False, "descripcion": "Administra cuentas, roles, automatizaciones y la plataforma.",
-     "permisos": [p[0] for p in PERMISOS if p[0] not in ("jurado:ver", "dpir:solicitar")]},
+     "autoregistro": False, "descripcion": "Administra cuentas, roles, automatizaciones y la plataforma. Por "
+                                          "segregación de funciones no gestiona seguridad, privacidad ni la bitácora.",
+     "permisos": [p[0] for p in PERMISOS if p[0] not in (
+         "jurado:ver", "dpir:solicitar", "seguridad:gestionar", "privacidad:administrar", "bitacora:ver")]},
     {"codigo": "seguridad", "nombre": "Oficial de seguridad", "area": "Seguridad de la información",
      "privilegiado": True, "autoregistro": False,
      "descripcion": "Supervisa la postura de seguridad, riesgos, incidentes, privacidad y la bitácora.",
      "permisos": ["centro:ver", "tableros:ver", "tableros:crear", "seguridad:ver", "seguridad:gestionar",
                   "ti:ver", "bitacora:ver", "privacidad:administrar", "automatizaciones:ver", "datos:ver"]},
-    {"codigo": "direccion", "nombre": "Dirección y Gerencia", "area": "Gerencia",
+    {"codigo": "direccion", "nombre": "Dirección y Gerencia", "area": "Gerencia", "autoregistro": False,
      "descripcion": "Vista ejecutiva de todos los procesos, sin modificar datos.",
      "permisos": _LECTURA_GENERAL},
     {"codigo": "analista_dpir", "nombre": "Analista de Precios de Referencia", "area": "DPIR",
@@ -68,8 +70,8 @@ ROLES: list[dict] = [
     {"codigo": "entidad_solicitante", "nombre": "Entidad pública solicitante", "area": "Externo",
      "descripcion": "Unidad de compras o contabilidad de una entidad que pide precios de referencia.",
      "permisos": ["dpir:solicitar"]},
-    {"codigo": "jurado", "nombre": "Jurado del Datatón", "area": "Evaluación",
-     "descripcion": "Solo lectura de toda la plataforma y del modo jurado.",
+    {"codigo": "jurado", "nombre": "Jurado del Datatón", "area": "Evaluación", "autoregistro": False,
+     "descripcion": "Lectura de toda la plataforma y del modo jurado; puede crear tableros personales.",
      "permisos": _LECTURA_GENERAL + ["jurado:ver", "bitacora:ver"]},
     {"codigo": "consulta", "nombre": "Consulta", "area": "General",
      "descripcion": "Lectura de tableros, índices, territorio y catálogo de datos.",
@@ -77,12 +79,19 @@ ROLES: list[dict] = [
                   "datos:ver"]},
 ]
 
+# Segregación de funciones: pares de roles que una misma persona no puede tener a la vez.
+ROLES_INCOMPATIBLES: list[tuple[str, str, str]] = [
+    ("admin_ti", "seguridad", "quien administra la plataforma no puede auditarse a sí mismo"),
+    ("analista_dpir", "entidad_solicitante", "quien pide un precio de referencia no puede calcularlo"),
+    ("jurado", "admin_ti", "el jurado solo observa"),
+]
+
 POLITICAS_RETENCION: list[dict] = [
     {"clase": "sesiones", "nombre": "Sesiones vencidas o revocadas", "dias": 30, "accion": "eliminar",
      "descripcion": "Registros técnicos de sesiones que ya no son válidas.",
      "fundamento": "Minimización: solo se necesitan para investigar incidentes recientes."},
     {"clase": "intentos_login", "nombre": "Intentos de inicio de sesión", "dias": 90, "accion": "eliminar",
-     "descripcion": "Intentos exitosos y fallidos con IP (el correo se guarda como hash).",
+     "descripcion": "Intentos exitosos y fallidos con IP; el correo se guarda seudonimizado con HMAC.",
      "fundamento": "Detección de fuerza bruta; plazo acotado de conservación de datos técnicos."},
     {"clase": "tokens", "nombre": "Enlaces de verificación y restablecimiento", "dias": 7, "accion": "eliminar",
      "descripcion": "Tokens de un solo uso ya usados o vencidos.", "fundamento": "Sin utilidad después de vencer."},

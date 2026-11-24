@@ -68,7 +68,7 @@ class Usuario(Base):
     rol_solicitado: Mapped[str | None] = mapped_column(String(40))
     motivo_solicitud: Mapped[str] = mapped_column(Text, default="")
     email_verificado_en: Mapped[datetime | None] = mapped_column(DateTime)
-    aprobado_por: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"))
+    aprobado_por: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
     aprobado_en: Mapped[datetime | None] = mapped_column(DateTime)
     mfa_activo: Mapped[bool] = mapped_column(Boolean, default=False)
     mfa_secreto_cifrado: Mapped[str | None] = mapped_column(Text)
@@ -92,7 +92,7 @@ class UsuarioRol(Base):
     __tablename__ = "usuario_roles"
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True)
     rol_id: Mapped[int] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
-    asignado_por: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"))
+    asignado_por: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
     asignado_en: Mapped[datetime] = mapped_column(DateTime, default=ahora)
     rol: Mapped[Rol] = relationship(lazy="selectin")
 
@@ -141,6 +141,7 @@ class CorreoSaliente(Base):
     asunto: Mapped[str] = mapped_column(String(200))
     cuerpo: Mapped[str] = mapped_column(Text)
     enlace: Mapped[str | None] = mapped_column(String(500))
+    clave_lectura: Mapped[str | None] = mapped_column(String(64), index=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime, default=ahora)
 
 
@@ -454,6 +455,7 @@ class SolicitudPrecio(Base):
     creada_en: Mapped[datetime] = mapped_column(DateTime, default=ahora)
     actualizada_en: Mapped[datetime] = mapped_column(DateTime, default=ahora)
     entregada_en: Mapped[datetime | None] = mapped_column(DateTime)
+    es_demo: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class EventoSolicitud(Base):

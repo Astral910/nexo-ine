@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import re
 import secrets
+from functools import lru_cache
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
@@ -19,7 +20,7 @@ from ..texto import normalizar
 _hasher = PasswordHasher()  # Argon2id con parámetros recomendados por RFC 9106
 _HASH_FICTICIO = _hasher.hash(secrets.token_urlsafe(24))
 
-LONGITUD_MINIMA = 12
+LONGITUD_MINIMA = 15  # NIST SP 800-63B-4: mínimo 15 si la contraseña es el único factor
 LONGITUD_MAXIMA = 128
 
 # Lista corta de contraseñas y patrones comunes; en producción se recomienda además
@@ -57,7 +58,9 @@ def evaluar_password(clave: str, email: str = "", nombre: str = "") -> list[str]
     if len(clave) > LONGITUD_MAXIMA:
         problemas.append(f"Debe tener como máximo {LONGITUD_MAXIMA} caracteres.")
     n = normalizar(clave).replace(" ", "")
-    if n in _COMUNES or re.fullmatch(r"(.)\1{5,}", n) or n.isdigit():
+    if not re.search(r"[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]", clave) or len(set(clave)) < 5:
+        problemas.append("Usa letras o números y al menos 5 caracteres distintos.")
+    elif n in _COMUNES or re.fullmatch(r"(.)\1{5,}", n) or n.isdigit():
         problemas.append("Es demasiado común o predecible.")
     usuario = normalizar(email.split("@")[0]) if email else ""
     if usuario and len(usuario) >= 4 and usuario in n:
@@ -72,8 +75,22 @@ def evaluar_password(clave: str, email: str = "", nombre: str = "") -> list[str]
 
 
 def hash_token(token: str) -> str:
-    """Hash SHA-256 para tokens de alta entropía (sesiones, enlaces, códigos de recuperación)."""
+    """Hash SHA-256 para tokens aleatorios de alta entropía (sesiones y enlaces de un solo uso)."""
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+@lru_cache
+def _llave_hmac() -> bytes:
+    from .cifrado import llave
+
+    return llave("hmac-identificadores")
+
+
+def hmac_token(valor: str) -> str:
+    """HMAC-SHA256 con llave del servidor: para correos seudonimizados y códigos de recuperación.
+
+    A diferencia de un hash simple, no se puede revertir con un diccionario sin la llave del servidor."""
+    return hmac.new(_llave_hmac(), valor.encode(), hashlib.sha256).hexdigest()
 
 
 def iguales(a: str, b: str) -> bool:
