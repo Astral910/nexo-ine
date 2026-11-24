@@ -46,11 +46,16 @@ class AjusteIPC:
     def periodo(self) -> str:
         return f"{self.ultimo[0]}-{self.ultimo[1]:02d}" if self.ultimo else ""
 
-    def factor(self, fecha: date | None) -> float:
+    def factor(self, fecha: date | None) -> float | None:
+        """Factor de actualización o None si no hay índice para esa fecha (el precio queda sin ajustar)."""
         if not fecha or not self.ultimo:
-            return 1.0
+            return None
         base = self.indice.get((fecha.year, fecha.month))
-        return self.indice[self.ultimo] / base if base else 1.0
+        return self.indice[self.ultimo] / base if base else None
+
+    def ajustar(self, precio: float, fecha: date | None) -> tuple[float, bool]:
+        f = self.factor(fecha)
+        return (precio * f, True) if f else (precio, False)
 
 
 # ---------------------------------------------------------------------------
@@ -58,11 +63,18 @@ class AjusteIPC:
 # ---------------------------------------------------------------------------
 
 
+def _redondeo_relativo(v: float) -> float:
+    """Tres cifras significativas: Q4,850 y Q4,849 cuentan igual; Q2.35 y Q2.36 no."""
+    if v <= 0:
+        return v
+    return round(v, 2 - int(math.floor(math.log10(v))))
+
+
 def moda(valores: list[float]) -> float | None:
-    """Precio más repetido (redondeado a quetzales). None si ningún precio se repite."""
+    """Precio más repetido (con redondeo relativo). None si ningún precio se repite."""
     if not valores:
         return None
-    conteo = Counter(round(v) for v in valores)
+    conteo = Counter(_redondeo_relativo(v) for v in valores)
     valor, veces = conteo.most_common(1)[0]
     return float(valor) if veces > 1 else None
 
@@ -128,13 +140,14 @@ def investigar(bd: Session, terminos: str, unspsc: str | None = None, meses: int
         conds.append(CompraItem.unspsc == unspsc)
     compras = bd.execute(select(CompraItem).where(and_(*conds)).order_by(CompraItem.fecha.desc()).limit(limite)).scalars().all()
     ipc = AjusteIPC(bd)
-    precios_aj = [c.precio_unitario * ipc.factor(c.fecha) for c in compras]
+    ajustes = [ipc.ajustar(c.precio_unitario, c.fecha) for c in compras]
+    precios_aj = [a for a, _ in ajustes]
     marcas = atipicos_iqr(precios_aj)
     filas = [{"tipo": "guatecompras", "fecha": c.fecha.isoformat() if c.fecha else None, "origen": c.entidad,
               "descripcion": c.descripcion[:300], "unidad": c.unidad, "cantidad": c.cantidad,
-              "precio": round(c.precio_unitario, 2), "precio_ajustado": round(pa, 2), "atipico": at,
+              "precio": round(c.precio_unitario, 2), "precio_ajustado": round(pa, 2), "ajustado": aj, "atipico": at,
               "referencia": c.nog, "enlace": GUATECOMPRAS_URL.format(nog=c.nog), "departamento": c.departamento}
-             for c, pa, at in zip(compras, precios_aj, marcas, strict=True)]
+             for c, (pa, aj), at in zip(compras, ajustes, marcas, strict=True)]
 
     pr_conds = _condiciones(PrecioReferencia.texto_norm, terminos)
     referencias = bd.execute(select(PrecioReferencia).where(and_(*pr_conds), PrecioReferencia.precio.is_not(None))
@@ -142,8 +155,8 @@ def investigar(bd: Session, terminos: str, unspsc: str | None = None, meses: int
     filas_pr = [{"tipo": "referencia_ine", "fecha": p.fecha.isoformat() if p.fecha else None,
                  "origen": p.entidad or p.evento, "descripcion": f"{p.producto} — {p.caracteristicas[:200]}",
                  "unidad": p.presentacion, "precio": round(p.precio, 2),
-                 "precio_ajustado": round(p.precio * ipc.factor(p.fecha), 2), "referencia": p.nog,
-                 "atipico": False} for p in referencias]
+                 "precio_ajustado": round(ipc.ajustar(p.precio, p.fecha)[0], 2), "ajustado": ipc.ajustar(p.precio, p.fecha)[1],
+                 "referencia": p.nog, "atipico": False} for p in referencias]
 
     validos = [f["precio_ajustado"] for f in filas if not f["atipico"]]
     est = estadisticos(validos)
@@ -156,6 +169,7 @@ def investigar(bd: Session, terminos: str, unspsc: str | None = None, meses: int
         "estadisticos": est, "estadisticos_con_atipicos": est_todos,
         "atipicos": sum(marcas), "estadistico_recomendado": sugerido, "razon": razon,
         "precio_sugerido": est.get(sugerido) if est.get("n") else None,
+        "sin_ajuste": sum(1 for f in filas if not f["ajustado"]),
         "notas": ["Precio unitario de Guatecompras = monto adjudicado ÷ cantidad (procesos de un solo artículo).",
                   f"Precios llevados a quetzales de {ipc.periodo} con el IPC República del INE.",
                   "Atípicos: regla de Tukey (1.5 × rango intercuartílico) sobre el logaritmo del precio."],
@@ -167,12 +181,15 @@ def investigar(bd: Session, terminos: str, unspsc: str | None = None, meses: int
 # ---------------------------------------------------------------------------
 
 
-def analizar_solicitud(bd: Session, sol: SolicitudPrecio) -> dict:
+def analizar_solicitud(bd: Session, sol: SolicitudPrecio, justificacion: str | None = None) -> dict:
     cotizaciones = bd.execute(select(Cotizacion).where(Cotizacion.solicitud_id == sol.id)).scalars().all()
     incluidas = [c for c in cotizaciones if c.incluida]
     ipc = AjusteIPC(bd)
+    sin_ajuste = 0
     for c in incluidas:
-        c.precio_ajustado = round(c.precio * ipc.factor(c.fecha), 2)
+        valor, ajustado = ipc.ajustar(c.precio, c.fecha)
+        c.precio_ajustado = round(valor, 2)
+        sin_ajuste += 0 if ajustado else 1
     precios = [c.precio_ajustado for c in incluidas]
     marcas = atipicos_iqr(precios)
     for c, m in zip(incluidas, marcas, strict=True):
@@ -197,8 +214,12 @@ def analizar_solicitud(bd: Session, sol: SolicitudPrecio) -> dict:
         "precio_referencia": precio,
         "monto_estimado": round(precio * sol.cantidad, 2) if precio else None,
         "ipc_periodo": ipc.periodo,
+        "sin_ajuste": sin_ajuste,
+        "justificacion_mercado": (justificacion or (sol.resultado or {}).get("justificacion_mercado") or "").strip()[:1000],
         "advertencias": [],
     }
+    if sin_ajuste:
+        resultado["advertencias"].append(f"{sin_ajuste} precio(s) sin índice del IPC para su fecha: quedaron sin ajustar.")
     if not resultado["cumple_mercado_relevante"]:
         resultado["advertencias"].append(
             f"Solo {pct_primarias} % de las fuentes son cotizaciones o catálogos del mercado relevante; "
@@ -211,9 +232,13 @@ def analizar_solicitud(bd: Session, sol: SolicitudPrecio) -> dict:
 
 
 def huella_datos(sol: SolicitudPrecio, cotizaciones: list[Cotizacion]) -> str:
-    datos = [{"tipo": c.tipo, "precio": c.precio, "fecha": c.fecha.isoformat() if c.fecha else None,
-              "referencia": c.referencia, "incluida": c.incluida} for c in cotizaciones]
-    return hashlib.sha256(json.dumps({"solicitud": sol.codigo, "fuentes": datos}, sort_keys=True).encode()).hexdigest()
+    """Huella de los datos usados (no del PDF): fuentes, ajuste por IPC y método."""
+    datos = [{"tipo": c.tipo, "precio": c.precio, "ajustado": c.precio_ajustado, "fecha": c.fecha.isoformat() if c.fecha else None,
+              "referencia": c.referencia, "incluida": c.incluida, "atipica": c.atipica} for c in cotizaciones]
+    r = sol.resultado or {}
+    base = {"solicitud": sol.codigo, "fuentes": datos, "ipc_periodo": r.get("ipc_periodo"),
+            "estadistico": r.get("estadistico_recomendado"), "metodo": "tukey-log-1.5;dpir-media-mediana-moda"}
+    return hashlib.sha256(json.dumps(base, sort_keys=True).encode()).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -242,6 +267,13 @@ def informe_pdf(sol: SolicitudPrecio, cotizaciones: list[Cotizacion], autor: str
 
     def pie(canvas, doc):
         canvas.saveState()
+        canvas.setFont("Helvetica-Bold", 46)
+        canvas.setFillColor(colors.Color(0, 0.25, 0.5, alpha=0.07))
+        canvas.translate(letter[0] / 2, letter[1] / 2)
+        canvas.rotate(35)
+        canvas.drawCentredString(0, 0, "PROTOTIPO · NO OFICIAL")
+        canvas.restoreState()
+        canvas.saveState()
         canvas.setFillColor(azul)
         canvas.rect(0, letter[1] - 0.5 * cm, letter[0], 0.5 * cm, fill=1, stroke=0)
         canvas.setFillColor(celeste)
@@ -257,7 +289,8 @@ def informe_pdf(sol: SolicitudPrecio, cotizaciones: list[Cotizacion], autor: str
                             bottomMargin=2 * cm, title=f"Informe {sol.codigo}", author=autor)
     hist = []
     hist.append(Paragraph(f"Informe técnico de precio de referencia · {sol.codigo}", h1))
-    hist.append(Paragraph(f"Entidad solicitante: <b>{sol.entidad}</b> · Generado: {ahora():%d/%m/%Y %H:%M} UTC · "
+    hora_gt = (ahora() - timedelta(hours=6)).strftime("%d/%m/%Y %H:%M")
+    hist.append(Paragraph(f"Entidad solicitante: <b>{sol.entidad}</b> · Generado: {hora_gt} (hora de Guatemala) · "
                           f"Analista: {autor}", normal))
     hist.append(Spacer(1, 6))
     datos = [["Producto", sol.producto], ["Especificaciones", Paragraph(sol.especificaciones or "—", normal)],
@@ -285,7 +318,10 @@ def informe_pdf(sol: SolicitudPrecio, cotizaciones: list[Cotizacion], autor: str
     hist.append(Paragraph(f"Fuentes incluidas: {r.get('fuentes_incluidas', 0)} · primarias (cotizaciones y catálogos): "
                           f"{r.get('porcentaje_primarias', 0)} % · atípicos excluidos: {r.get('atipicos', 0)}", normal))
     for adv in r.get("advertencias", []):
-        hist.append(Paragraph(f"⚠ {adv}", normal))
+        hist.append(Paragraph(f"Advertencia: {adv}", normal))
+    if r.get("justificacion_mercado"):
+        hist.append(Paragraph(f"<b>Justificación del analista</b> (menos de 50 % de cotizaciones del mercado relevante): "
+                              f"{r['justificacion_mercado']}", normal))
     hist.append(Paragraph("Fuentes consultadas", h2))
     filas = [["Tipo", "Fecha", "Origen", "Referencia", "Precio", "Ajustado", ""]]
     for c in [c for c in cotizaciones if c.incluida][:40]:
@@ -308,9 +344,11 @@ def informe_pdf(sol: SolicitudPrecio, cotizaciones: list[Cotizacion], autor: str
     ]:
         hist.append(Paragraph(f"• {texto}", normal))
     hist.append(Spacer(1, 8))
-    hist.append(Paragraph("Fuente de los datos: Instituto Nacional de Estadística (INE), Guatemala; Guatecompras vía Open "
-                          "Contracting Partnership. Trazabilidad: la huella SHA-256 del pie de página identifica los "
-                          "datos usados; cualquier cambio en las fuentes produce una huella distinta.", pequeno))
+    hist.append(Paragraph("Fuentes de los datos: Instituto Nacional de Estadística (INE), Guatemala (precios de referencia e "
+                          "Índice de Precios al Consumidor). Guatecompras, Ministerio de Finanzas Públicas, publicado en "
+                          "formato OCDS por Open Contracting Partnership (data.open-contracting.org), licencia CC BY 4.0; "
+                          "precio unitario calculado por Nexo. Trazabilidad: la huella SHA-256 del pie identifica los datos "
+                          "usados; cualquier cambio en las fuentes produce una huella distinta.", pequeno))
     doc.build(hist, onFirstPage=pie, onLaterPages=pie)
     return buffer.getvalue()
 

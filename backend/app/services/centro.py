@@ -73,7 +73,10 @@ def resumen_general(bd: Session) -> dict:
     anio_actual = t.year
     poblacion = bd.execute(select(func.sum(ProyeccionPoblacion.poblacion))
                            .where(ProyeccionPoblacion.anio == anio_actual)).scalar() or 0
-    registros = sum(f.filas or 0 for f in bd.execute(select(FuenteDatos)).scalars())
+    from ..models import HbaConversion, HbaProducto  # noqa: PLC0415
+
+    registros = sum(contar(m) for m in (CompraItem, PrecioReferencia, SerieIndice, PrecioRecolectado, LugarPoblado,
+                                        ProyeccionPoblacion, HbaProducto, HbaConversion))
     return {
         "indicadores": {
             "ipc_indice": round(ipc.valor, 2) if ipc else None,

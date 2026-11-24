@@ -6,16 +6,20 @@ import hashlib
 import json
 import logging
 import shutil
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import httpx
 
 from ..config import obtener_config
+from .fuentes import CKAN as CKAN_URL
 from .fuentes import FUENTES, POR_ID, Fuente
+from .fuentes import INE as INE_PUBLICADOR
 
 log = logging.getLogger("nexo.etl")
 AGENTE = "Nexo-ETL/1.0 (prototipo Dataton INE 2026)"
+GUATEMALA = timezone(timedelta(hours=-6))
+FIRMAS = {"XLSX": [b"PK\x03\x04"], "TAR.GZ": [b"\x1f\x8b"], "CSV": []}
 
 
 def dir_crudos() -> Path:
@@ -45,14 +49,50 @@ def sha256_archivo(ruta: Path) -> str:
     return h.hexdigest()
 
 
-def descargar(fuente: Fuente, forzar: bool = False, origen_local: Path | None = None) -> dict:
-    """Descarga una fuente a data/crudos/. Si ya existe, solo verifica su huella."""
+def _validar_contenido(ruta: Path, fuente: Fuente) -> None:
+    """Evita registrar como dato una página de error o de captcha que llegó con HTTP 200."""
+    if ruta.stat().st_size < 512:
+        raise ValueError(f"{fuente.id}: archivo demasiado pequeño")
+    cabeza = ruta.open("rb").read(2048)
+    firmas = FIRMAS.get(fuente.formato, [])
+    if firmas and not any(cabeza.startswith(f) for f in firmas):
+        raise ValueError(f"{fuente.id}: el contenido no es {fuente.formato} (¿página de error o captcha?)")
+    if fuente.formato == "CSV" and cabeza.lstrip().lower().startswith((b"<!doctype", b"<html")):
+        raise ValueError(f"{fuente.id}: se recibió HTML en lugar de CSV")
+
+
+def licencia_ckan(fuente: Fuente) -> str:
+    """Licencia declarada en el portal del INE para el conjunto (o «no especificada»)."""
+    if fuente.publicador != INE_PUBLICADOR:
+        return fuente.licencia
+    try:
+        r = httpx.get(f"{CKAN_URL}/api/3/action/package_show", params={"id": fuente.conjunto}, timeout=20,
+                      headers={"User-Agent": AGENTE})
+        datos = r.json().get("result", {})
+        return datos.get("license_title") or "No especificada en el portal del INE (citar la fuente)"
+    except Exception:
+        return "No especificada en el portal del INE (citar la fuente)"
+
+
+def descargar(fuente: Fuente, forzar: bool = False, origen_local: Path | None = None,
+              fecha_origen: datetime | None = None) -> dict:
+    """Descarga una fuente a data/crudos/. Si ya existe, recalcula su huella y la compara con el manifiesto.
+
+    `origen_local` permite reutilizar una descarga previa del mismo URL: en ese caso `fecha_origen` (la fecha
+    real de esa descarga) es obligatoria, para no registrar una fecha de descarga falsa.
+    """
     destino = dir_crudos() / fuente.archivo
     manifiesto = leer_manifiesto()
     if destino.exists() and not forzar and fuente.id in manifiesto:
-        return manifiesto[fuente.id]
-    if origen_local is not None:  # copia de una descarga previa (misma URL), útil sin red
+        previo = manifiesto[fuente.id]
+        if sha256_archivo(destino) != previo.get("sha256"):
+            raise ValueError(f"{fuente.id}: el archivo local no coincide con la huella del manifiesto")
+        return previo
+    if origen_local is not None:
+        if fecha_origen is None:
+            raise ValueError("Al reutilizar una descarga previa indica su fecha real (fecha_origen).")
         shutil.copyfile(origen_local, destino)
+        momento = fecha_origen.astimezone(UTC)
     else:
         temporal = destino.with_suffix(destino.suffix + ".parcial")
         with httpx.stream("GET", fuente.url, headers={"User-Agent": AGENTE}, timeout=httpx.Timeout(60, read=300),
@@ -61,19 +101,24 @@ def descargar(fuente: Fuente, forzar: bool = False, origen_local: Path | None = 
             with temporal.open("wb") as f:
                 for bloque in r.iter_bytes(1 << 20):
                     f.write(bloque)
+        _validar_contenido(temporal, fuente)
         temporal.replace(destino)
+        momento = datetime.now(UTC)
     registro = {
         "id": fuente.id,
         "titulo": fuente.titulo,
         "url": fuente.url,
         "pagina": fuente.pagina,
         "publicador": fuente.publicador,
-        "licencia": fuente.licencia,
+        "licencia": licencia_ckan(fuente),
         "archivo": fuente.archivo,
-        "descargado_en": datetime.now(UTC).isoformat(timespec="seconds"),
+        "descargado_en": momento.isoformat(timespec="seconds"),
+        "descargado_en_guatemala": momento.astimezone(GUATEMALA).strftime("%d/%m/%Y %H:%M"),
         "bytes": destino.stat().st_size,
         "sha256": sha256_archivo(destino),
     }
+    if origen_local is not None:
+        registro["nota"] = "Copia local de una descarga previa del mismo URL; fecha de esa descarga original."
     manifiesto[fuente.id] = registro
     guardar_manifiesto(manifiesto)
     log.info("Descargado %s (%s bytes)", fuente.id, registro["bytes"])

@@ -153,8 +153,12 @@ def avanzar(sol_id: int, datos: Comentario, ctx: Contexto = Depends(requiere("dp
         raise HTTPException(409, "Antes del análisis incluye al menos una fuente de precio.")
     if siguiente == "informe":
         precios_ref.analizar_solicitud(bd, sol)
-        if not (sol.resultado or {}).get("precio_referencia"):
+        r = sol.resultado or {}
+        if not r.get("precio_referencia"):
             raise HTTPException(409, "El análisis no produjo un precio. Revisa las fuentes incluidas.")
+        if not r.get("cumple_mercado_relevante") and not r.get("justificacion_mercado"):
+            raise HTTPException(409, "Menos del 50 % de las fuentes son cotizaciones del mercado relevante: agrega "
+                                     "cotizaciones o escribe una justificación en el análisis (quedará en el informe).")
     if siguiente == "entregada" and not sol.informe_sha256:
         raise HTTPException(409, "Genera el informe técnico antes de entregar.")
     de = sol.estado
@@ -297,10 +301,15 @@ def borrar_fuente(sol_id: int, fuente_id: int, ctx: Contexto = Depends(requiere(
     return {"ok": True}
 
 
+class Analisis(BaseModel):
+    justificacion: str | None = Field(default=None, max_length=1000)
+
+
 @router.post("/solicitudes/{sol_id}/analizar")
-def analizar(sol_id: int, ctx: Contexto = Depends(requiere("dpir:gestionar")), bd: Session = Depends(obtener_bd)):
+def analizar(sol_id: int, datos: Analisis | None = None, ctx: Contexto = Depends(requiere("dpir:gestionar")),
+             bd: Session = Depends(obtener_bd)):
     sol = _obtener(bd, ctx, sol_id)
-    return precios_ref.analizar_solicitud(bd, sol)
+    return precios_ref.analizar_solicitud(bd, sol, datos.justificacion if datos else None)
 
 
 @router.get("/solicitudes/{sol_id}/informe.pdf")
@@ -316,8 +325,12 @@ def informe(sol_id: int, ctx: Contexto = Depends(requiere("dpir:ver", "dpir:soli
         sol.informe_sha256 = precios_ref.huella_datos(sol, cot)
         bd.commit()
     pdf = precios_ref.informe_pdf(sol, cot, ctx.usuario.nombre)
+    huella_pdf = hashlib.sha256(pdf).hexdigest()
+    if ctx.puede("dpir:gestionar"):
+        sol.resultado = {**(sol.resultado or {}), "sha256_pdf": huella_pdf}
+        bd.commit()
     bitacora.registrar("dpir.informe", usuario=ctx.usuario, modulo="precios", objeto=sol.codigo,
-                       detalle={"sha256_pdf": hashlib.sha256(pdf).hexdigest()}, ip=ctx.ip)
+                       detalle={"sha256_pdf": huella_pdf, "huella_datos": sol.informe_sha256}, ip=ctx.ip)
     return Response(pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'inline; filename="{sol.codigo}.pdf"'})
 

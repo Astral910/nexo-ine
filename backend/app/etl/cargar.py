@@ -99,7 +99,7 @@ def registrar_linaje(bd: Session, filas_por_tabla: dict[str, int]) -> None:
         fd = bd.get(FuenteDatos, f.id) or FuenteDatos(id=f.id)
         fd.titulo, fd.publicador, fd.conjunto, fd.url = f.titulo, f.publicador, f.conjunto, f.url
         fd.pagina, fd.licencia, fd.formato, fd.periodicidad, fd.usado_en = (
-            f.pagina, f.licencia, f.formato, f.periodicidad, f.usado_en)
+            f.pagina, reg.get("licencia", f.licencia), f.formato, f.periodicidad, f.usado_en)
         fd.clasificacion = "publico"
         if reg.get("descargado_en"):
             fd.descargado_en = datetime.fromisoformat(reg["descargado_en"]).replace(tzinfo=None)

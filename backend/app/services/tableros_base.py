@@ -84,8 +84,8 @@ TABLEROS_POR_ROL: dict[str, dict] = {
                      w("salud", "sistema", "Salud del sistema (agente de TI)", 12, componente="salud_ti"),
                      w("auto", "sistema", "Automatizaciones", 12, componente="automatizaciones_estado"),
                      w("ejec", "dona", "Ejecuciones por estado", 4, consulta=q("ejecuciones", "conteo", "estado")),
-                     w("bit-mod", "barras", "Eventos de auditoría por módulo", 8,
-                       consulta=q("bitacora", "conteo", "modulo"))]},
+                     w("ejec-dia", "linea", "Ejecuciones de automatizaciones por día", 8,
+                       consulta=q("ejecuciones", "conteo", "dia"))]},
     "seguridad": {"titulo": "Ciberseguridad", "descripcion": "Postura, riesgos y eventos.",
                   "widgets": [
                       w("postura", "sistema", "Postura de seguridad (agente)", 12, componente="postura_seguridad"),

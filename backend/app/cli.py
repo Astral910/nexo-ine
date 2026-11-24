@@ -86,7 +86,7 @@ def cmd_demo(_args) -> None:
     credenciales = []
     with SesionLocal() as bd:
         for rol, nombre, unidad in DEMO:
-            email = f"{rol.replace('_', '.')}@demo.nexo.local"
+            email = f"{rol.replace('_', '.')}@nexo.example.com"
             clave = "-".join(secrets.token_urlsafe(4) for _ in range(3))  # aleatoria; nunca se guarda en el código
             _crear_usuario(bd, email, nombre, unidad, [rol], clave, True)
             credenciales.append((rol, email, clave))
@@ -105,7 +105,7 @@ def cmd_demo(_args) -> None:
 def _sembrar_solicitudes(bd) -> None:
     if bd.execute(select(func.count()).select_from(SolicitudPrecio)).scalar():
         return
-    entidad = bd.execute(select(Usuario).where(Usuario.email == "entidad.solicitante@demo.nexo.local")).scalar()
+    entidad = bd.execute(select(Usuario).where(Usuario.email == "entidad.solicitante@nexo.example.com")).scalar()
     ejemplos = [
         ("Computadora portátil para escuelas", "8 GB RAM, 256 GB SSD, pantalla 14 pulgadas (caso presentado por la DPIR)",
          500, "Unidad", "computadora portatil", "Ministerio de Educación", "recibida"),
@@ -120,7 +120,7 @@ def _sembrar_solicitudes(bd) -> None:
     for i, (prod, espec, cant, unidad, terminos, ent, estado) in enumerate(ejemplos, start=1):
         bd.add(SolicitudPrecio(codigo=f"PR-{anio}-{i:04d}", entidad=ent, solicitante_id=entidad.id if entidad else None,
                                producto=prod, especificaciones=espec, cantidad=cant, unidad=unidad,
-                               terminos_busqueda=terminos, estado=estado, modalidad="Cotización",
+                               terminos_busqueda=terminos, estado=estado, modalidad="Cotización", es_demo=True,
                                fecha_limite=date.today() + timedelta(days=[8, 3, -1, 10][i - 1])))
     bd.commit()
 

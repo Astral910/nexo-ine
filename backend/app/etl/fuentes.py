@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 CKAN = "https://datos.ine.gob.gt"
 INE = "Instituto Nacional de Estadística (INE), Guatemala"
-LICENCIA_INE = "Datos abiertos del INE (citar la fuente)"
+LICENCIA_INE = "Según el portal de datos abiertos del INE (ver data/manifiesto.json)"
 
 
 @dataclass(frozen=True)

@@ -44,16 +44,20 @@ UNSPSC_RUIDO = {"de", "para", "con", "y", "tipo", "marca"}
 
 
 def _anios(texto: str) -> dict:
+    """«desde 2022» → desde; «hasta 2030» → hasta; «en 2025» o un año suelto → ese año; dos años → rango."""
     filtros: dict = {}
     anios = [int(a) for a in re.findall(r"\b(20[0-3]\d|19[89]\d)\b", texto)]
-    if re.search(r"\bdesde\b", texto) and anios:
-        filtros["desde_anio"] = anios[0]
-        if len(anios) > 1:
-            filtros["hasta_anio"] = anios[1]
-    elif len(anios) == 1:
-        filtros["anio"] = anios[0]
-    elif len(anios) >= 2:
-        filtros["desde_anio"], filtros["hasta_anio"] = min(anios), max(anios)
+    desde = re.search(r"\bdesde (?:el )?(?:ano )?(\d{4})", texto)
+    hasta = re.search(r"\b(?:hasta|al|a) (?:el )?(?:ano )?(\d{4})", texto)
+    if desde:
+        filtros["desde_anio"] = int(desde.group(1))
+    if hasta:
+        filtros["hasta_anio"] = int(hasta.group(1))
+    if not desde and not hasta:
+        if len(anios) == 1:
+            filtros["anio"] = anios[0]
+        elif len(anios) >= 2:
+            filtros["desde_anio"], filtros["hasta_anio"] = min(anios), max(anios)
     return filtros
 
 
