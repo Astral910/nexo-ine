@@ -107,8 +107,8 @@ function WidgetSistema({ w }: { w: WidgetSpec }) {
             ["CBA urbana por persona", fmt.moneda(datos.cba_urbana), `Rural ${fmt.moneda(datos.cba_rural)} · ${datos.cba_periodo}`, "verde"],
             ["Alertas de precios nuevas", fmt.numero(datos.alertas_nuevas), `${fmt.numero(datos.alertas_altas)} de severidad alta`, "naranja"],
             ["Solicitudes abiertas", fmt.numero(datos.solicitudes_abiertas), `${datos.solicitudes_vencidas} vencidas`, "morado"],
-          ].map(([e, v, d, t]) => (
-            <div key={e} className={`c3 kpi ${t}`} style={{ borderTop: "4px solid", borderColor: "inherit", paddingTop: 8 }}>
+          ].map(([e, v, d]) => (
+            <div key={e} className="c3 kpi" style={{ padding: "4px 2px" }}>
               <span className="etiqueta">{e}</span><span className="valor">{v}</span><span className="detalle">{d}</span>
             </div>
           ))}
@@ -186,7 +186,7 @@ function WidgetSistema({ w }: { w: WidgetSpec }) {
     case "mapa_riesgos":
       return <MatrizRiesgos riesgos={datos} />;
     case "validaciones_recientes":
-      return <Tabla filas={datos} vacio="Aún no validas archivos." columnas={[
+      return <Tabla filas={datos} vacio="Aún no ha validado archivos." columnas={[
         { id: "a", titulo: "Archivo", valor: (v: any) => v.archivo, celda: (v: any) => <Link to={`/calidad?v=${v.id}`}>{v.archivo}</Link> },
         { id: "p", titulo: "Puntaje", num: true, valor: (v: any) => v.puntaje },
         { id: "b", titulo: "Datos personales", valor: (v: any) => v.bloqueante, celda: (v: any) => (v.bloqueante ? <Insignia tono="critico">Sí</Insignia> : <Insignia tono="exito">No</Insignia>) },

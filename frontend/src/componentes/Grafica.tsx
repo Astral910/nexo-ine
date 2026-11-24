@@ -9,7 +9,7 @@ echarts.use([BarChart, LineChart, PieChart, ScatterChart, HeatmapChart, GridComp
   DataZoomComponent, VisualMapComponent, CanvasRenderer]);
 
 // Paleta del INE en tonos con contraste suficiente sobre blanco (el verde lima y el amarillo se oscurecen).
-export const PALETA = ["#004080", "#0080FF", "#E04B00", "#5E8C0A", "#7B5CD6", "#A88600", "#4D5B6E", "#6FA8DC", "#A33A00", "#2E6FB5"];
+export const PALETA = ["#004080", "#0080FF", "#E04B00", "#5E8C0A", "#7B5CD6", "#A88600", "#4D5B6E", "#4F86C6", "#A33A00", "#2E6FB5"];
 
 /** Sin animación si la persona pidió movimiento reducido (sistema operativo o preferencia de Nexo). */
 export function movimientoReducido() {

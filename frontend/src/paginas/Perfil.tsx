@@ -5,6 +5,40 @@ import { LogOut, ShieldCheck } from "lucide-react";
 import { api, fmt } from "../api";
 import { useSesion } from "../auth";
 import { Aviso, avisar, Campo, Encabezado, Esqueleto, Insignia, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import { ESCALAS } from "../componentes/Marco";
+
+/** Preferencias de lectura: se guardan en este navegador y se aplican al instante (main.tsx las lee al abrir Nexo). */
+function PreferenciasLectura() {
+  const raiz = document.documentElement;
+  const [escala, setEscala] = useState(raiz.dataset.escala ?? "");
+  const [sinAnimacion, setSinAnimacion] = useState(raiz.classList.contains("sin-animacion"));
+  const elegirEscala = (id: string) => {
+    if (id) raiz.dataset.escala = id; else delete raiz.dataset.escala;
+    localStorage.setItem("nexo:escala", id);
+    setEscala(id);
+  };
+  const alternarAnimacion = (activo: boolean) => {
+    raiz.classList.toggle("sin-animacion", activo);
+    localStorage.setItem("nexo:sin-animacion", activo ? "1" : "");
+    setSinAnimacion(activo);
+  };
+  return (
+    <Tarjeta titulo="Preferencias de lectura" ayuda="Se guardan en este navegador.">
+      <div className="columna">
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: 6 }}>Tamaño de letra</div>
+          <div className="fila" style={{ gap: 6 }}>
+            {ESCALAS.map((e) => <button key={e.id || "normal"} className={`boton pequeno ${escala === e.id ? "" : "secundario"}`} onClick={() => elegirEscala(e.id)} aria-pressed={escala === e.id}>{e.texto}</button>)}
+          </div>
+        </div>
+        <label className="casilla">
+          <input type="checkbox" checked={sinAnimacion} onChange={(e) => alternarAnimacion(e.target.checked)} />
+          <span>Reducir animaciones<br /><span className="pequeno suave">Quita los movimientos de entrada, de carga y de las gráficas. Nexo también respeta la preferencia de su sistema operativo.</span></span>
+        </label>
+      </div>
+    </Tarjeta>
+  );
+}
 
 export default function Perfil() {
   const { usuario } = useSesion();
@@ -32,6 +66,8 @@ export default function Perfil() {
             {usuario.mfa_activo ? <Aviso tono="exito">Activo. Cada inicio de sesión pide un código de su aplicación.</Aviso>
               : <><Aviso tono="alerta">No tiene segundo factor. Le recomendamos activarlo.</Aviso><Link className="boton" style={{ marginTop: 10 }} to="/configurar-mfa">Configurar ahora</Link></>}
           </Tarjeta>
+          <div style={{ height: 16 }} />
+          <PreferenciasLectura />
         </div>
         <div className="c6">
           <Tarjeta titulo="Cambiar contraseña" ayuda="Mínimo 15 caracteres. Al cambiarla se cierran sus otras sesiones.">

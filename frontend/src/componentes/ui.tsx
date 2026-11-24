@@ -38,7 +38,7 @@ export function Encabezado({ titulo, subtitulo, migas, acciones, sobretitulo }: 
   );
 }
 
-/** Cifra que cuenta hasta su valor (400 ms, desaceleración). Respeta la preferencia de movimiento reducido. */
+/** Cifra que cuenta hasta su valor (650 ms, desaceleración). Respeta la preferencia de movimiento reducido. */
 export function NumeroAnimado({ valor, formato }: { valor: number; formato: (v: number) => string }) {
   const [mostrado, setMostrado] = useState(valor);
   useEffect(() => {

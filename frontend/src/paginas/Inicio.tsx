@@ -81,7 +81,7 @@ function Pendientes({ k }: { k: any }) {
   if (!items.length) return null;
   const conPendiente = items.filter((i) => i.n > 0);
   return (
-    <Tarjeta titulo="Requiere su atención" ayuda="Tareas abiertas según su rol. Las cifras se actualizan cada minuto."
+    <Tarjeta titulo="Requiere su atención" ayuda="Tareas abiertas según su rol, al momento de abrir esta pantalla."
       acciones={conPendiente.length === 0 ? <span className="insignia exito"><CircleCheck size={13} /> Todo al día</span> : undefined}>
       <ul className="actividad">
         {items.map((i) => (
