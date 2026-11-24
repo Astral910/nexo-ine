@@ -50,6 +50,8 @@ class AjusteIPC:
         """Factor de actualización o None si no hay índice para esa fecha (el precio queda sin ajustar)."""
         if not fecha or not self.ultimo:
             return None
+        if (fecha.year, fecha.month) > self.ultimo:
+            return 1.0  # posterior al último IPC publicado: ya está en quetzales corrientes
         base = self.indice.get((fecha.year, fecha.month))
         return self.indice[self.ultimo] / base if base else None
 
@@ -301,7 +303,7 @@ def informe_pdf(sol: SolicitudPrecio, cotizaciones: list[Cotizacion], autor: str
     hist.append(t)
     hist.append(Paragraph("Resultado", h2))
     res = Table([["Precio de referencia unitario", q(r.get("precio_referencia"))],
-                 ["Estadístico usado", f"{r.get('estadistico_recomendado', '—')} — {r.get('razon', '')}"],
+                 ["Estadístico usado", Paragraph(f"<b>{r.get('estadistico_recomendado', '—')}</b>: {r.get('razon', '')}", normal)],
                  ["Monto estimado del proceso", q(r.get("monto_estimado"))],
                  ["Precios expresados en quetzales de", r.get("ipc_periodo", "—")]], colWidths=[6 * cm, 11 * cm])
     res.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "Helvetica", 9), ("FONT", (1, 0), (1, 0), "Helvetica-Bold", 13),
@@ -319,7 +321,7 @@ def informe_pdf(sol: SolicitudPrecio, cotizaciones: list[Cotizacion], autor: str
                           f"{r.get('porcentaje_primarias', 0)} % · atípicos excluidos: {r.get('atipicos', 0)}", normal))
     for adv in r.get("advertencias", []):
         hist.append(Paragraph(f"Advertencia: {adv}", normal))
-    if r.get("justificacion_mercado"):
+    if r.get("justificacion_mercado") and not r.get("cumple_mercado_relevante"):
         hist.append(Paragraph(f"<b>Justificación del analista</b> (menos de 50 % de cotizaciones del mercado relevante): "
                               f"{r['justificacion_mercado']}", normal))
     hist.append(Paragraph("Fuentes consultadas", h2))

@@ -23,7 +23,17 @@ from . import bitacora
 from .config import obtener_config
 from .db import SesionLocal, ahora
 from .etl.cargar import cargar_todo
-from .models import AvanceOperativo, LugarPoblado, PrecioRecolectado, Rol, SolicitudPrecio, Usuario, UsuarioRol
+from .models import (
+    Automatizacion,
+    AvanceOperativo,
+    EventoSolicitud,
+    LugarPoblado,
+    PrecioRecolectado,
+    Rol,
+    SolicitudPrecio,
+    Usuario,
+    UsuarioRol,
+)
 from .security.passwords import evaluar_password, hash_password
 from .services import agente_seguridad, agente_ti, alertas
 from .siembra import preparar_base
@@ -92,6 +102,12 @@ def cmd_demo(_args) -> None:
             credenciales.append((rol, email, clave))
         _sembrar_solicitudes(bd)
         _sembrar_operativo(bd)
+        sistema = [a.id for a in bd.execute(select(Automatizacion).where(Automatizacion.sistema.is_(True))).scalars()
+                   if a.tarea != "catalogo.sincronizar"]
+    from .services.programador import ejecutar_automatizacion
+
+    for aid in sistema:  # primera ejecución de cada automatización del sistema (historial inicial)
+        ejecutar_automatizacion(aid, disparada_por="instalacion")
     ruta = cfg.directorio_var / "credenciales-demo.txt"
     ruta.write_text("Cuentas de demostración de Nexo (no subir a ningún repositorio)\n\n" +
                     "\n".join(f"{r:<22} {e:<40} {c}" for r, e, c in credenciales) + "\n")
@@ -117,11 +133,23 @@ def _sembrar_solicitudes(bd) -> None:
          "toner", "Instituto Guatemalteco de Seguridad Social", "recibida"),
     ]
     anio = ahora().year
+    analista = bd.execute(select(Usuario).where(Usuario.email == "analista.dpir@nexo.example.com")).scalar()
+    orden = ["recibida", "revision", "investigacion"]
     for i, (prod, espec, cant, unidad, terminos, ent, estado) in enumerate(ejemplos, start=1):
-        bd.add(SolicitudPrecio(codigo=f"PR-{anio}-{i:04d}", entidad=ent, solicitante_id=entidad.id if entidad else None,
-                               producto=prod, especificaciones=espec, cantidad=cant, unidad=unidad,
-                               terminos_busqueda=terminos, estado=estado, modalidad="Cotización", es_demo=True,
-                               fecha_limite=date.today() + timedelta(days=[8, 3, -1, 10][i - 1])))
+        sol = SolicitudPrecio(codigo=f"PR-{anio}-{i:04d}", entidad=ent, solicitante_id=entidad.id if entidad else None,
+                              producto=prod, especificaciones=espec, cantidad=cant, unidad=unidad,
+                              terminos_busqueda=terminos, estado=estado, modalidad="Cotización", es_demo=True,
+                              asignada_a=analista.id if analista and estado != "recibida" else None,
+                              fecha_limite=date.today() + timedelta(days=[8, 3, -1, 10][i - 1]))
+        bd.add(sol)
+        bd.flush()
+        previo = None
+        for etapa in orden[: orden.index(estado) + 1]:
+            quien = entidad if etapa == "recibida" else analista
+            bd.add(EventoSolicitud(solicitud_id=sol.id, usuario_id=quien.id if quien else None,
+                                   usuario_nombre=quien.nombre if quien else "", de_estado=previo, a_estado=etapa,
+                                   comentario="Solicitud registrada" if etapa == "recibida" else "Avanza (demostración)"))
+            previo = etapa
     bd.commit()
 
 
