@@ -369,6 +369,7 @@ class HbaProducto(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     grupo: Mapped[str] = mapped_column(String(120), default="")
     producto: Mapped[str] = mapped_column(String(160))
+    es_grupo: Mapped[bool] = mapped_column(Boolean, default=False)
     valores: Mapped[dict] = mapped_column(JSON)  # columna original -> valor numérico
     orden: Mapped[int] = mapped_column(Integer, default=0)
 
