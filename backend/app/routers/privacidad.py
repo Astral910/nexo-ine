@@ -183,7 +183,7 @@ def resolver(sid: int, datos: Resolucion, ctx: Contexto = Depends(requiere("priv
     s.respuesta, s.atendida_en, s.atendida_por = datos.respuesta, ahora(), ctx.usuario.id
     u = bd.get(Usuario, s.usuario_id) if s.usuario_id else None
     if datos.aprobar and s.tipo == "eliminar" and u is not None:
-        # La bitácora conserva el identificador numérico (rendición de cuentas), pero se borran los datos personales.
+        # Se borran los datos personales de la cuenta. Los registros pasados de la bitácora no se reescriben (romperían la cadena HMAC).
         revocar_todas(bd, u.id)
         u.email = f"eliminado-{u.id}@invalido.local"
         u.nombre, u.unidad, u.motivo_solicitud = "Cuenta eliminada", "", ""
