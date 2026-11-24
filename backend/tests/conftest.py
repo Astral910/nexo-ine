@@ -9,7 +9,8 @@ import time
 _TMP = tempfile.mkdtemp(prefix="nexo-pruebas-")
 os.environ.update({
     "NEXO_ENTORNO": "desarrollo",
-    "NEXO_BASE_DATOS_URL": f"sqlite:///{_TMP}/pruebas.db",
+    # Con NEXO_PRUEBAS_BD se prueban contra PostgreSQL (como en producción); por defecto, SQLite temporal.
+    "NEXO_BASE_DATOS_URL": os.environ.get("NEXO_PRUEBAS_BD") or f"sqlite:///{_TMP}/pruebas.db",
     "NEXO_DIRECTORIO_VAR": _TMP,
     "NEXO_CLAVE_SECRETA": "clave-solo-para-pruebas-automaticas-0123456789",
     "NEXO_PROGRAMADOR_ACTIVO": "false",

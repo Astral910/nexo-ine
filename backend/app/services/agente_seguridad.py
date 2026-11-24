@@ -7,7 +7,6 @@ No usa modelos de lenguaje: sus conclusiones son reproducibles y auditables.
 from __future__ import annotations
 
 from datetime import timedelta
-from pathlib import Path
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -31,8 +30,8 @@ from .hallazgos import Resultado, puntaje, registrar_resultados
 
 
 def _usuarios_con_rol(bd: Session, codigos: set[str]) -> list[Usuario]:
-    q = (select(Usuario).join(UsuarioRol, UsuarioRol.usuario_id == Usuario.id).join(Rol, Rol.id == UsuarioRol.rol_id)
-         .where(Rol.codigo.in_(codigos), Usuario.estado == "activo").distinct())
+    ids = select(UsuarioRol.usuario_id).join(Rol, Rol.id == UsuarioRol.rol_id).where(Rol.codigo.in_(codigos))
+    q = select(Usuario).where(Usuario.id.in_(ids), Usuario.estado == "activo")
     return list(bd.execute(q).scalars())
 
 
@@ -162,7 +161,6 @@ def chequeos(bd: Session) -> list[Resultado]:
     r.append(Resultado("permisos_env", "El archivo .env es legible por otros usuarios",
                        permisos_env is None or permisos_env in ("600", "400"), "media",
                        f"Permisos actuales: {permisos_env}.", "chmod 600 .env", "ISO 27001 A.8.4"))
-    _ = Path  # (sin uso)
     return r
 
 

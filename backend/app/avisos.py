@@ -57,13 +57,10 @@ def notificar(bd: Session, usuario_id: int, titulo: str, cuerpo: str = "", nivel
 
 
 def usuarios_con_permiso(bd: Session, permiso: str) -> list[Usuario]:
-    consulta = (
-        select(Usuario)
-        .join(UsuarioRol, UsuarioRol.usuario_id == Usuario.id)
-        .join(RolPermiso, RolPermiso.rol_id == UsuarioRol.rol_id)
-        .where(RolPermiso.permiso == permiso, Usuario.estado == "activo")
-        .distinct()
-    )
+    # Subconsulta de ids: DISTINCT sobre la entidad completa falla en PostgreSQL por las columnas JSON.
+    ids = (select(UsuarioRol.usuario_id).join(RolPermiso, RolPermiso.rol_id == UsuarioRol.rol_id)
+           .where(RolPermiso.permiso == permiso))
+    consulta = select(Usuario).where(Usuario.id.in_(ids), Usuario.estado == "activo")
     return list(bd.execute(consulta).scalars())
 
 

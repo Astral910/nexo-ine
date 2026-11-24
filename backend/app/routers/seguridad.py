@@ -68,9 +68,8 @@ def postura(ctx: Contexto = Depends(requiere("seguridad:ver")), bd: Session = De
     activos = bd.execute(select(func.count()).select_from(Usuario).where(Usuario.estado == "activo")).scalar() or 0
     con_mfa = bd.execute(select(func.count()).select_from(Usuario).where(Usuario.estado == "activo",
                                                                          Usuario.mfa_activo.is_(True))).scalar() or 0
-    priv = bd.execute(select(Usuario).join(UsuarioRol, UsuarioRol.usuario_id == Usuario.id)
-                      .join(Rol, Rol.id == UsuarioRol.rol_id).where(Rol.privilegiado.is_(True), Usuario.estado == "activo")
-                      .distinct()).scalars().all()
+    ids_priv = select(UsuarioRol.usuario_id).join(Rol, Rol.id == UsuarioRol.rol_id).where(Rol.privilegiado.is_(True))
+    priv = bd.execute(select(Usuario).where(Usuario.id.in_(ids_priv), Usuario.estado == "activo")).scalars().all()
     por_sev = dict(bd.execute(select(Hallazgo.severidad, func.count()).where(
         Hallazgo.agente == "seguridad", Hallazgo.estado == "abierto").group_by(Hallazgo.severidad)).all())
     ultima = bd.execute(select(func.max(Hallazgo.ultima_vez)).where(Hallazgo.agente == "seguridad")).scalar()
