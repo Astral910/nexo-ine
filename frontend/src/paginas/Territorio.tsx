@@ -5,7 +5,7 @@ import { api, fmt } from "../api";
 import { useSesion } from "../auth";
 import { Grafica, opcionLinea } from "../componentes/Grafica";
 import { MapaGT } from "../componentes/MapaGT";
-import { Aviso, avisar, Encabezado, Esqueleto, FuenteCita, Kpi, Pestanas, Progreso, Tabla, Tarjeta, useDatos } from "../componentes/ui";
+import { Aviso, avisar, Campo, Encabezado, Esqueleto, FuenteCita, Kpi, Modal, Pestanas, Progreso, Tabla, Tarjeta, useDatos } from "../componentes/ui";
 
 function Pais() {
   const { datos } = useDatos<any>("/api/territorio/departamentos");
@@ -96,15 +96,17 @@ function Operativos() {
   const nombre = lista?.[0]?.operativo;
   const { datos, recargar } = useDatos<any>(nombre ? `/api/territorio/operativos/${encodeURIComponent(nombre)}` : null);
   const [depto, setDepto] = useState("");
+  const [editando, setEditando] = useState<any>(null);
+  const [valor, setValor] = useState("");
   if (!lista) return <Esqueleto alto={300} />;
   if (!lista.length) return <Aviso tono="info">No hay operativos registrados.</Aviso>;
   if (!datos) return <Esqueleto alto={300} />;
-  const actualizar = async (m: any) => {
-    const valor = Number(prompt(`Lugares completados en ${m.municipio} (meta ${m.meta})`, String(m.completados)));
-    if (Number.isNaN(valor)) return;
-    await api(`/api/territorio/operativos/${encodeURIComponent(nombre)}/${m.codigo}`, { metodo: "PATCH", cuerpo: { completados: valor } });
-    avisar("Avance actualizado."); recargar();
+  const guardar = async () => {
+    if (!editando) return;
+    await api(`/api/territorio/operativos/${encodeURIComponent(nombre)}/${editando.codigo}`, { metodo: "PATCH", cuerpo: { completados: Number(valor) } });
+    avisar("Avance actualizado."); setEditando(null); recargar();
   };
+  const actualizar = (m: any) => { setEditando(m); setValor(String(m.completados)); };
   return (
     <div className="columna" style={{ gap: 16 }}>
       {datos.es_demo && <Aviso tono="alerta">{datos.nota}</Aviso>}
@@ -126,6 +128,16 @@ function Operativos() {
             { id: "c", titulo: "Completados / meta", num: true, valor: (m: any) => m.completados, celda: (m: any) => `${fmt.numero(m.completados)} / ${fmt.numero(m.meta)}` },
           ]} />
       </Tarjeta>
+      {editando && (
+        <Modal titulo={`Avance en ${editando.municipio}`} onCerrar={() => setEditando(null)}>
+          <div className="columna">
+            <Campo etiqueta={`Lugares poblados completados (meta ${fmt.numero(editando.meta)})`}>
+              <input type="number" min={0} max={editando.meta} value={valor} onChange={(e) => setValor(e.target.value)} autoFocus />
+            </Campo>
+            <button className="boton" onClick={guardar}>Guardar avance</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

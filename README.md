@@ -1,5 +1,7 @@
 # Nexo · Plataforma integrada de automatización estadística
 
+[![Calidad y seguridad](https://github.com/Astral910/nexo-ine/actions/workflows/ci.yml/badge.svg)](https://github.com/Astral910/nexo-ine/actions/workflows/ci.yml)
+
 > Prototipo para el **Datatón INE 2026, Categoría 2: Tecnológica y ciencias de datos**.
 > No es un sistema oficial del Instituto Nacional de Estadística (INE) de Guatemala.
 > **Fuente de los datos: Instituto Nacional de Estadística (INE), Guatemala.** Complemento: Guatecompras (OCDS, CC BY 4.0).
