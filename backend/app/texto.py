@@ -1,0 +1,52 @@
+"""Utilidades de texto en español: normalización para búsqueda y comparación."""
+
+from __future__ import annotations
+
+import re
+import unicodedata
+
+_PALABRAS_VACIAS = {
+    "a", "al", "algo", "con", "contra", "de", "del", "desde", "el", "en", "entre", "es", "esta",
+    "este", "hasta", "la", "las", "lo", "los", "me", "mi", "mis", "muestra", "muestrame", "para",
+    "por", "que", "quiero", "se", "segun", "sin", "sobre", "su", "sus", "un", "una", "unos", "unas",
+    "y", "o", "u", "ver", "dame", "cual", "cuales", "como", "cuanto", "cuantos", "the", "tipo",
+}
+
+DEPARTAMENTOS = [
+    "Guatemala", "El Progreso", "Sacatepéquez", "Chimaltenango", "Escuintla", "Santa Rosa",
+    "Sololá", "Totonicapán", "Quetzaltenango", "Suchitepéquez", "Retalhuleu", "San Marcos",
+    "Huehuetenango", "Quiché", "Baja Verapaz", "Alta Verapaz", "Petén", "Izabal", "Zacapa",
+    "Chiquimula", "Jalapa", "Jutiapa",
+]
+
+
+def normalizar(texto: str | None) -> str:
+    """Minúsculas, sin tildes y con espacios simples."""
+    if not texto:
+        return ""
+    t = unicodedata.normalize("NFKD", str(texto))
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    t = re.sub(r"[^a-z0-9ñ\s\.\-/]", " ", t.lower())
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def fichas(texto: str | None) -> list[str]:
+    """Palabras significativas (sin palabras vacías) para búsqueda."""
+    return [p for p in re.split(r"[\s/\-\.]+", normalizar(texto)) if len(p) > 1 and p not in _PALABRAS_VACIAS]
+
+
+_DEPTO_NORM = {normalizar(d): d for d in DEPARTAMENTOS}
+_DEPTO_NORM.update({"peten": "Petén", "quiche": "Quiché", "el quiche": "Quiché"})
+
+
+def departamento_canonico(nombre: str | None) -> str | None:
+    """Devuelve el nombre oficial del departamento o None si no se reconoce."""
+    n = normalizar(nombre)
+    if not n:
+        return None
+    if n in _DEPTO_NORM:
+        return _DEPTO_NORM[n]
+    for clave, oficial in _DEPTO_NORM.items():
+        if clave in n:
+            return oficial
+    return None
