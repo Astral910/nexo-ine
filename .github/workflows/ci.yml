@@ -1,0 +1,43 @@
+name: Calidad y seguridad
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: nexo, POSTGRES_DB: nexo_pruebas, POSTGRES_HOST_AUTH_METHOD: trust }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U nexo" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Dependencias (con verificación de hashes)
+        run: pip install --require-hashes -r backend/requirements.txt && pip install pytest ruff pip-audit
+      - name: Estilo y reglas de seguridad (ruff, incluye bandit)
+        run: cd backend && ruff check app tests
+      - name: Pruebas con SQLite
+        run: cd backend && python -m pytest -q
+      - name: Pruebas con PostgreSQL
+        env: { NEXO_PRUEBAS_BD: "postgresql+psycopg://nexo@localhost:5432/nexo_pruebas" }
+        run: cd backend && python -m pytest -q
+      - name: Vulnerabilidades conocidas en dependencias
+        run: pip-audit -r backend/requirements.txt --disable-pip
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: cd frontend && npm ci && npx tsc --noEmit -p tsconfig.json && npm run build
+      - run: cd frontend && npm audit --omit=dev --audit-level=high
+  secretos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }

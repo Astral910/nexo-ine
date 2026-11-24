@@ -8,8 +8,8 @@ RIESGOS_BASE: list[dict] = [
     {"codigo": "R-01", "titulo": "Robo de credenciales (phishing o relleno de credenciales)", "categoria": "Acceso",
      "probabilidad": 4, "impacto": 4, "dueno": "seguridad",
      "descripcion": "Un atacante usa contraseñas filtradas o robadas para entrar a la plataforma.",
-     "controles": "Argon2id; bloqueo tras 5 intentos; límite de tasa; MFA obligatorio en roles privilegiados; "
-                  "mensajes de error que no revelan si el correo existe.",
+     "controles": "Argon2id; contraseñas de 15 caracteres; bloqueo por cuenta e IP; límite de tasa; MFA obligatorio "
+                  "en roles privilegiados; respuestas que no revelan si el correo existe.",
      "referencias": "ISO 27001 A.5.17, A.8.5 · NIST CSF PR.AA"},
     {"codigo": "R-02", "titulo": "Abuso de privilegios por personal interno", "categoria": "Acceso",
      "probabilidad": 3, "impacto": 5, "dueno": "seguridad",
@@ -55,8 +55,8 @@ RIESGOS_BASE: list[dict] = [
     {"codigo": "R-10", "titulo": "Pérdida de datos por falla o ransomware", "categoria": "Continuidad",
      "probabilidad": 2, "impacto": 5, "dueno": "admin_ti",
      "descripcion": "La base de datos se pierde o se cifra sin respaldo recuperable.",
-     "controles": "Respaldos automáticos de PostgreSQL fuera del servidor; restauración probada; datos "
-                  "fuente reproducibles con el pipeline.",
+     "controles": "Automatización de respaldo (SQLite) y pg_dump documentado para PostgreSQL; datos fuente "
+                  "reproducibles con el pipeline. Pendiente: copia fuera del servidor y prueba de restauración.",
      "referencias": "ISO 27001 A.8.13, A.5.30 · NIST CSF RC.RP"},
     {"codigo": "R-11", "titulo": "Secretos publicados en el repositorio", "categoria": "Desarrollo",
      "probabilidad": 3, "impacto": 5, "dueno": "admin_ti",
@@ -67,13 +67,14 @@ RIESGOS_BASE: list[dict] = [
     {"codigo": "R-12", "titulo": "Secuestro o fijación de sesión", "categoria": "Acceso",
      "probabilidad": 2, "impacto": 4, "dueno": "seguridad",
      "descripcion": "Un atacante reutiliza la sesión de otra persona.",
-     "controles": "Cookies HttpOnly, SameSite=Strict y Secure; rotación del identificador; expiración por "
-                  "inactividad; cierre remoto de sesiones.",
+     "controles": "Cookies HttpOnly y SameSite=Strict (Secure y __Host- en producción con HTTPS); rotación del "
+                  "identificador; expiración por inactividad; cierre remoto de sesiones.",
      "referencias": "ISO 27001 A.8.5 · OWASP ASVS (Sesiones)"},
     {"codigo": "R-13", "titulo": "Alteración o borrado de la bitácora", "categoria": "Integridad",
      "probabilidad": 2, "impacto": 4, "dueno": "seguridad",
      "descripcion": "Alguien con acceso a la base intenta borrar rastros.",
-     "controles": "Cadena de hashes SHA-256; verificación automática cada hora; alerta al oficial de seguridad.",
+     "controles": "Cadena HMAC-SHA256 con llave del servidor; anclas externas; verificación automática cada hora; "
+                  "alerta al oficial de seguridad.",
      "referencias": "ISO 27001 A.8.15, A.5.28 · NIST CSF DE.CM"},
     {"codigo": "R-14", "titulo": "Datos desactualizados presentados como vigentes", "categoria": "Calidad",
      "probabilidad": 4, "impacto": 3, "dueno": "calidad_desa",

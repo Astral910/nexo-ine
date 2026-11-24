@@ -20,7 +20,7 @@ htmlcov/
 
 # Node / frontend
 node_modules/
-frontend/dist/
+# frontend/dist se incluye en el repositorio para ejecutar Nexo sin Node.js (CI verifica que se reproduce)
 *.tsbuildinfo
 
 # Datos: los crudos se descargan con el pipeline (no se versionan)

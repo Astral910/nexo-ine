@@ -1,0 +1,31 @@
+# Despliegue local con PostgreSQL:   docker compose up --build
+# Luego abre http://localhost:8000 . Las cuentas de demostración quedan en el volumen var (credenciales-demo.txt):
+#   docker compose exec app cat /app/var/credenciales-demo.txt
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: nexo
+      POSTGRES_USER: nexo
+      POSTGRES_PASSWORD: ${NEXO_BD_CLAVE:?Define NEXO_BD_CLAVE en el archivo .env (ver README)}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexo -d nexo"]
+      interval: 5s
+      retries: 10
+  app:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+    ports: ["8000:8000"]
+    environment:
+      NEXO_ENTORNO: ${NEXO_ENTORNO:-desarrollo}
+      NEXO_BASE_DATOS_URL: postgresql+psycopg://nexo:${NEXO_BD_CLAVE}@db:5432/nexo
+      NEXO_CLAVE_SECRETA: ${NEXO_CLAVE_SECRETA:-}
+      NEXO_URL_PUBLICA: ${NEXO_URL_PUBLICA:-http://localhost:8000}
+      NEXO_COOKIE_SEGURA: ${NEXO_COOKIE_SEGURA:-false}
+      NEXO_CREAR_DEMO: ${NEXO_CREAR_DEMO:-true}
+    volumes: [var:/app/var]
+volumes:
+  pgdata:
+  var:
