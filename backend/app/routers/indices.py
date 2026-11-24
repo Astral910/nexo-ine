@@ -145,10 +145,10 @@ def detalle_articulo(codigo: str, ctx: Contexto = Depends(requiere("indices:ver"
 
     def serie(grupos, fuentes):
         return [{"x": x, "mediana": round(statistics.median(v), 2) if len(fuentes[x]) >= k else None,
-                 "n": len(v), "suprimido": len(fuentes[x]) < k} for x, v in sorted(grupos.items())]
+                 "n": None if len(fuentes[x]) < k else len(v), "suprimido": len(fuentes[x]) < k} for x, v in sorted(grupos.items())]
 
     return {"codigo": codigo, "articulo": filas[0].articulo, "por_mes": serie(por_mes, fuentes_mes),
-            "por_departamento": sorted(serie(por_depto, fuentes_depto), key=lambda d: -d["n"]),
+            "por_departamento": sorted(serie(por_depto, fuentes_depto), key=lambda d: -(d["n"] or 0)),
             "nota": f"Precio unitario mediano (precio ÷ cantidad). Se suprimen celdas con menos de {k} informantes o "
                     "boletas por secreto estadístico."}
 

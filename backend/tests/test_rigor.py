@@ -145,3 +145,14 @@ def test_celda_suprimida_no_revela_su_conteo():
         finally:
             bd.execute(delete(PrecioRecolectado).where(PrecioRecolectado.cod_articulo == "T-1"))
             bd.commit()
+
+
+def test_hb_corrige_cuartiles_y_no_marca_lo_que_sigue_a_la_mediana():
+    """Regresión HB-2: valida las dos correcciones a la vez. La mayoría de precios no cambia y los que cambian lo hacen
+    en un rango estrecho (5 % a 7 %). Sin cuartiles de los que cambiaron, los límites serían casi cero y se marcarían
+    todos los cambios; sin la regla de la mediana, los 200 precios sin cambio caerían bajo el límite inferior."""
+    cambios = [1.05 + 0.0005 * i for i in range(40)]
+    relativos = [1.0] * 200 + cambios + [2.5]
+    res = hidiroglou_berthelot(relativos, [10.0] * len(relativos))
+    marcados = [r for r, x in zip(relativos, res, strict=True) if x.atipico]
+    assert marcados == [2.5]

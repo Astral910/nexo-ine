@@ -27,7 +27,7 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 
 | Criterio | Peso | Evidencia principal |
 |---|---|---|
-| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial, tableros por rol y generados desde texto, 22 pruebas automáticas |
+| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial, tableros por rol y generados desde texto, 23 pruebas automáticas |
 | Aplicabilidad institucional (desempate) | 20 % | Responde a lo que presentaron la DPIR, la DIEC, la DCE y la DCR; usa su metodología (regla del 50 %, media, mediana y moda, 6 reglas de la DCE); adopción con software libre |
 | Calidad técnica | 20 % | Arquitectura modular, capa semántica única, CI con pruebas en SQLite y PostgreSQL, documentación completa |
 | Innovación | 15 % | Tableros generativos deterministas, agentes de seguridad y TI, bitácora HMAC con anclas, precio unitario de 214 mil compras ajustado con el IPC |

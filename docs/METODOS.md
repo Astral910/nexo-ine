@@ -38,7 +38,7 @@ Para cada artículo se trabaja con los relativos de precio del mismo informante,
 2. Transformación simétrica: sᵢ = 1 − r_M / rᵢ si rᵢ < r_M; sᵢ = rᵢ / r_M − 1 en otro caso.
 3. Efecto tamaño: Eᵢ = sᵢ · max(pᵢ,t, pᵢ,t−1)^U, con U = 0.5.
 4. Límites: [E_M − C·d₁, E_M + C·d₃], con d₁ = max(E_M − E_Q1, |A·E_M|) y d₃ = max(E_Q3 − E_M, |A·E_M|). Parámetros A = 0.05 y C = 4 (C se puede ajustar).
-5. **Corrección importante:** cuando la mayoría de los precios no cambia, los cuartiles se estiman con los precios que sí cambiaron, y **un precio igual a la mediana nunca es atípico**. Sin esta corrección, el 62 % de las alertas eran precios sin cambio; con ella, el 3.2 % de las observaciones queda marcado.
+5. **Corrección importante:** cuando la mayoría de los precios no cambia, los cuartiles se estiman con los precios que sí cambiaron, y **un precio igual a la mediana nunca es atípico**. Sin ninguna corrección, los límites quedan casi en cero y se marcan 5,805 observaciones (16.9 %); con solo la primera regla, el 62 % de las alertas (1,946 de 3,119) eran precios sin cambio. Con ambas, en julio de 2022 se marca el 3.4 % de las observaciones (1,173 de 34,413).
 6. **Grupos:** por artículo y región cuando hay al menos 30 observaciones; si no, se compara con la distribución nacional del artículo.
 7. **Severidad:** según cuántas veces el puntaje excede el ancho de tolerancia (alta si lo duplica).
 
