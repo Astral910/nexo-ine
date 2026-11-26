@@ -2,7 +2,7 @@
 
 Nexo · Datatón INE 2026, Categoría 2. Equipo: Josue David Sajche Boror, Jeferson Andre Cano López, Angel David Siliezar López y Ricardo Javier González Corado.
 
-El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 45 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
+El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 50 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
 
 ## Orden de los entregables
 
@@ -76,6 +76,7 @@ Instalación en Windows verificada desde cero, solicitud de precio de referencia
 | 22:43 | Rakataxxd | Video demostrativo de 2 min 36 s con narración de ElevenLabs, recorrido de todos los módulos (incluye codificador CIUO-08, ficha municipal y Modo Jurado) y secuencia actualizada |
 | 22:43 | Rakataxxd | Secuencia del trabajo actualizada con los últimos commits |
 | 23:16 | Rakataxxd | Documentación: demostración en línea con túnel gratuito de Cloudflare, declarado como servicio en la nube |
+| 23:51 | xsiliezxr | add: Quitar comentario |
 
 ## Jueves 26 de noviembre: entrega
 
@@ -84,3 +85,7 @@ Entrega de los proyectos a las 09:00, por el medio que indicó el INE.
 | Hora | Autor | Qué se hizo |
 |---|---|---|
 | 00:10 | Rakataxxd | Celular: el recorrido sube el cuadro resaltado para que la tarjeta no lo tape, buscador fijo en el catálogo de campo y barras fijas que vuelven a funcionar; enlace de verificación nuevo desde el inicio de sesión |
+| 00:10 | Rakataxxd | Secuencia del trabajo actualizada |
+| 00:20 | xsiliezxr | Merge branch 'main' of https://github.com/Astral910/nexo-ine |
+| 04:17 | Rakataxxd | Demostración: la cuenta queda activa al registrarse, sin verificar el correo ni esperar aprobación (en producción se mantiene el flujo completo; NEXO_ALTA_INMEDIATA lo controla) |
+| 04:17 | Rakataxxd | Secuencia del trabajo actualizada |
