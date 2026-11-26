@@ -1,7 +1,7 @@
 // Acceso: inicio de sesión con segundo factor, registro con verificación y aprobación, recuperación y MFA.
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, CircleCheck, Eye, EyeOff, Fingerprint, Globe, Info, KeyRound, LayoutDashboard, Mail, ShieldCheck, Smartphone, Workflow } from "lucide-react";
+import { CircleCheck, Eye, EyeOff, Fingerprint, Globe, Info, KeyRound, Mail, PlayCircle, Smartphone } from "lucide-react";
 import { api, ErrorApi } from "../api";
 import { useSesion, type Usuario } from "../auth";
 import { Aviso, Campo, Modal } from "../componentes/ui";
@@ -12,42 +12,20 @@ function Plantilla({ children }: { children: ReactNode }) {
       <section className="ilustracion">
         <img src="/marca/logo-ine-blanco.svg" alt="Instituto Nacional de Estadística" style={{ width: 210 }} />
         <div>
-          <div className="sobretitulo" style={{ color: "#a9c7ea" }}>Plataforma integrada de procesos estadísticos</div>
-          <h1 style={{ marginTop: 8 }}>Nexo</h1>
-          <p style={{ marginTop: 10 }}>Una sola plataforma para los procesos del INE: precios de referencia, índices, territorio y calidad de datos, con automatizaciones, tableros por rol y seguridad desde el diseño.</p>
+          <h1>Nexo</h1>
+          <p style={{ marginTop: 10 }}>Los procesos del INE en una sola plataforma: precios de referencia, índices, territorio y calidad de datos.</p>
         </div>
-        <div className="puntos">
-          <div><span className="icono"><LayoutDashboard size={17} /></span><span>Tableros que se arman escribiendo lo que necesita ver, siempre con datos oficiales y su fuente.</span></div>
-          <div><span className="icono"><Workflow size={17} /></span><span>Automatizaciones que cada persona controla, con historial completo de cada ejecución.</span></div>
-          <div><span className="icono"><ShieldCheck size={17} /></span><span>Segundo factor de autenticación, roles, bitácora a prueba de manipulación y secreto estadístico.</span></div>
-        </div>
-        <div className="direcciones">
-          <div className="sobretitulo" style={{ color: "#a9c7ea" }}>Procesos integrados</div>
-          <dl>
-            <div><dt>DPIR</dt><dd>Precios de referencia</dd></div>
-            <div><dt>DIEC</dt><dd>Índices y alertas de precios</dd></div>
-            <div><dt>DCE · DCR</dt><dd>Territorio y operativos de campo</dd></div>
-            <div><dt>DESA</dt><dd>Validación de calidad de datos</dd></div>
-          </dl>
-          <div className="pequeno" style={{ color: "#bcd7f5", marginTop: 18 }}>
-            Prototipo del Datatón INE 2026 · Categoría Tecnológica y ciencia de datos. Fuente de los datos: Instituto Nacional de Estadística.
-          </div>
+        <div className="pequeno" style={{ color: "#bcd7f5" }}>
+          Prototipo del Datatón INE 2026 · Categoría 2. Fuente de los datos: Instituto Nacional de Estadística.
         </div>
       </section>
       <section className="formulario">
-        <div className="aviso-prototipo" role="note"><Info size={15} /> Prototipo del Datatón INE 2026. No es un sistema oficial del Gobierno de Guatemala.</div>
         <div className="caja">{children}</div>
-        <Link to="/abierto" className="tarjeta modulo" style={{ width: "min(460px, 100%)", padding: "14px 16px" }}>
-          <span className="icono-modulo"><Globe size={20} /></span>
-          <span style={{ minWidth: 0 }}><b>¿Busca datos públicos del INE?</b><span className="pequeno suave" style={{ display: "block", marginTop: 2 }}>Entre a Nexo Abierto sin cuenta: precios que pagó el Estado, su municipio en datos y preguntas a las cifras oficiales.</span></span>
-          <ArrowRight className="ir" size={18} />
-        </Link>
-        <Link to="/campo" className="tarjeta modulo" style={{ width: "min(460px, 100%)", padding: "14px 16px" }}>
-          <span className="icono-modulo"><Smartphone size={20} /></span>
-          <span style={{ minWidth: 0 }}><b>Catálogo de campo para el teléfono</b><span className="pequeno suave" style={{ display: "block", marginTop: 2 }}>Los artículos del IPC para la recolección. Se instala como aplicación y funciona sin internet.</span></span>
-          <ArrowRight className="ir" size={18} />
-        </Link>
-        <div className="pequeno suave" style={{ textAlign: "center", maxWidth: 440 }}>¿Necesita ayuda para entrar? Comuníquese con la Unidad de Informática de su dirección.</div>
+        <nav className="accesos-rapidos" aria-label="Sin cuenta">
+          <Link to="/abierto"><Globe size={16} /> Datos públicos sin cuenta</Link>
+          <Link to="/campo"><Smartphone size={16} /> Catálogo para el teléfono</Link>
+        </nav>
+        <div className="pequeno suave" style={{ textAlign: "center", maxWidth: 440 }}><Info size={13} style={{ verticalAlign: "-2px" }} /> Prototipo del Datatón INE 2026. No es un sistema oficial del Gobierno de Guatemala.</div>
       </section>
     </div>
   );
@@ -124,6 +102,8 @@ export function Acceso() {
   const [enviando, setEnviando] = useState(false);
   const [reenvio, setReenvio] = useState<{ mensaje: string; clave_buzon?: string } | null>(null);
   const sinVerificar = error.startsWith("Primero verifique su correo");
+  const [demo, setDemo] = useState(false);
+  useEffect(() => { api<{ alta_inmediata?: boolean }>("/api/auth/config").then((c) => setDemo(!!c.alta_inmediata)).catch(() => undefined); }, []);
 
   const reenviar = async () => {
     setEnviando(true);
@@ -149,16 +129,25 @@ export function Acceso() {
     catch (err) { setError((err as ErrorApi).message); }
     finally { setEnviando(false); }
   };
+  const entrarDemo = async () => {
+    setError(""); setEnviando(true);
+    try { continuar(await api<Usuario>("/api/auth/demo", { cuerpo: {} })); }
+    catch (err) { setError((err as ErrorApi).message); }
+    finally { setEnviando(false); }
+  };
   return (
     <Plantilla>
       <div>
-        <img src="/marca/dataton.png" alt="Datatón INE 2026: Innova, Comunica, Impacta" style={{ width: 118, marginBottom: 14 }} />
-        <div className="sobretitulo">{paso === "mfa" ? "Paso 2 de 2 · Verificación" : "Acceso al sistema"}</div>
-        <h1 style={{ marginTop: 6 }}>{paso === "mfa" ? "Confirme que es usted" : "Iniciar sesión"}</h1>
-        <p className="suave" style={{ marginTop: 6 }}>
-          {paso === "mfa" ? "Escriba el código de 6 dígitos que muestra su aplicación de autenticación, o uno de sus códigos de recuperación." : "Ingrese con su correo institucional y su contraseña."}
-        </p>
+        <div className="sobretitulo">Nexo · INE</div>
+        <h1 style={{ marginTop: 4 }}>{paso === "mfa" ? "Confirme que es usted" : "Iniciar sesión"}</h1>
+        {paso === "mfa" && <p className="suave" style={{ marginTop: 6 }}>Escriba el código de 6 dígitos de su aplicación de autenticación o uno de sus códigos de recuperación.</p>}
       </div>
+      {paso === "credenciales" && demo && (
+        <>
+          <button type="button" className="boton grande" onClick={entrarDemo} disabled={enviando}><PlayCircle /> Entrar a la demostración</button>
+          <div className="separador-o"><span>o con su cuenta</span></div>
+        </>
+      )}
       {error && <Aviso tono="critico">{error}</Aviso>}
       {sinVerificar && (
         <button type="button" className="boton secundario" onClick={reenviar} disabled={enviando}><Mail /> Enviarme un enlace nuevo</button>
@@ -166,12 +155,12 @@ export function Acceso() {
       {reenvio && (reenvio.clave_buzon ? <CorreoDemo clave={reenvio.clave_buzon} /> : <Aviso tono="info">{reenvio.mensaje}</Aviso>)}
       {paso === "credenciales" ? (
         <form className="columna" onSubmit={entrar}>
-          <Campo etiqueta="Correo institucional"><input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@ine.gob.gt" /></Campo>
+          <Campo etiqueta="Correo"><input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@ine.gob.gt" /></Campo>
           <Campo etiqueta="Contraseña"><CampoClave valor={clave} onCambio={setClave} autocompletar="current-password" /></Campo>
-          <button className="boton" disabled={enviando}><KeyRound /> {enviando ? "Verificando…" : "Entrar"}</button>
+          <button className={`boton ${demo ? "secundario" : ""}`} disabled={enviando}><KeyRound /> {enviando ? "Verificando…" : "Entrar"}</button>
           <div className="fila espaciado pequeno">
             <Link to="/olvide">¿Olvidó su contraseña?</Link>
-            <Link to="/registro">Solicitar acceso</Link>
+            <Link to="/registro">{demo ? "Crear cuenta" : "Solicitar acceso"}</Link>
           </div>
         </form>
       ) : (
@@ -180,7 +169,7 @@ export function Acceso() {
           <button className="boton" disabled={enviando}><Fingerprint /> {enviando ? "Verificando…" : "Verificar y entrar"}</button>
         </form>
       )}
-      <Aviso tono="info">Solo usamos cookies necesarias para su sesión y su seguridad. Cada acceso queda registrado en la bitácora de auditoría.</Aviso>
+      <p className="pequeno suave" style={{ margin: 0 }}>Solo usamos cookies necesarias. Cada acceso queda en la bitácora.</p>
     </Plantilla>
   );
 }

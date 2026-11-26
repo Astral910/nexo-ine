@@ -300,6 +300,27 @@ def login(datos: Login, request: Request, response: Response, bd: Session = Depe
     return info_usuario(bd, usuario, ses)
 
 
+CUENTA_DEMO = "jurado@nexo.example.com"  # lectura de toda la plataforma y Modo Jurado (creada con `nexo demo`)
+
+
+@router.post("/demo")
+def entrar_demo(request: Request, response: Response, bd: Session = Depends(obtener_bd)):
+    """Entrada de un clic a la demostración con la cuenta de solo lectura del jurado. Nunca en producción."""
+    if not obtener_config().usar_alta_inmediata:
+        raise HTTPException(404, "No disponible.")
+    _limitar(request, "demo", 30, 300)
+    usuario = bd.execute(select(Usuario).where(Usuario.email == CUENTA_DEMO, Usuario.es_demo.is_(True),
+                                               Usuario.estado == "activo")).scalar()
+    if usuario is None or usuario.mfa_activo:
+        raise HTTPException(404, "La cuenta de demostración no está creada. Ejecute: python -m app.cli demo")
+    token, ses = crear_sesion(bd, usuario.id, request, mfa_ok=True)
+    escribir_cookies(response, token, ses)
+    usuario.ultimo_acceso = ahora()
+    bd.commit()
+    bitacora.registrar("auth.login_demo", usuario=usuario, modulo="acceso", ip=ip_cliente(request))
+    return info_usuario(bd, usuario, ses)
+
+
 class CodigoMfa(BaseModel):
     codigo: str = Field(min_length=6, max_length=40)
 

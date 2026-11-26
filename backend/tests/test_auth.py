@@ -147,3 +147,16 @@ def test_roles_incompatibles():
     uid = next(u["id"] for u in c.get("/api/admin/usuarios").json()["usuarios"] if u["email"] == "doble@ejemplo.gob.gt")
     r = c.put(f"/api/admin/usuarios/{uid}/roles", json={"roles": ["analista_dpir", "entidad_solicitante"]}, headers=csrf(c))
     assert r.status_code == 422
+
+
+def test_entrar_a_la_demostracion():
+    crear_usuario("jurado@nexo.example.com", ["jurado"])
+    from app.db import SesionLocal
+    from app.models import Usuario
+    with SesionLocal() as bd:
+        u = bd.query(Usuario).filter_by(email="jurado@nexo.example.com").one()
+        u.es_demo = True
+        bd.commit()
+    c = cliente()
+    r = c.post("/api/auth/demo", json={})
+    assert r.status_code == 200 and "jurado:ver" in r.json()["permisos"]

@@ -460,6 +460,14 @@ a.modulo:hover .ir { transform: translateX(4px); color: var(--acento); }
 .acceso .formulario .caja { width: min(460px, 100%); display: flex; flex-direction: column; gap: 16px; padding: 32px; background: var(--superficie);
   border: 1px solid var(--borde); border-radius: 16px; box-shadow: var(--sombra-16); animation: elevar var(--lento) var(--ease-salida) both; }
 .acceso .formulario .caja .boton:not(.pequeno) { height: 40px; }
+.acceso .formulario .caja .boton.grande { height: 48px; font-size: 1rem; }
+.acceso .ilustracion > .pequeno:last-child { margin-top: auto; }
+.separador-o { display: flex; align-items: center; gap: 10px; color: var(--texto-3); font-size: 0.8rem; }
+.separador-o::before, .separador-o::after { content: ""; flex: 1; height: 1px; background: var(--borde); }
+.accesos-rapidos { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.accesos-rapidos a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--borde);
+  background: var(--superficie); color: var(--texto-2); text-decoration: none; font-size: 0.86rem; font-weight: 500; }
+.accesos-rapidos a:hover { color: var(--ine-azul); border-color: var(--acento); }
 .aviso-prototipo { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--texto-2); background: rgba(255, 255, 255, 0.75);
   border: 1px solid var(--borde); border-radius: 999px; padding: 5px 14px; }
 .clave-campo { position: relative; }
