@@ -646,7 +646,13 @@ ol.pasos li { list-style: none; }
 }
 @media (max-width: 720px) {
   .recorrido-tarjeta, .recorrido-tarjeta.anclada, .recorrido-tarjeta.centrada { left: 12px !important; right: 12px; bottom: 12px; top: auto !important;
-    width: auto; margin: 0; inset: auto 12px 12px 12px; }
+    width: auto; margin: 0; inset: auto 12px 12px 12px; gap: 8px; padding: 12px 14px; max-height: 46vh; overflow-y: auto; }
+  .recorrido-tarjeta h2 { font-size: 1.02rem; }
+  .recorrido-tarjeta p { font-size: 0.9rem; line-height: 1.45; }
+  .recorrido-tarjeta .recorrido-salir { display: none; }
+  .recorrido-tarjeta > .fila.espaciado:first-child { flex-wrap: nowrap; align-items: flex-start; }
+  .recorrido-tarjeta > .fila.espaciado:last-child { justify-content: flex-end; }
+  html.con-recorrido body { padding-bottom: 60vh; }
 }
 @media print { .selector-vista, .recorrido, .publico-barra { display: none !important; } }
 
@@ -663,7 +669,8 @@ ol.pasos li { list-style: none; }
   .barra-superior .buscador kbd { display: none; }
   .barra-superior .acciones { flex-shrink: 0; gap: 6px; }
   .modal, .modal.ancho { overflow-x: hidden; }
-  html, body { overflow-x: hidden; }
+  /* clip y no hidden: hidden convierte a body en contenedor de desplazamiento y anula las barras fijas (sticky). */
+  html, body { overflow-x: clip; }
   .modal .bienvenida-recorrido > * { flex: 1 1 100%; min-width: 0; }
   .modal .rejilla > * { min-width: 0; }
 }

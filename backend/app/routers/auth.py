@@ -186,6 +186,33 @@ def verificar_correo(datos: TokenEntrada, request: Request, bd: Session = Depend
             "mensaje": "Correo verificado. Un administrador revisará su solicitud y le avisará por correo."}
 
 
+class Reenvio(BaseModel):
+    email: EmailStr
+    password: str = Field(max_length=256)
+
+
+@router.post("/reenviar-verificacion", status_code=202)
+def reenviar_verificacion(datos: Reenvio, request: Request, bd: Session = Depends(obtener_bd)):
+    """Manda un enlace nuevo a quien se registró y no verificó su correo. Exige la contraseña de la cuenta, así nadie
+    puede pedir el enlace de otra persona; la respuesta es la misma si los datos no coinciden."""
+    _limitar(request, "reenviar", 5, 600)
+    cfg = obtener_config()
+    email = datos.email.lower().strip()
+    usuario = bd.execute(select(Usuario).where(Usuario.email == email)).scalar()
+    respuesta = {"mensaje": "Si la cuenta espera verificación, le enviamos un enlace nuevo a su correo."}
+    if not verificar_password(datos.password, usuario.password_hash if usuario else None) or usuario.estado != "pendiente_verificacion":
+        return respuesta
+    token = _crear_token(bd, usuario, "verificar_correo", 60 * 24)
+    clave_buzon = enviar_correo(bd, email, "Verifique su correo en Nexo",
+                                f"Estimado(a) {usuario.nombre}: este es el enlace nuevo para confirmar su correo. Vence en 24 horas.",
+                                f"{cfg.url_publica}/verificar?token={token}", visible_en_demo=True)
+    if clave_buzon:
+        respuesta["clave_buzon"] = clave_buzon
+    bitacora.registrar("auth.verificacion_reenviada", usuario=usuario, modulo="acceso", objeto=f"usuario:{usuario.id}",
+                       ip=ip_cliente(request))
+    return respuesta
+
+
 # ---------------------------------------------------------------------------
 # Inicio de sesión y segundo factor
 # ---------------------------------------------------------------------------
