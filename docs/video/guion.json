@@ -1,0 +1,67 @@
+[
+ {
+  "id": "01-portada",
+  "texto": "Nexo reúne en una sola plataforma los procesos que las Direcciones del INE presentaron en el Datatón: precios de referencia, índices, recolección de precios, territorio y calidad de datos.",
+  "dur": 10.97
+ },
+ {
+  "id": "02-problema",
+  "texto": "En 2024 y 2025, cincuenta y seis instituciones compraron computadoras portátiles. El diez por ciento más caro pagó el doble que el diez por ciento más barato. Para eso existen los precios de referencia del INE.",
+  "dur": 14.04
+ },
+ {
+  "id": "03-centro",
+  "texto": "Cada persona entra con su rol y ve un tablero hecho para su trabajo. Cada pantalla tiene una vista Resumen, para decidir, y una Completa, para analizar.",
+  "dur": 9.53
+ },
+ {
+  "id": "04-investigar",
+  "texto": "La analista de la DPIR abre una solicitud y pulsa Investigar. Nexo trae compras comparables de Guatecompras y precios históricos del INE, ajustados con el IPC.",
+  "dur": 9.77
+ },
+ {
+  "id": "05-entregada",
+  "texto": "Aplica la regla de la DPIR, más de la mitad de las fuentes del mercado relevante, elige media, mediana o moda con su criterio, y genera un informe PDF con huella digital.",
+  "dur": 10.34
+ },
+ {
+  "id": "06-alertas",
+  "texto": "Para la DIEC, Nexo aplica el método Hidiroglou-Berthelot a los precios recolectados del IPC. De cada cien precios, el equipo revisa tres o cuatro, no todos.",
+  "dur": 10.1
+ },
+ {
+  "id": "07-recoleccion",
+  "texto": "Y responde a sus propuestas para el IPP, el IPMC y el ICC: informantes, productos y captura mensual. Al guardar un precio, Nexo dice al momento si conviene confirmarlo.",
+  "dur": 11.74
+ },
+ {
+  "id": "08-campo",
+  "texto": "El catálogo de artículos se instala en el teléfono y funciona sin internet, para la recolección en campo.",
+  "dur": 6.02
+ },
+ {
+  "id": "09-tablero",
+  "texto": "Escriba lo que necesita ver, por ejemplo: IPC de Quetzaltenango. Nexo muestra la Región seis y avisa que el INE no publica el IPC por departamento. No inventa cifras.",
+  "dur": 11.69
+ },
+ {
+  "id": "10-territorio",
+  "texto": "Para Censos y Encuestas y la Coordinación Regional: las fichas de los trescientos cuarenta municipios y el mapa de veinte mil lugares poblados del Censo 2018.",
+  "dur": 9.12
+ },
+ {
+  "id": "11-abierto",
+  "texto": "Y sin cuenta, Nexo Abierto lleva la misma información a la ciudadanía: cuánto pagó el Estado por un producto, la ficha de su municipio y preguntas a los datos.",
+  "dur": 9.14
+ },
+ {
+  "id": "12-confianza",
+  "texto": "Cada cifra tiene su fuente, su fecha de descarga y su huella. La bitácora detecta alteraciones, y todo es software libre: el INE puede adoptarlo por módulos.",
+  "dur": 9.77
+ },
+ {
+  "id": "13-cierre",
+  "texto": "Nexo. Datatón INE 2026, categoría tecnológica y ciencias de datos. Fuente de los datos: Instituto Nacional de Estadística.",
+  "dur": 9.89
+ }
+]

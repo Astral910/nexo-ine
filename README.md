@@ -321,6 +321,8 @@ Los lineamientos permiten herramientas de IA generativa si se declaran. Esta es 
 - la descarga de datos desde el portal del INE y desde data.open-contracting.org;
 - un servidor SMTP institucional, si se configura.
 
+Fuera de la plataforma, solo para producir el video demostrativo, la narración se generó con las voces neuronales gratuitas de Microsoft Edge (`edge-tts`, voz es-GT-AndresNeural). Nexo no usa ese servicio.
+
 ## 10. Componentes de terceros
 
 Las librerías conservan sus licencias originales. La lista con versión y licencia está en [docs/TERCEROS.md](docs/TERCEROS.md), y también se consulta dentro de la plataforma en *Salud de TI*. Incluye el logotipo y las ilustraciones del INE tomados de las presentaciones oficiales del Datatón.
@@ -333,6 +335,8 @@ Según los términos de la Categoría 2, los integrantes conservan el reconocimi
 
 - Matriz de lineamientos y rúbrica: [docs/CUMPLIMIENTO.md](docs/CUMPLIMIENTO.md).
 - Guion de la demostración: [docs/GUION-DEMO.md](docs/GUION-DEMO.md).
+- Presentación en PDF: [docs/presentacion/Nexo-Datatón-INE-2026.pdf](docs/presentacion/Nexo-Datat%C3%B3n-INE-2026.pdf) (fuente HTML y `generar_pdf.py` en la misma carpeta).
+- Video demostrativo (2 min 24 s): [docs/video/Nexo-video-demostrativo.mp4](docs/video/Nexo-video-demostrativo.mp4). Se regenera con `docs/video/grabar.py` y `montar.py` (Edge sin ventana, ffmpeg).
 - El historial de commits es la evidencia del trabajo, desde el 23-nov-2026 a las 22:09 (día 1).
 
 ---
