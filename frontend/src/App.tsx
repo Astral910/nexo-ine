@@ -23,6 +23,8 @@ const Admin = lazy(() => import("./paginas/Admin"));
 const Jurado = lazy(() => import("./paginas/Jurado"));
 const Perfil = lazy(() => import("./paginas/Perfil"));
 const Abierto = lazy(() => import("./paginas/Abierto"));
+const Recoleccion = lazy(() => import("./paginas/Recoleccion"));
+const Campo = lazy(() => import("./paginas/Campo"));
 
 function Protegida({ children }: { children: ReactNode }) {
   const { usuario, cargando } = useSesion();
@@ -55,6 +57,7 @@ export function App() {
           <Route path="/restablecer" element={<Restablecer />} />
           <Route path="/configurar-mfa" element={<ConfigurarMfa />} />
           <Route path="/abierto/*" element={<Abierto />} />
+          <Route path="/campo" element={<Campo />} />
           <Route element={<Protegida><Marco /></Protegida>}>
             <Route path="/" element={<InicioSegunRol />} />
             <Route path="/tableros" element={<Tableros />} />
@@ -63,6 +66,7 @@ export function App() {
             <Route path="/mis-solicitudes" element={<Precios />} />
             <Route path="/precios/:id" element={<Solicitud />} />
             <Route path="/indices/*" element={<Indices />} />
+            <Route path="/recoleccion" element={<Recoleccion />} />
             <Route path="/hba" element={<Hba />} />
             <Route path="/territorio/*" element={<Territorio />} />
             <Route path="/calidad" element={<Calidad />} />

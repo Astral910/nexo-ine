@@ -61,3 +61,14 @@ def test_informante_y_producto_de_indices_distintos_se_rechazan():
     r = c.post("/api/recoleccion/precios", json={"informante_id": inf["id"], "producto_id": prod["id"], "periodo": "2026-10",
                                                  "precio": 80}, headers=h)
     assert r.status_code == 422
+
+
+def test_catalogo_de_campo_no_lleva_precios_ni_informantes():
+    c = _sesion("diec.campo@nexo.example.com", ["analista_diec"])
+    r = c.get("/api/indices/catalogo-campo")
+    assert r.status_code == 200
+    datos = r.json()
+    assert {"generado_en", "total", "articulos", "fuente"} <= set(datos)
+    for a in datos["articulos"]:
+        assert not {"precio", "precio_actual", "cod_fuente", "informante"} & set(a)
+    assert cliente().get("/api/indices/catalogo-campo").status_code == 401

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import statistics
+import time
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -122,6 +123,40 @@ def catalogo_articulos(texto: str | None = Query(default=None, max_length=100),
     filas = bd.execute(q.group_by(PrecioRecolectado.cod_articulo).order_by(func.count().desc()).limit(300)).all()
     return [{"codigo": c, "articulo": a, "observaciones": n, "departamentos": d,
              "ultimo_periodo": f"{p // 100}-{p % 100:02d}"} for c, a, n, d, p in filas]
+
+
+_CACHE_CAMPO: dict = {}  # se recalcula cada 10 minutos (los precios cambian una vez al mes)
+
+
+@router.get("/catalogo-campo")
+def catalogo_campo(ctx: Contexto = Depends(requiere("indices:ver")), bd: Session = Depends(obtener_bd)):
+    """Catálogo completo y compacto para el teléfono de campo (reto de la DIEC: Manual de Características digital).
+
+    Por artículo: presentación más frecuente, otras presentaciones observadas, cobertura y último periodo.
+    No lleva precios ni informantes: se puede guardar en el dispositivo para consultarlo sin conexión.
+    """
+    if _CACHE_CAMPO and time.monotonic() - _CACHE_CAMPO["t"] < 600:
+        return _CACHE_CAMPO["datos"]
+    presentaciones: dict[str, dict[float, int]] = defaultdict(lambda: defaultdict(int))
+    for cod, cant, n in bd.execute(select(PrecioRecolectado.cod_articulo, PrecioRecolectado.cant_actual, func.count())
+                                   .where(PrecioRecolectado.cant_actual.is_not(None))
+                                   .group_by(PrecioRecolectado.cod_articulo, PrecioRecolectado.cant_actual)):
+        presentaciones[cod][cant] += n
+    filas = bd.execute(select(PrecioRecolectado.cod_articulo, func.max(PrecioRecolectado.articulo), func.count(),
+                              func.count(distinct(PrecioRecolectado.departamento)), func.count(distinct(PrecioRecolectado.region)),
+                              func.max(PrecioRecolectado.anio * 100 + PrecioRecolectado.mes))
+                       .group_by(PrecioRecolectado.cod_articulo).order_by(PrecioRecolectado.cod_articulo)).all()
+    articulos = []
+    for cod, art, n, deptos, regiones, per in filas:
+        orden = sorted(presentaciones.get(cod, {}).items(), key=lambda x: -x[1])
+        articulos.append({"codigo": cod, "articulo": art, "observaciones": n, "departamentos": deptos, "regiones": regiones,
+                          "ultimo_periodo": f"{per // 100}-{per % 100:02d}",
+                          "presentacion": orden[0][0] if orden else None,
+                          "otras_presentaciones": [c for c, _ in orden[1:6]]})
+    datos = {"generado_en": ahora().isoformat(timespec="seconds"), "total": len(articulos), "articulos": articulos,
+             "fuente": "INE, precios recolectados para el Índice de Precios al Consumidor (base 2024=100)"}
+    _CACHE_CAMPO.update(t=time.monotonic(), datos=datos)
+    return datos
 
 
 @router.get("/articulos/{codigo}")

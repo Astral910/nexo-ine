@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import mimetypes
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -38,6 +39,10 @@ from .routers import (
 from .security.cabeceras import CabecerasSeguridad
 from .services import programador
 from .siembra import preparar_base
+
+# En Windows el registro puede asociar .js a text/plain y el navegador rechazaría los módulos y el service worker.
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("nexo")

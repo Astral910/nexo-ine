@@ -654,3 +654,16 @@ ol.pasos li { list-style: none; }
 .opcion-tarea { text-align: left; font: inherit; color: inherit; align-items: flex-start; }
 .opcion-tarea.elegida { border-color: var(--acento); box-shadow: 0 0 0 3px rgba(0, 64, 128, 0.1); }
 .tarjeta.plantilla { display: flex; flex-direction: column; gap: 6px; background: var(--superficie-2); }
+
+/* Teléfono: la barra superior cabe en la pantalla (antes estiraba la página y descentraba los modales). */
+@media (max-width: 640px) {
+  .barra-superior { gap: 8px; }
+  .barra-superior .ruta, .barra-superior .acciones .insignia { display: none; }
+  .barra-superior .buscador { min-width: 0; }
+  .barra-superior .buscador kbd { display: none; }
+  .barra-superior .acciones { flex-shrink: 0; gap: 6px; }
+  .modal, .modal.ancho { overflow-x: hidden; }
+  html, body { overflow-x: hidden; }
+  .modal .bienvenida-recorrido > * { flex: 1 1 100%; min-width: 0; }
+  .modal .rejilla > * { min-width: 0; }
+}

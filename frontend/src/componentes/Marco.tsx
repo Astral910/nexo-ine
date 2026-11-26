@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  Bell, ChevronDown, ChevronRight, ChevronsUpDown, CircleHelp, Database, FileCheck2, Gavel, Globe, House, LayoutDashboard, Lock, LogOut, Map,
+  Bell, ChevronDown, ClipboardList, ChevronRight, ChevronsUpDown, CircleHelp, Database, FileCheck2, Gavel, Globe, House, LayoutDashboard, Lock, LogOut, Map,
   Menu, PanelLeftClose, PanelLeftOpen, Route, ScrollText, Search, Server, ShieldCheck, Tags, TrendingUp, Type, User, Users, Wheat, Workflow,
 } from "lucide-react";
 import { api, fmt } from "../api";
@@ -23,6 +23,7 @@ const MENU: { grupo: string; items: Item[] }[] = [
   { grupo: "Procesos estadísticos", items: [
     { ruta: "/precios", texto: "Precios de Referencia", icono: Tags, permiso: ["dpir:ver"], cuenta: "solicitudes_abiertas", descripcion: "Atienda solicitudes con investigación de mercado automática." },
     { ruta: "/indices", texto: "Índices y alertas", icono: TrendingUp, permiso: ["indices:ver"], cuenta: "alertas_nuevas", descripcion: "IPC, materiales de construcción, canasta básica y crítica de precios." },
+    { ruta: "/recoleccion", texto: "Recolección de precios", icono: ClipboardList, permiso: ["indices:ver"], descripcion: "Informantes, productos y precios del IPP, IPMC e ICC, con alertas al capturar." },
     { ruta: "/hba", texto: "Balance de Alimentos", icono: Wheat, permiso: ["hba:ver"], descripcion: "Suministro y disponibilidad de alimentos; calculadora de derivados." },
     { ruta: "/territorio", texto: "Territorio y operativos", icono: Map, permiso: ["territorio:ver"], descripcion: "Municipios, lugares poblados y avance de campo." },
     { ruta: "/calidad", texto: "Validador de calidad", icono: FileCheck2, permiso: ["calidad:usar"], descripcion: "Revise una base antes de usarla o publicarla." },
