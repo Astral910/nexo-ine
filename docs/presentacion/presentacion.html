@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nexo · Datatón INE 2026</title>
+<!-- Presentación para el jurado (7 minutos). Se exporta a PDF con: python generar_pdf.py -->
+<style>
+@font-face { font-family: "Ubuntu Sans"; font-weight: 400; src: url(fuentes/ubuntu-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Ubuntu Sans"; font-weight: 500; src: url(fuentes/ubuntu-sans-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Ubuntu Sans"; font-weight: 700; src: url(fuentes/ubuntu-sans-latin-700-normal.woff2) format("woff2"); }
+:root { --azul: #004080; --celeste: #0080ff; --naranja: #ff5500; --verde: #9dd926; --morado: #a97eff; --amarillo: #ffd500;
+  --texto: #0f1c2e; --texto-2: #3d4b5f; --texto-3: #6b7a90; --fondo: #f3f5f8; --borde: #dfe5ee; }
+@page { size: 1920px 1080px; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: "Ubuntu Sans", system-ui, sans-serif; color: var(--texto); }
+.lamina { width: 1920px; height: 1080px; position: relative; overflow: hidden; background: var(--fondo); padding: 96px 120px 110px;
+  page-break-after: always; break-after: page; display: flex; flex-direction: column; }
+.lamina:last-child { page-break-after: auto; break-after: auto; }
+.pie { position: absolute; left: 120px; right: 120px; bottom: 44px; display: flex; justify-content: space-between; align-items: center;
+  font-size: 20px; color: var(--texto-3); }
+.pie img { height: 34px; }
+.sobre { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--celeste); margin-bottom: 18px; }
+h1 { font-size: 76px; line-height: 1.05; margin: 0 0 28px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 60px; line-height: 1.08; margin: 0 0 36px; font-weight: 700; letter-spacing: -0.01em; }
+p.grande { font-size: 32px; line-height: 1.4; color: var(--texto-2); margin: 0 0 20px; max-width: 1500px; }
+.dos { display: grid; grid-template-columns: 1fr 1.25fr; gap: 64px; align-items: center; flex: 1; }
+.dos.inv { grid-template-columns: 1.3fr 1fr; }
+ul.puntos { list-style: none; padding: 0; margin: 0; }
+ul.puntos li { font-size: 29px; line-height: 1.35; padding: 14px 0 14px 44px; position: relative; color: var(--texto-2); }
+ul.puntos li::before { content: ""; position: absolute; left: 0; top: 26px; width: 18px; height: 18px; border-radius: 5px; background: var(--celeste); }
+ul.puntos li b { color: var(--texto); }
+.captura { width: 100%; border-radius: 18px; box-shadow: 0 24px 60px rgba(15, 28, 46, 0.18), 0 2px 8px rgba(15, 28, 46, 0.08); border: 1px solid var(--borde); display: block; }
+.cifras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 12px; }
+.cifra { background: #fff; border-radius: 20px; padding: 36px 36px 32px; border: 1px solid var(--borde); border-top: 8px solid var(--celeste); }
+.cifra .v { font-size: 72px; font-weight: 700; color: var(--azul); line-height: 1; }
+.cifra .e { font-size: 26px; color: var(--texto-2); margin-top: 16px; line-height: 1.35; }
+.cifra.naranja { border-top-color: var(--naranja); } .cifra.verde { border-top-color: var(--verde); } .cifra.morado { border-top-color: var(--morado); }
+table.mapa { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 25px; background: #fff; border-radius: 18px; overflow: hidden; border: 1px solid var(--borde); }
+table.mapa th { background: var(--azul); color: #fff; text-align: left; padding: 20px 26px; font-size: 24px; }
+table.mapa td { padding: 18px 26px; border-top: 1px solid var(--borde); vertical-align: top; line-height: 1.35; color: var(--texto-2); }
+table.mapa td:first-child { font-weight: 700; color: var(--texto); white-space: nowrap; }
+.etiqueta { display: inline-block; font-size: 20px; font-weight: 700; padding: 6px 14px; border-radius: 999px; background: #e6f0ff; color: var(--azul); margin-right: 8px; }
+.cita { font-size: 30px; font-weight: 500; color: var(--azul); border-left: 8px solid var(--naranja); padding: 10px 0 10px 28px; margin-top: 28px; line-height: 1.35; }
+/* Portada y cierre */
+.portada { background: radial-gradient(1200px 700px at 85% 20%, #0a5bb0 0%, transparent 60%), linear-gradient(135deg, #003366, var(--azul)); color: #fff; }
+.portada .pie { color: rgba(255,255,255,0.75); }
+.portada h1 { font-size: 150px; margin: 40px 0 16px; }
+.portada .sub { font-size: 40px; line-height: 1.3; max-width: 1300px; opacity: 0.92; }
+.portada .marcas { display: flex; align-items: center; gap: 48px; }
+.portada .marcas .ine { height: 110px; filter: brightness(0) invert(1); }
+.portada .marcas .dt { height: 120px; background: #fff; border-radius: 16px; padding: 12px 20px; }
+.portada .equipo { margin-top: auto; font-size: 26px; line-height: 1.6; opacity: 0.9; }
+.portada .equipo b { display: block; font-size: 22px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; margin-bottom: 6px; }
+.movil { width: 360px; border-radius: 36px; border: 12px solid #0f1c2e; box-shadow: 0 24px 60px rgba(15, 28, 46, 0.25); display: block; }
+.fila-capturas { display: flex; gap: 40px; align-items: center; }
+.pasos6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 8px 0 30px; }
+.pasos6 div { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 16px 16px; font-size: 21px; font-weight: 500; color: var(--texto-2); }
+.pasos6 div span { display: block; font-size: 30px; font-weight: 700; color: var(--celeste); }
+.ruta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 20px; }
+.ruta div { background: #fff; border-radius: 18px; border: 1px solid var(--borde); padding: 28px; font-size: 25px; line-height: 1.4; color: var(--texto-2); }
+.ruta div b { display: block; font-size: 28px; color: var(--texto); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Portada -->
+<section class="lamina portada">
+  <div class="marcas"><img class="ine" src="img/logo-ine.svg" alt="INE"><img class="dt" src="img/dataton.png" alt="Datatón"></div>
+  <h1>Nexo</h1>
+  <div class="sub">Una sola plataforma para los procesos del INE: precios de referencia, índices y recolección de precios, territorio y calidad de datos. Con su metodología, sus datos y software libre.</div>
+  <div class="equipo"><b>Categoría 2 · Tecnológica y ciencias de datos</b>Josue David Sajche Boror · Jeferson Andre Cano López · Angel David Siliezar López · Ricardo Javier González Corado</div>
+  <div class="pie"><span>Datatón INE 2026 · Prototipo, no es un sistema oficial del INE</span><span>Fuente de los datos: Instituto Nacional de Estadística</span></div>
+</section>
+
+<!-- 2. El problema -->
+<section class="lamina">
+  <div class="sobre">El problema</div>
+  <h2>El Estado paga precios muy distintos por lo mismo</h2>
+  <p class="grande">Computadoras portátiles compradas por el Estado en 2024 y 2025, según Guatecompras, en quetzales de octubre de 2026 y sin compras atípicas:</p>
+  <div class="cifras">
+    <div class="cifra"><div class="v">354</div><div class="e">compras de <b>56 instituciones</b></div></div>
+    <div class="cifra"><div class="v">Q8,948</div><div class="e">pagó la compra del medio (mediana) por unidad</div></div>
+    <div class="cifra naranja"><div class="v">2 veces</div><div class="e">más pagó el 10 % más caro (Q13,393 o más) que el 10 % más barato (Q6,729 o menos)</div></div>
+  </div>
+  <div class="cita">Para eso existen los precios de referencia del INE. Hoy la DPIR los investiga a mano, para cualquiera de las 559 instituciones que compran en Guatecompras.</div>
+  <div class="pie"><span>Cálculo de Nexo con Guatecompras OCDS (CC BY 4.0), ajustado con el IPC del INE</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 3. Qué es Nexo -->
+<section class="lamina">
+  <div class="sobre">La solución</div>
+  <h2>Lo que pidieron las Direcciones el 23 de noviembre, en una sola plataforma</h2>
+  <table class="mapa">
+    <tr><th style="width:250px">Dirección</th><th>Lo que pidió</th><th>Lo que hace Nexo</th></tr>
+    <tr><td>DPIR</td><td>Digitalizar los 6 pasos; media, mediana y moda; más del 50 % de fuentes del mercado relevante</td><td>Flujo completo con investigación automática en 214 mil compras públicas e informe PDF trazable</td></tr>
+    <tr><td>DIEC</td><td>Alertas de precios del IPP; sistema para IPMC e ICC; Manual de Características en el teléfono; calculadora de la HBA</td><td>Recolección de precios con alertas al capturar, catálogo de campo que funciona sin internet, alertas Hidiroglou-Berthelot y calculadora HBA</td></tr>
+    <tr><td>DESA</td><td>Tableros dinámicos y validación de bases con licencia libre</td><td>Tableros que se arman escribiendo y un validador con las reglas de la DCE</td></tr>
+    <tr><td>DCE · DCR</td><td>Datos por municipio y lugar poblado; avance de las 22 delegaciones</td><td>340 fichas municipales, mapa de 20,036 lugares poblados y avance por delegación</td></tr>
+  </table>
+  <p class="grande" style="margin-top:28px">Y <b>Nexo Abierto</b>, sin cuenta, para la ciudadanía, la prensa y las municipalidades.</p>
+  <div class="pie"><span>754,705 registros oficiales de 25 archivos del portal de datos abiertos del INE, más Guatecompras</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 4. DPIR -->
+<section class="lamina">
+  <div class="sobre">Precios de Referencia · DPIR</div>
+  <h2>Los 6 pasos de la DPIR, en segundos y con su metodología</h2>
+  <div class="dos">
+    <ul class="puntos">
+      <li><b>Investigación automática:</b> compras comparables de Guatecompras con su NOG y precios históricos del INE, ajustados con el IPC.</li>
+      <li><b>Su regla:</b> si menos del 50 % de las fuentes son cotizaciones del mercado relevante, el informe exige una justificación.</li>
+      <li><b>Media, mediana o moda</b> con el criterio de su presentación: la mediana cuando hay precios extremos.</li>
+      <li><b>Informe PDF trazable</b> con huella SHA-256. Decide el analista: es un borrador, no el precio oficial.</li>
+    </ul>
+    <img class="captura" src="img/solicitud_entregada.jpg" alt="Solicitud entregada">
+  </div>
+  <div class="pie"><span>Ejemplo de demostración: compras reales de Guatecompras y cotizaciones de demostración</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 5. DIEC -->
+<section class="lamina">
+  <div class="sobre">Índices y Estadísticas Continuas · DIEC</div>
+  <h2>Recolección de precios y catálogo en el teléfono</h2>
+  <div class="dos inv">
+    <img class="captura" src="img/recoleccion.jpg" alt="Recolección de precios">
+    <div>
+      <ul class="puntos">
+        <li><b>Informantes, productos y precios</b> de los tres índices, con el mismo flujo.</li>
+        <li><b>Al capturar</b>, Nexo dice cuánto varió el precio y si conviene confirmarlo (Hidiroglou-Berthelot).</li>
+        <li><b>Cobertura y pendientes</b> del mes. El nombre del informante solo lo ve la DIEC.</li>
+      </ul>
+      <div class="fila-capturas" style="margin-top:20px"><img class="movil" style="width:190px;height:400px;object-fit:cover;object-position:top;border-width:9px;border-radius:28px" src="img/campo_movil.jpg" alt="Catálogo de campo">
+        <p style="font-size:26px;line-height:1.4;color:var(--texto-2)"><b style="color:var(--texto)">Catálogo de campo:</b> 441 artículos del IPC. Se instala en el teléfono y funciona sin internet.</p></div>
+    </div>
+  </div>
+  <div class="pie"><span>Precios del IPP, IPMC e ICC de demostración: el INE no los publica de forma individual</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 6. Crítica de precios -->
+<section class="lamina">
+  <div class="sobre">Crítica de precios del IPC</div>
+  <h2>De cada 100 precios, el equipo revisa 3 o 4, no todos</h2>
+  <div class="dos">
+    <ul class="puntos">
+      <li>La DIEC recolecta <b>más de 112 mil precios</b> en más de 20 mil fuentes para el IPC.</li>
+      <li>Nexo aplica <b>Hidiroglou-Berthelot</b> a los precios recolectados publicados y marca los cambios inusuales.</li>
+      <li>Cada alerta se confirma o se descarta con un comentario que queda en la bitácora.</li>
+      <li><b>Secreto estadístico:</b> se suprime toda celda con menos de 5 informantes, también su conteo.</li>
+    </ul>
+    <img class="captura" src="img/alertas.jpg" alt="Alertas de precios">
+  </div>
+  <div class="pie"><span>INE, precios recolectados para el IPC (julio de 2022 y 2023)</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 7. Tableros generativos -->
+<section class="lamina">
+  <div class="sobre">Tableros generativos</div>
+  <h2>Escriba lo que necesita ver. Nexo no inventa cifras</h2>
+  <div class="dos inv">
+    <img class="captura" src="img/tablero.jpg" alt="Tablero generado">
+    <ul class="puntos">
+      <li>«IPC de Quetzaltenango» → muestra la <b>Región VI</b> y avisa que el INE no publica el IPC por departamento.</li>
+      <li>Muestra <b>cómo entendió</b> la petición: fuente, medida, periodo y desglose.</li>
+      <li><b>Determinista:</b> sin chatbot, sin costos y sin que los datos salgan del INE.</li>
+    </ul>
+  </div>
+  <div class="pie"><span>Capa semántica con lista blanca de fuentes y reglas de rigor del INE</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 8. Nexo Abierto -->
+<section class="lamina">
+  <div class="sobre">Nexo Abierto · sin cuenta</div>
+  <h2>La misma información, para cualquier persona</h2>
+  <div class="dos">
+    <ul class="puntos">
+      <li><b>¿Cuánto debería costar?</b> Lo que pagó el Estado por un producto, con la mediana y el rango.</li>
+      <li><b>Mi municipio en datos:</b> 340 fichas con el Censo 2018 y las proyecciones, con la cita lista para copiar.</li>
+      <li><b>Pregunte a los datos:</b> tableros solo con fuentes públicas.</li>
+      <li>Cada cifra enlaza al archivo original del INE. Solo lectura y con límite de consultas.</li>
+    </ul>
+    <img class="captura" src="img/abierto_precio.jpg" alt="Nexo Abierto">
+  </div>
+  <div class="pie"><span>Responde al objetivo general del Datatón: acercar la información pública a la población</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 9. Confianza -->
+<section class="lamina">
+  <div class="sobre">Confianza</div>
+  <h2>Cada número tiene origen, fecha y huella</h2>
+  <div class="dos">
+    <ul class="puntos">
+      <li><b>Linaje:</b> cada archivo con su URL, fecha de descarga, licencia y SHA-256.</li>
+      <li><b>Bitácora</b> encadenada con HMAC: detecta alteraciones y borrados.</li>
+      <li><b>Seguridad:</b> Argon2id, segundo factor, 11 roles con segregación de funciones.</li>
+      <li><b>Calidad:</b> 40 pruebas automáticas en SQLite y PostgreSQL en cada cambio, con auditoría de dependencias.</li>
+    </ul>
+    <img class="captura" src="img/linaje.jpg" alt="Catálogo y linaje">
+  </div>
+  <div class="pie"><span>Prototipo sin prueba de penetración externa; los riesgos y controles están documentados en la plataforma</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 10. Adopción -->
+<section class="lamina">
+  <div class="sobre">Adopción</div>
+  <h2>El INE puede empezar mañana, por módulos</h2>
+  <div class="cifras">
+    <div class="cifra verde"><div class="v">Q0</div><div class="e">en licencias: Python, PostgreSQL y React, todo libre</div></div>
+    <div class="cifra"><div class="v">1</div><div class="e">máquina virtual con Docker, o un comando en Windows</div></div>
+    <div class="cifra morado"><div class="v">Sin internet</div><div class="e">funciona con los datos procesados y su manifiesto</div></div>
+  </div>
+  <div class="ruta">
+    <div><b>1. Precios de Referencia</b>Empezar con la DPIR y sus solicitudes reales.</div>
+    <div><b>2. Recolección</b>Cargar los informantes reales del IPP, IPMC e ICC.</div>
+    <div><b>3. Manual de Características</b>Cargar el texto oficial al catálogo de campo.</div>
+    <div><b>4. Acceso institucional</b>Inicio de sesión con la cuenta del INE.</div>
+  </div>
+  <div class="pie"><span>Instalación y dependencias en el README del repositorio</span><img src="img/logo-ine.svg" alt="INE"></div>
+</section>
+
+<!-- 11. Cierre -->
+<section class="lamina portada">
+  <div class="marcas"><img class="ine" src="img/logo-ine.svg" alt="INE"><img class="dt" src="img/dataton.png" alt="Datatón"></div>
+  <h1 style="font-size:120px">Gracias</h1>
+  <div class="sub">Nexo: los procesos del INE en una sola plataforma, con su metodología, sus datos y software libre.</div>
+  <div class="equipo"><b>Repositorio</b>github.com/Astral910/nexo-ine<br>Uso de IA declarado en el README (Claude Code como asistente de programación).</div>
+  <div class="pie"><span>Datatón INE 2026 · Categoría 2</span><span>Fuente de los datos: Instituto Nacional de Estadística</span></div>
+</section>
+
+</body>
+</html>
