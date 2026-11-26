@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,7 @@ from ..db import obtener_bd
 from ..deps import Contexto, requiere
 from ..models import Validacion
 from ..security.limites import limitador
+from ..services.codificador import codificar_lote
 from ..services.validador import ArchivoInvalido, reporte_csv, validar
 
 router = APIRouter(prefix="/api/calidad", tags=["calidad de datos"])
@@ -77,3 +79,16 @@ def inconsistencias(vid: int, ctx: Contexto = Depends(requiere("calidad:usar")),
     v = _propia(bd, ctx, vid)
     return Response(reporte_csv(v.informe), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="inconsistencias-{v.id}.csv"'})
+
+
+class Respuestas(BaseModel):
+    respuestas: list[str] = Field(min_length=1, max_length=5000)
+
+
+@router.post("/codificar")
+def codificar_respuestas(datos: Respuestas, ctx: Contexto = Depends(requiere("calidad:usar"))):
+    """Sugiere el código CIUO-08 de cada respuesta abierta de ocupación (propuesta de la DCE). No guarda las respuestas."""
+    resultado = codificar_lote([r[:300] for r in datos.respuestas])
+    bitacora.registrar("calidad.codificacion", usuario=ctx.usuario, modulo="calidad",
+                       detalle={"respuestas": resultado["total"], "automaticas": resultado["automaticas"]}, ip=ctx.ip)
+    return resultado

@@ -310,6 +310,15 @@ def ficha_municipio(codigo: str, _ip: str = Depends(_limite()), bd: Session = De
     })
 
 
+@router.get("/catalogo-campo")
+def catalogo_campo(_ip: str = Depends(_limite()), bd: Session = Depends(obtener_bd)):
+    """Catálogo de artículos del IPC para el teléfono de campo: nombres, presentaciones y cobertura, sin precios ni
+    informantes (se deriva de los archivos públicos de precios recolectados)."""
+    from .indices import datos_catalogo_campo
+
+    return datos_catalogo_campo(bd)
+
+
 @router.get("/mapa")
 def mapa(departamento: str | None = Query(default=None, max_length=40), _ip: str = Depends(_limite()),
          bd: Session = Depends(obtener_bd)):

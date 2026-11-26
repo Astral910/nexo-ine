@@ -44,3 +44,48 @@ export function MapaGT({ departamento, alto = 460, puntos: propios, base = "/api
     </div>
   );
 }
+
+/** Mapa de un municipio: el departamento de fondo en gris y los lugares poblados del municipio resaltados por área,
+ *  con su nombre al pasar el cursor y el nombre de los más poblados. */
+export function MapaMunicipio({ lugares, departamento, municipio, base = "/api/territorio/mapa", alto = 320 }: {
+  lugares: any[][]; departamento: string; municipio: string; base?: string; alto?: number;
+}) {
+  const { datos } = useDatos<{ puntos: number[][] }>(`${base}?departamento=${encodeURIComponent(departamento)}`);
+  const opcion = useMemo(() => {
+    if (!lugares?.length) return null;
+    // Encuadre centrado en el municipio, con margen para ver alrededor los demás lugares del departamento.
+    const lons = lugares.map((p) => p[0] as number), lats = lugares.map((p) => p[1] as number);
+    const cx = (Math.min(...lons) + Math.max(...lons)) / 2, cy = (Math.min(...lats) + Math.max(...lats)) / 2;
+    const medio = Math.max(Math.max(...lons) - Math.min(...lons), Math.max(...lats) - Math.min(...lats), 0.04) * 0.85;
+    const fondo = (datos?.puntos ?? []).filter((p) => Math.abs(p[0] - cx) <= medio * 1.3 && Math.abs(p[1] - cy) <= medio);
+    const mayores = [...lugares].sort((a, b) => b[2] - a[2]).slice(0, 1).map((l) => l[3]);
+    const tam = (v: any[]) => Math.max(4, Math.min(22, Math.sqrt(v[2] || 1) / 6));
+    const serie = (area: string, color: string) => ({
+      name: area === "Urbana" ? "Urbano" : "Rural", type: "scatter", z: 3,
+      data: lugares.filter((l) => (area === "Urbana") === (l[4] === "Urbana")),
+      symbolSize: tam, itemStyle: { color, opacity: 0.85, borderColor: "#fff", borderWidth: 1 },
+      label: { show: true, formatter: (p: any) => (mayores.includes(p.value[3]) ? p.value[3] : ""), position: "top", fontSize: 12, fontWeight: 600, color: "#0f1c2e" },
+      labelLayout: { hideOverlap: true },
+    });
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => p.seriesIndex === 0 ? `${departamento}: otro municipio`
+        : `<b>${p.value[3]}</b><br/>${(p.value[2] ?? 0).toLocaleString("es-GT")} habitantes (2018) · ${p.value[4] || "—"}` },
+      legend: { bottom: 0, data: ["Urbano", "Rural"], textStyle: { fontSize: 12 } },
+      grid: { left: 0, right: 0, top: 4, bottom: 28 },
+      xAxis: { type: "value", show: false, min: cx - medio * 1.3, max: cx + medio * 1.3 },
+      yAxis: { type: "value", show: false, min: cy - medio, max: cy + medio },
+      series: [
+        { name: departamento, type: "scatter", data: fondo, symbolSize: 4, silent: false, z: 1, itemStyle: { color: "#b9c3d1", opacity: 0.8 } },
+        serie("Urbana", "#ff5500"),
+        serie("Rural", PALETA[1] ?? "#0080ff"),
+      ],
+    };
+  }, [lugares, datos, departamento]);
+  if (!opcion) return <Esqueleto alto={alto} />;
+  return (
+    <div>
+      <Grafica opcion={opcion} alto={alto} />
+      <FuenteCita>INE, centroides de lugares poblados y Cuadro A1.3 del Censo 2018. En color, los lugares poblados de {municipio} (tamaño según su población); en gris, el resto de {departamento}.</FuenteCita>
+    </div>
+  );
+}

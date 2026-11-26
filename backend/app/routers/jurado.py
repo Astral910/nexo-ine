@@ -63,7 +63,7 @@ def evidencia(bd: Session) -> dict:
             "Stack libre y estándar (Python, PostgreSQL, React), un solo contenedor, sin servicios de pago.",
             "Nexo Abierto: sin cuenta, cualquier persona consulta cuánto pagó el Estado por un bien, la ficha de su "
             "municipio y tableros con datos publicados del INE (solo fuentes públicas, con límite por conexión)."],
-         "rutas": ["/precios", "/indices", "/territorio", "/calidad", "/abierto"]},
+         "rutas": ["/precios", "/indices", "/recoleccion", "/campo", "/territorio", "/calidad", "/abierto"]},
         {"criterio": "Calidad técnica", "peso": 20, "evidencia": [
             "Arquitectura modular por dominio; capa semántica única para todas las gráficas.",
             "Reproducible: pipeline de datos con manifiesto (URL, fecha, SHA-256), Docker Compose y CI.",

@@ -3,7 +3,7 @@
 // Vista Completa: el informe con todos los hallazgos, las 6 reglas de la DCE y el perfil de cada columna.
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Download, FileCheck2, FileStack, ListChecks, Upload } from "lucide-react";
+import { Download, FileCheck2, FileStack, ListChecks, Tags, Upload } from "lucide-react";
 import { api, ErrorApi, fmt } from "../api";
 import { Aviso, Encabezado, EsqueletoTabla, GuiaRapida, Insignia, Medidor, SelectorArchivo, Severidad, Tabla, Tarjeta, useDatos } from "../componentes/ui";
 import { BotonAyuda, CifraClara, EnPocasPalabras, ListaSimple, PieResumen, SegunVista, type AyudaPantalla, type ElementoLista } from "../componentes/vista";
@@ -169,6 +169,45 @@ function RecientesSimple({ historial, error, abrir }: { historial: any[] | null;
   );
 }
 
+const EJEMPLO_OCUPACIONES = ["piloto de bus extraurbano", "maestra de primaria", "jornalero en finca de café", "tortillera", "guardia de seguridad",
+  "secretaria", "agricultor de maíz y frijol", "ayudante de albañil", "no sabe"].join(String.fromCharCode(10));
+
+/** Codificación automática de respuestas abiertas de ocupación a la CIUO-08 (propuesta de la DCE). */
+function Codificador() {
+  const [texto, setTexto] = useState(EJEMPLO_OCUPACIONES);
+  const [r, setR] = useState<any>(null);
+  const [error, setError] = useState("");
+  const codificar = async () => {
+    setError("");
+    const respuestas = texto.split(String.fromCharCode(10)).map((t) => t.trim()).filter(Boolean).slice(0, 5000);
+    try { setR(await api("/api/calidad/codificar", { cuerpo: { respuestas } })); } catch (e) { setError((e as ErrorApi).message); }
+  };
+  return (
+    <Tarjeta titulo={<><Tags size={18} style={{ verticalAlign: -3 }} /> Codificar respuestas abiertas de ocupación (CIUO-08)</>}
+      ayuda="Propuesta de la DCE: clasificar automáticamente respuestas abiertas. Nexo sugiere el subgrupo de la CIUO-08 (2 dígitos) con su confianza y deja para revisión humana las dudosas. Corre en el servidor, sin enviar datos fuera y sin guardar las respuestas.">
+      <div className="columna">
+        <textarea rows={6} value={texto} onChange={(e) => setTexto(e.target.value)} aria-label="Respuestas, una por línea"
+          style={{ width: "100%", fontFamily: "inherit", padding: 10, borderRadius: 10, border: "1px solid var(--borde-fuerte)" }} />
+        <div className="fila"><button className="boton" onClick={codificar} disabled={!texto.trim()}><Tags /> Codificar</button>
+          <span className="pequeno suave">Una respuesta por línea (hasta 5,000). «No sabe» o «no responde» quedan como 99, según las reglas de la DCE.</span></div>
+        {error && <Aviso tono="alerta">{error}</Aviso>}
+        {r && (
+          <>
+            <p className="aparecer"><b>{fmt.numero(r.automaticas)}</b> de {fmt.numero(r.total)} respuestas quedaron codificadas con confianza; <b>{fmt.numero(r.revisar)}</b> conviene revisarlas a mano.</p>
+            <Tabla filas={r.filas} columnas={[
+              { id: "resp", titulo: "Respuesta", valor: (f: any) => f.respuesta },
+              { id: "cod", titulo: "Código", valor: (f: any) => f.codigo, celda: (f: any) => f.codigo ?? "—" },
+              { id: "ocu", titulo: "Ocupación (CIUO-08)", valor: (f: any) => f.ocupacion, celda: (f: any) => <>{f.ocupacion}{f.alternativa && f.revisar && <span className="pequeno suave"><br />¿O {f.alternativa.codigo}: {f.alternativa.ocupacion}?</span>}</> },
+              { id: "conf", titulo: "Confianza", num: true, valor: (f: any) => f.confianza, celda: (f: any) => fmt.pct(f.confianza * 100, 0) },
+              { id: "rev", titulo: "", valor: (f: any) => (f.revisar ? 0 : 1), celda: (f: any) => f.revisar ? <Insignia tono="alerta">revisar</Insignia> : <Insignia tono="exito">lista</Insignia> },
+            ]} />
+          </>
+        )}
+      </div>
+    </Tarjeta>
+  );
+}
+
 export default function Calidad() {
   const [params] = useSearchParams();
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -228,6 +267,7 @@ export default function Calidad() {
           </Tarjeta>
         </>}
       />
+      <Codificador />
     </div>
   );
 }

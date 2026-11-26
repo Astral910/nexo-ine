@@ -1,6 +1,6 @@
 // Catálogo de campo: el Manual de Características del IPC como aplicación instalable en el teléfono institucional
-// (propuesta de la DIEC). Se descarga con la sesión iniciada y queda guardado en el dispositivo para consultarlo sin
-// conexión durante la recolección y la supervisión. No lleva precios ni informantes.
+// (propuesta de la DIEC). Se descarga sin cuenta (no lleva precios ni informantes) y queda guardado en el dispositivo
+// para consultarlo sin conexión durante la recolección y la supervisión.
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, CloudOff, Download, RefreshCw, Search, Smartphone } from "lucide-react";
@@ -27,7 +27,7 @@ export default function Campo() {
   const descargar = async () => {
     setEstado("cargando");
     try {
-      const r = await fetch("/api/indices/catalogo-campo", { credentials: "same-origin", headers: { Accept: "application/json" } });
+      const r = await fetch("/api/publico/catalogo-campo", { credentials: "same-origin", headers: { Accept: "application/json" } });
       if (r.status === 401 || r.status === 403) { setEstado("sin-sesion"); return; }
       if (!r.ok) throw new Error(String(r.status));
       const c = (await r.json()) as Catalogo;
@@ -53,7 +53,7 @@ export default function Campo() {
   return (
     <div className="campo-app">
       <header className="campo-cabecera">
-        <Link to="/indices" className="campo-volver" aria-label="Volver a Nexo"><ArrowLeft size={20} /></Link>
+        <Link to="/" className="campo-volver" aria-label="Volver a Nexo"><ArrowLeft size={20} /></Link>
         <div>
           <div className="campo-titulo">Catálogo de campo</div>
           <div className="campo-sub">Artículos del IPC · INE</div>
@@ -79,7 +79,7 @@ export default function Campo() {
         <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar artículo o código" inputMode="search" />
       </label>
 
-      {!cat && estado !== "cargando" && <p className="campo-vacio"><Smartphone size={28} /><br />El catálogo se descarga al abrir esta página con la sesión iniciada.</p>}
+      {!cat && estado !== "cargando" && <p className="campo-vacio"><Smartphone size={28} /><br />El catálogo se descarga la primera vez que abre esta página con internet.</p>}
 
       <ul className="campo-lista">
         {filtrados.slice(0, 120).map((a) => (

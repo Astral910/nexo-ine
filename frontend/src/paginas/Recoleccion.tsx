@@ -159,7 +159,7 @@ export default function Recoleccion() {
 
   const vistaResumen = (
     <>
-      <EnPocasPalabras>
+      <EnPocasPalabras ancla="recoleccion-resumen">
         {fila?.periodo ? (
           <>
             <p>En {mesTexto(fila.periodo)} se han capturado <b>{fila.capturados} de {fila.esperados}</b> precios del {NOMBRES[indice]}. {pendientes.length > 0 && <>Faltan <b>{pendientes.length}</b> por recolectar.</>}</p>

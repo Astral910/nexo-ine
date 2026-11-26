@@ -50,6 +50,8 @@ export const RECORRIDOS: Record<string, DefRecorrido> = {
         pruebe: "Escriba «papel bond» y pulse «Consultar»." },
       { ruta: "/indices/alertas", ancla: "alertas-resumen", vista: "resumen", permiso: ["indices:ver"], titulo: "Alertas de precios",
         texto: "De cada 100 precios que recolecta el INE para el IPC, unos 3 o 4 se marcan para revisión. El equipo revisa esos, no todos." },
+      { ruta: "/recoleccion", ancla: "recoleccion-resumen", vista: "resumen", permiso: ["indices:ver"], titulo: "Recolección de precios",
+        texto: "Lo que pidió la DIEC para el IPP, el IPMC y el ICC: informantes, productos y captura mensual. Al guardar un precio, Nexo dice si conviene confirmarlo. El botón «Catálogo de campo» abre la versión para teléfono, que funciona sin internet." },
       { ruta: "/territorio", ancla: "territorio-mapa", vista: "resumen", permiso: ["territorio:ver", "tableros:ver"], titulo: "El país en datos",
         texto: "Cada punto es uno de los 20 mil lugares poblados del Censo 2018. Busque un municipio y obtenga su ficha al instante." },
       { ruta: "/tableros", ancla: "tableros-consulta", vista: "resumen", permiso: ["tableros:ver"], titulo: "Pregunte con sus palabras",

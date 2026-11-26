@@ -7,7 +7,7 @@ import { MapPin, Search, UsersRound } from "lucide-react";
 import { api, fmt } from "../api";
 import { useSesion } from "../auth";
 import { Grafica, opcionLinea } from "../componentes/Grafica";
-import { MapaGT } from "../componentes/MapaGT";
+import { MapaGT, MapaMunicipio } from "../componentes/MapaGT";
 import {
   Aviso, avisar, Campo, Encabezado, EsqueletoGrafica, EsqueletoKpis, EsqueletoTabla, FuenteCita, Kpi, Modal, Pestanas, Progreso, Tabla, Tarjeta, useDatos,
 } from "../componentes/ui";
@@ -257,7 +257,7 @@ function Municipio() {
           <div className="c3"><Kpi tono="naranja" etiqueta="Proyección 2030" valor={fmt.numero(datos.proyeccion.find((p: any) => p.anio === 2030)?.poblacion)} /></div>
         </div>
         <div className="rejilla">
-          <div className="c6"><Tarjeta titulo="Lugares poblados del municipio"><MapaGT puntos={datos.puntos.map((p: number[]) => [...p, 3])} alto={360} /></Tarjeta></div>
+          <div className="c6"><Tarjeta titulo="Lugares poblados del municipio"><MapaMunicipio lugares={datos.lugares ?? []} departamento={datos.departamento} municipio={datos.municipio} alto={360} /></Tarjeta></div>
           <div className="c6"><Tarjeta titulo="Población proyectada 2015-2030">{proy && <Grafica opcion={proy} />}<FuenteCita>{datos.fuente}</FuenteCita></Tarjeta></div>
         </div>
         <Tarjeta titulo="Lugares poblados con más población">

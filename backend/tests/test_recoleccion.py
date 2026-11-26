@@ -72,3 +72,13 @@ def test_catalogo_de_campo_no_lleva_precios_ni_informantes():
     for a in datos["articulos"]:
         assert not {"precio", "precio_actual", "cod_fuente", "informante"} & set(a)
     assert cliente().get("/api/indices/catalogo-campo").status_code == 401
+
+
+def test_codificador_ciuo_sugiere_y_respeta_codigos_especiales():
+    c = _sesion("dce.codificar@nexo.example.com", ["analista_dce"])
+    r = c.post("/api/calidad/codificar", json={"respuestas": ["piloto de bus", "secretaria", "tortillera", "no sabe", "xyz qwerty"]},
+               headers=csrf(c))
+    assert r.status_code == 200, r.text
+    filas = r.json()["filas"]
+    assert [f["codigo"] for f in filas] == ["83", "41", "75", "99", None]
+    assert filas[3]["ocupacion"].startswith("Sin respuesta") and filas[4]["revisar"] is True

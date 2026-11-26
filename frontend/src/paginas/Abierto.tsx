@@ -4,11 +4,11 @@
 // cada sección enlaza al archivo original. Usa /api/publico/*, que no pide sesión y limita las consultas por conexión.
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpenCheck, Copy, ExternalLink, LogIn, MapPin, Route as IconoRuta, Scale, Search, ShieldCheck, Tags } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Copy, ExternalLink, LogIn, MapPin, Route as IconoRuta, Scale, Search, ShieldCheck, Smartphone, Tags } from "lucide-react";
 import { api, ErrorApi, fmt } from "../api";
 import { useSesion } from "../auth";
 import { Grafica, opcionBarras, opcionLinea } from "../componentes/Grafica";
-import { MapaGT } from "../componentes/MapaGT";
+import { MapaGT, MapaMunicipio } from "../componentes/MapaGT";
 import { useRecorrido } from "../componentes/Recorrido";
 import { RutaConsulta, TableroVista } from "../componentes/Widget";
 import { Aviso, avisar, Encabezado, EsqueletoGrafica, EsqueletoKpis, EsqueletoTabla, FuenteCita, Insignia, Tabla, Tarjeta, useDatos } from "../componentes/ui";
@@ -118,14 +118,15 @@ function Portada() {
       </section>
 
       <section aria-label="Qué puede hacer" data-recorrido="abierto-entradas">
-        <div className="sobretitulo" style={{ marginBottom: 10 }}>Tres maneras de usar los datos</div>
+        <div className="sobretitulo" style={{ marginBottom: 10 }}>Cuatro maneras de usar los datos</div>
         <div className="rejilla escalonada">
           {[
             { ruta: "/abierto/precios", icono: Tags, titulo: "¿Cuánto debería costar?", texto: "Escriba un producto y vea cuánto pagó el Estado, con la mediana y el rango, y los precios de referencia del INE." },
             { ruta: "/abierto/municipios", icono: MapPin, titulo: "Mi municipio en datos", texto: "Población del Censo 2018, proyección para este año y sus lugares poblados, lista para citar." },
             { ruta: "/abierto/preguntar", icono: Search, titulo: "Pregunte a los datos del INE", texto: "Escriba una pregunta con sus palabras y obtenga un tablero con cifras oficiales y sus notas de método." },
+            { ruta: "/campo", icono: Smartphone, titulo: "Catálogo de campo (teléfono)", texto: "Los artículos del IPC con su presentación y cobertura. Se instala en el teléfono y funciona sin internet." },
           ].map((e) => (
-            <Link key={e.ruta} to={e.ruta} className="c4 tarjeta modulo">
+            <Link key={e.ruta} to={e.ruta} className="c3 tarjeta modulo">
               <span className="icono-modulo"><e.icono size={20} /></span>
               <div style={{ minWidth: 0 }}><h3>{e.titulo}</h3><p className="pequeno suave">{e.texto}</p></div>
               <ArrowRight className="ir" size={18} />
@@ -420,7 +421,7 @@ function FichaMunicipio() {
           <>
             <div className="rejilla">
               <div className="c6"><Tarjeta titulo="Cómo crecerá la población">{proy ? <Grafica opcion={proy} /> : <EsqueletoGrafica />}<FuenteCita>INE, Estimaciones y proyecciones de población 2015-2030.</FuenteCita></Tarjeta></div>
-              <div className="c6"><Tarjeta titulo="Dónde vive la gente"><MapaGT puntos={(m.puntos ?? []).map((p: number[]) => [...p, 3])} alto={300} /></Tarjeta></div>
+              <div className="c6"><Tarjeta titulo="Dónde vive la gente"><MapaMunicipio base="/api/publico/mapa" lugares={m.lugares ?? []} departamento={m.departamento} municipio={m.municipio} alto={320} /></Tarjeta></div>
             </div>
             <Tarjeta titulo="Cite estos datos"><CopiarCita texto={cita} /></Tarjeta>
             <PieResumen fuente="INE, XII Censo Nacional de Población 2018 y proyecciones 2015-2030">La vista Completa agrega los lugares poblados más grandes y los archivos originales.</PieResumen>
@@ -430,7 +431,7 @@ function FichaMunicipio() {
           <>
             <div className="rejilla">
               <div className="c6"><Tarjeta titulo="Población proyectada 2015-2030">{proy && <Grafica opcion={proy} />}<FuenteCita>{m.fuente}</FuenteCita></Tarjeta></div>
-              <div className="c6"><Tarjeta titulo="Lugares poblados del municipio"><MapaGT puntos={(m.puntos ?? []).map((p: number[]) => [...p, 3])} alto={300} /></Tarjeta></div>
+              <div className="c6"><Tarjeta titulo="Lugares poblados del municipio"><MapaMunicipio base="/api/publico/mapa" lugares={m.lugares ?? []} departamento={m.departamento} municipio={m.municipio} alto={320} /></Tarjeta></div>
             </div>
             <Tarjeta titulo="Lugares poblados con más población" ayuda="Población censada en 2018 por lugar poblado (Cuadro A1.3 del Censo).">
               <Tabla filas={m.principales ?? []} columnas={[

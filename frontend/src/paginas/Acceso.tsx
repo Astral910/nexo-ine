@@ -42,6 +42,11 @@ function Plantilla({ children }: { children: ReactNode }) {
           <span style={{ minWidth: 0 }}><b>¿Busca datos públicos del INE?</b><span className="pequeno suave" style={{ display: "block", marginTop: 2 }}>Entre a Nexo Abierto sin cuenta: precios que pagó el Estado, su municipio en datos y preguntas a las cifras oficiales.</span></span>
           <ArrowRight className="ir" size={18} />
         </Link>
+        <Link to="/campo" className="tarjeta modulo" style={{ width: "min(460px, 100%)", padding: "14px 16px" }}>
+          <span className="icono-modulo"><Smartphone size={20} /></span>
+          <span style={{ minWidth: 0 }}><b>Catálogo de campo para el teléfono</b><span className="pequeno suave" style={{ display: "block", marginTop: 2 }}>Los artículos del IPC para la recolección. Se instala como aplicación y funciona sin internet.</span></span>
+          <ArrowRight className="ir" size={18} />
+        </Link>
         <div className="pequeno suave" style={{ textAlign: "center", maxWidth: 440 }}>¿Necesita ayuda para entrar? Comuníquese con la Unidad de Informática de su dirección.</div>
       </section>
     </div>

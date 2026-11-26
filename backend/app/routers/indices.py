@@ -130,6 +130,10 @@ _CACHE_CAMPO: dict = {}  # se recalcula cada 10 minutos (los precios cambian una
 
 @router.get("/catalogo-campo")
 def catalogo_campo(ctx: Contexto = Depends(requiere("indices:ver")), bd: Session = Depends(obtener_bd)):
+    return datos_catalogo_campo(bd)
+
+
+def datos_catalogo_campo(bd: Session) -> dict:
     """Catálogo completo y compacto para el teléfono de campo (reto de la DIEC: Manual de Características digital).
 
     Por artículo: presentación más frecuente, otras presentaciones observadas, cobertura y último periodo.

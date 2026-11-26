@@ -67,6 +67,8 @@ def ficha_municipio(bd: Session, codigo: str, principales: int = 40) -> dict | N
         "principales": [{"codigo": lp.codigo, "nombre": lp.nombre, "poblacion": lp.poblacion, "area": lp.area,
                          "lat": lp.lat, "lon": lp.lon} for lp in lugares[:principales]],
         "puntos": [[lp.lon, lp.lat, lp.poblacion or 0] for lp in lugares if lp.lat and lp.lon],
+        # Para el mapa de la ficha: nombre y área de cada lugar poblado (todo es público en el Censo 2018).
+        "lugares": [[lp.lon, lp.lat, lp.poblacion or 0, lp.nombre, lp.area or ""] for lp in lugares if lp.lat and lp.lon],
         "fuente": FUENTE_FICHA,
     }
 
