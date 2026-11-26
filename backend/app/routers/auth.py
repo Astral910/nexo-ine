@@ -18,7 +18,7 @@ from ..avisos import enviar_correo, notificar_permiso
 from ..config import obtener_config
 from ..db import ahora, obtener_bd
 from ..deps import Contexto, contexto, contexto_parcial, permisos_de, requiere_mfa
-from ..models import CorreoSaliente, IntentoLogin, Rol, Sesion, TokenUnUso, Usuario
+from ..models import CorreoSaliente, IntentoLogin, Rol, Sesion, TokenUnUso, Usuario, UsuarioRol
 from ..security.cifrado import cifrar, descifrar
 from ..security.limites import limitador
 from ..security.passwords import (
@@ -101,6 +101,7 @@ def config_publica(bd: Session = Depends(obtener_bd)):
         "password_minimo": LONGITUD_MINIMA,
         "version_consentimiento": VERSION_CONSENTIMIENTO,
         "buzon_demo": cfg.mostrar_buzon_demo,
+        "alta_inmediata": cfg.usar_alta_inmediata,
         "entorno": cfg.entorno,
     }
 
@@ -153,6 +154,14 @@ def registrar(datos: Registro, request: Request, bd: Session = Depends(obtener_b
     )
     bd.add(usuario)
     bd.commit()
+    if cfg.usar_alta_inmediata:
+        # Demostración: la cuenta queda activa con el rol que pidió, sin correo ni aprobación.
+        usuario.estado, usuario.email_verificado_en, usuario.aprobado_en = "activo", ahora(), ahora()
+        usuario.roles.append(UsuarioRol(usuario_id=usuario.id, rol_id=rol.id))
+        bd.commit()
+        bitacora.registrar("auth.registro", usuario=usuario, modulo="acceso", objeto=f"usuario:{usuario.id}",
+                           detalle={"rol_solicitado": rol.codigo, "alta_inmediata": True}, ip=ip_cliente(request))
+        return {"mensaje": "Cuenta creada. Ya puede iniciar sesión.", "activa": True}
     token = _crear_token(bd, usuario, "verificar_correo", 60 * 24)
     clave_buzon = enviar_correo(bd, email, "Verifique su correo en Nexo",
                                 f"Estimado(a) {usuario.nombre}: confirme su correo para continuar con su solicitud de acceso "

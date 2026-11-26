@@ -39,6 +39,9 @@ class Configuracion(BaseSettings):
     roles_con_mfa_obligatorio: str = "admin_ti,seguridad"
     cookie_segura: bool | None = None  # None = automático (sí en producción)
     buzon_demo: bool | None = None  # buzón de correos visible en pantalla (solo demostración)
+    # Alta inmediata: la cuenta queda activa al registrarse, sin verificar el correo ni esperar aprobación.
+    # None = automático (sí en desarrollo y demostración; en producción siempre se verifica y se aprueba).
+    alta_inmediata: bool | None = None
 
     # Correo saliente (opcional)
     smtp_host: str = ""
@@ -72,6 +75,10 @@ class Configuracion(BaseSettings):
     @property
     def mostrar_buzon_demo(self) -> bool:
         return (not self.es_produccion) if self.buzon_demo is None else self.buzon_demo
+
+    @property
+    def usar_alta_inmediata(self) -> bool:
+        return (not self.es_produccion) if self.alta_inmediata is None else self.alta_inmediata
 
     @property
     def dominios_permitidos(self) -> list[str]:

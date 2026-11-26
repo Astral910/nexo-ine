@@ -210,7 +210,7 @@ export function Registro() {
   const [config, setConfig] = useState<any>(null);
   const [f, setF] = useState({ nombre: "", email: "", unidad: "", rol_solicitado: "", motivo: "", password: "", confirmar: "", acepta_privacidad: false });
   const [error, setError] = useState("");
-  const [listo, setListo] = useState<{ mensaje: string; clave_buzon?: string } | null>(null);
+  const [listo, setListo] = useState<{ mensaje: string; clave_buzon?: string; activa?: boolean } | null>(null);
   const [aviso, setAviso] = useState(false);
   useEffect(() => { api("/api/auth/config").then((c) => { setConfig(c); setF((x) => ({ ...x, rol_solicitado: c.roles[0]?.codigo ?? "" })); }); }, []);
   const cambiar = (k: string, v: unknown) => setF((x) => ({ ...x, [k]: v }));
@@ -222,6 +222,16 @@ export function Registro() {
       setListo(await api("/api/auth/registro", { cuerpo: datos }));
     } catch (err) { setError((err as ErrorApi).message); }
   };
+  if (listo?.activa) {
+    return (
+      <Plantilla>
+        <CircleCheck size={40} color="#2b6a0f" />
+        <h1>Cuenta creada</h1>
+        <p className="suave">{listo.mensaje} En esta demostración la cuenta queda activa al instante; en la versión institucional se verifica el correo y Informática aprueba el rol.</p>
+        <Link className="boton" to="/login"><KeyRound /> Iniciar sesión</Link>
+      </Plantilla>
+    );
+  }
   if (listo) {
     return (
       <Plantilla>
@@ -243,8 +253,8 @@ export function Registro() {
       <div>
         <div className="sobretitulo">Nueva cuenta</div>
         <h1 style={{ marginTop: 6 }}>Solicitar acceso</h1>
-        <p className="suave" style={{ marginTop: 6 }}>Informática revisa cada solicitud. Los roles de administración y de seguridad no se solicitan aquí.</p>
-        <div style={{ marginTop: 14 }}><Pasos actual={0} nombres={["Solicitud", "Verificar correo", "Aprobación", "Primer ingreso"]} /></div>
+        <p className="suave" style={{ marginTop: 6 }}>{config?.alta_inmediata ? "En esta demostración la cuenta queda activa al crearla." : "Informática revisa cada solicitud."} Los roles de administración y de seguridad no se solicitan aquí.</p>
+        <div style={{ marginTop: 14 }}><Pasos actual={0} nombres={config?.alta_inmediata ? ["Crear cuenta", "Primer ingreso"] : ["Solicitud", "Verificar correo", "Aprobación", "Primer ingreso"]} /></div>
       </div>
       {error && <Aviso tono="critico">{error}</Aviso>}
       <form className="columna" onSubmit={enviar}>

@@ -6,6 +6,10 @@ import re
 
 import pyotp
 
+import pytest
+
+from app.config import obtener_config
+
 from .conftest import CLAVE, cliente, crear_usuario, csrf, iniciar_sesion
 
 
@@ -20,7 +24,26 @@ def _activar_mfa(c) -> tuple[str, list[str]]:
     return secreto, r.json()["codigos_recuperacion"]
 
 
-def test_reenviar_verificacion_exige_la_contrasena():
+@pytest.fixture
+def con_verificacion():
+    """Flujo institucional: verificar el correo y esperar aprobación (en demostración el alta es inmediata)."""
+    cfg = obtener_config()
+    antes, cfg.alta_inmediata = cfg.alta_inmediata, False
+    yield
+    cfg.alta_inmediata = antes
+
+
+def test_alta_inmediata_en_demostracion():
+    c = cliente()
+    r = c.post("/api/auth/registro", json={
+        "nombre": "Persona Directa", "email": "directa@ejemplo.gob.gt", "unidad": "DIEC",
+        "rol_solicitado": "analista_dpir", "password": CLAVE, "acepta_privacidad": True})
+    assert r.status_code == 202 and r.json()["activa"] is True
+    r = iniciar_sesion(c, "directa@ejemplo.gob.gt")
+    assert r.status_code == 200 and "dpir:ver" in r.json()["permisos"]
+
+
+def test_reenviar_verificacion_exige_la_contrasena(con_verificacion):
     c = cliente()
     assert c.post("/api/auth/registro", json={
         "nombre": "Persona Sin Verificar", "email": "sin.verificar@ejemplo.gob.gt", "unidad": "DIEC",
@@ -36,7 +59,7 @@ def test_reenviar_verificacion_exige_la_contrasena():
     assert c.post("/api/auth/verificar-correo", json={"token": token}).json()["estado"] == "pendiente_aprobacion"
 
 
-def test_registro_verificacion_aprobacion_y_login():
+def test_registro_verificacion_aprobacion_y_login(con_verificacion):
     admin = cliente()
     crear_usuario("admin.pruebas@ejemplo.gob.gt", ["admin_ti"])
     assert iniciar_sesion(admin, "admin.pruebas@ejemplo.gob.gt").status_code == 200
