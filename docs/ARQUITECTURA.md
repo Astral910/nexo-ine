@@ -54,22 +54,22 @@ sequenceDiagram
 
 ## Módulos y responsables
 
-Cada integrante del equipo debe poder explicar los módulos que tiene a cargo. **Completar antes de la entrega.**
+Cada integrante del equipo explica y defiende los módulos que tiene a cargo (reparto acordado por el equipo; se puede ajustar).
 
 | Módulo | Archivos principales | Responsable |
 |---|---|---|
-| Acceso, sesiones y MFA | `routers/auth.py`, `security/*`, `deps.py` | _(nombre)_ |
-| Bitácora y auditoría | `bitacora.py`, `routers/bitacora_api.py` | _(nombre)_ |
-| Precios de Referencia | `routers/precios.py`, `services/precios_ref.py`, `paginas/Precios.tsx`, `Solicitud.tsx` | _(nombre)_ |
-| Índices, alertas y HBA | `routers/indices.py`, `services/alertas.py`, `routers/hba.py` | _(nombre)_ |
-| Recolección (IPP, IPMC, ICC) y catálogo de campo | `routers/recoleccion.py`, `paginas/Recoleccion.tsx`, `paginas/Campo.tsx`, `public/sw.js` | _(nombre)_ |
-| Capa semántica y tableros | `services/semantica.py`, `services/generador.py`, `routers/tableros.py`, `componentes/Widget.tsx` | _(nombre)_ |
-| Territorio | `routers/territorio.py`, `componentes/MapaGT.tsx` | _(nombre)_ |
-| Datos (ETL) | `etl/*` | _(nombre)_ |
-| Automatizaciones y agentes | `services/programador.py`, `tareas.py`, `agente_*.py` | _(nombre)_ |
-| Frontend e identidad visual | `frontend/src/estilos`, `componentes/*` | _(nombre)_ |
-| Nexo Abierto (sin cuenta) | `routers/publico.py`, `services/territorio.py`, `paginas/Abierto.tsx` | _(nombre)_ |
-| Vistas, ayuda y recorrido guiado | `componentes/vista.tsx`, `componentes/Recorrido.tsx` | _(nombre)_ |
+| Acceso, sesiones y MFA | `routers/auth.py`, `security/*`, `deps.py` | Jeferson Cano |
+| Bitácora y auditoría | `bitacora.py`, `routers/bitacora_api.py` | Jeferson Cano |
+| Precios de Referencia | `routers/precios.py`, `services/precios_ref.py`, `paginas/Precios.tsx`, `Solicitud.tsx` | Josue Sajche |
+| Índices, alertas y HBA | `routers/indices.py`, `services/alertas.py`, `routers/hba.py` | Angel Siliezar |
+| Recolección (IPP, IPMC, ICC) y catálogo de campo | `routers/recoleccion.py`, `paginas/Recoleccion.tsx`, `paginas/Campo.tsx`, `public/sw.js` | Ricardo González |
+| Capa semántica y tableros | `services/semantica.py`, `services/generador.py`, `routers/tableros.py`, `componentes/Widget.tsx` | Ricardo González |
+| Territorio | `routers/territorio.py`, `componentes/MapaGT.tsx` | Angel Siliezar |
+| Datos (ETL) | `etl/*` | Ricardo González |
+| Automatizaciones y agentes | `services/programador.py`, `tareas.py`, `agente_*.py` | Jeferson Cano |
+| Frontend e identidad visual | `frontend/src/estilos`, `componentes/*` | Angel Siliezar |
+| Nexo Abierto (sin cuenta) | `routers/publico.py`, `services/territorio.py`, `paginas/Abierto.tsx` | Josue Sajche |
+| Vistas, ayuda y recorrido guiado | `componentes/vista.tsx`, `componentes/Recorrido.tsx` | Josue Sajche |
 
 ## Decisiones de diseño
 
