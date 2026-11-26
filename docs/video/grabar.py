@@ -82,13 +82,19 @@ ESCENAS = {
                                        desplazar(pg, 220)),
     "08-campo": lambda ctx, pg: (ir(pg, "/campo", 600), pg.locator(".campo-lista li").first.wait_for(timeout=30000), escribir(pg, ".campo-buscar input", "frijol"), pg.wait_for_timeout(500),
                                  pg.locator(".campo-lista button").first.click()),
-    "09-tablero": lambda ctx, pg: (ir(pg, "/tableros"), escribir(pg, "input[type=text], input:not([type])", "IPC de Quetzaltenango"),
+    "09-codificador": lambda ctx, pg: (entrar(ctx, pg, "analista_dce"), ir(pg, "/calidad", 2000),
+                                       pg.get_by_text("Codificar respuestas abiertas").first.scroll_into_view_if_needed(), pg.wait_for_timeout(700),
+                                       pg.get_by_role("button", name="Codificar").click(), pg.wait_for_timeout(1200), desplazar(pg, 420)),
+    "10-tablero": lambda ctx, pg: (ir(pg, "/tableros"), escribir(pg, "input[type=text], input:not([type])", "IPC de Quetzaltenango"),
                                    pg.keyboard.press("Enter"), pg.wait_for_timeout(3500), desplazar(pg, 420)),
-    "10-territorio": lambda ctx, pg: (ir(pg, "/territorio", 3500), pg.wait_for_timeout(3000), desplazar(pg, 400)),
-    "11-abierto": lambda ctx, pg: (ir(pg, "/abierto/precios?q=computadora%20portatil", 800), pg.get_by_text("En pocas palabras").first.wait_for(timeout=30000),
+    "11-territorio": lambda ctx, pg: (ir(pg, "/territorio", 3500), pg.wait_for_timeout(1500), desplazar(pg, 400)),
+    "12-abierto": lambda ctx, pg: (ir(pg, "/abierto/precios?q=computadora%20portatil", 800), pg.get_by_text("En pocas palabras").first.wait_for(timeout=30000),
                                    pg.wait_for_timeout(2500), desplazar(pg, 380)),
-    "12-confianza": lambda ctx, pg: (ir(pg, "/datos", 2500), pg.wait_for_timeout(3000), desplazar(pg, 450)),
-    "13-cierre": lambda ctx, pg: lamina(pg, 10),
+    "13-ficha": lambda ctx, pg: (ir(pg, "/abierto/municipios/0901", 2500), desplazar(pg, 520)),
+    "14-confianza": lambda ctx, pg: (ir(pg, "/datos", 2500), pg.wait_for_timeout(2500), desplazar(pg, 450)),
+    "15-jurado": lambda ctx, pg: (entrar(ctx, pg, "jurado"), ir(pg, "/jurado", 600), pg.get_by_text("Funcionalidad").first.wait_for(timeout=60000),
+                                  pg.wait_for_timeout(800), desplazar(pg, 300)),
+    "16-cierre": lambda ctx, pg: lamina(pg, 10),
 }
 
 marcas = []
@@ -99,7 +105,8 @@ with sync_playwright() as p:
     # Sin la bienvenida de primera vez (es para personas nuevas, no para el video).
     ctx.add_init_script("try { for (let i = 1; i < 300; i++) localStorage.setItem('nexo:bienvenida:' + i, 'vista'); } catch (e) {}")
     # Calentar las cachés del servidor para que nada aparezca cargando en el video.
-    for rol, ruta in (("analista_diec", "/api/indices/catalogo-campo"), ("analista_dpir", "/api/publico/precios?q=computadora%20portatil")):
+    for rol, ruta in (("analista_diec", "/api/publico/catalogo-campo"), ("jurado", "/api/jurado/evidencia"),
+                      ("analista_dpir", "/api/publico/precios?q=computadora%20portatil")):
         entrar(ctx, None, rol)
         ctx.request.get(B + ruta, timeout=60000)
     pg = ctx.new_page()

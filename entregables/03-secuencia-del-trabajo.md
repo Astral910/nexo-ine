@@ -2,7 +2,7 @@
 
 Nexo · Datatón INE 2026, Categoría 2. Equipo: Josue David Sajche Boror, Jeferson Andre Cano López, Angel David Siliezar López y Ricardo Javier González Corado.
 
-El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 39 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
+El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 40 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
 
 ## Orden de los entregables
 
@@ -71,6 +71,7 @@ Instalación en Windows verificada desde cero, solicitud de precio de referencia
 | 21:33 | Rakataxxd | Video demostrativo de 2 min 24 s con narración y subtítulos, scripts para regenerarlo y documentación de entregables |
 | 21:34 | Rakataxxd | Reparto de módulos por integrante, repositorio público y guion con la recolección de precios |
 | 22:02 | Rakataxxd | Mapa de la ficha municipal centrado en el municipio con su departamento de fondo, catálogo de campo sin cuenta con enlaces desde el acceso y Nexo Abierto, recorrido y Modo Jurado con la recolección, y codificador CIUO-08 de respuestas abiertas para la DCE |
+| 22:08 | Rakataxxd | Carpeta de entregables ordenada (presentación, video y secuencia del trabajo día por día generada del historial) y documentación del codificador CIUO-08 |
 
 ## Jueves 26 de noviembre: entrega
 

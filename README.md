@@ -323,7 +323,7 @@ Los lineamientos permiten herramientas de IA generativa si se declaran. Esta es 
 - la descarga de datos desde el portal del INE y desde data.open-contracting.org;
 - un servidor SMTP institucional, si se configura.
 
-Fuera de la plataforma, solo para producir el video demostrativo, la narración se generó con las voces neuronales gratuitas de Microsoft Edge (`edge-tts`, voz es-GT-AndresNeural). Nexo no usa ese servicio.
+Fuera de la plataforma, solo para producir el video demostrativo, la narración se generó con ElevenLabs (plan gratuito, servicio en la nube, voz «Liam», modelo multilingüe; script `docs/video/voz_elevenlabs.py`, la clave se lee de una variable de entorno). Nexo no usa ese servicio ni ningún otro de pago o en la nube.
 
 ## 10. Componentes de terceros
 
