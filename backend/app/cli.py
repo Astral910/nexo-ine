@@ -30,8 +30,11 @@ from .models import (
     AvanceOperativo,
     Cotizacion,
     EventoSolicitud,
+    InformanteRecoleccion,
     LugarPoblado,
+    PrecioCapturado,
     PrecioRecolectado,
+    ProductoRecoleccion,
     Rol,
     SolicitudPrecio,
     Usuario,
@@ -105,6 +108,7 @@ def cmd_demo(_args) -> None:
             credenciales.append((rol, email, clave))
         _sembrar_solicitudes(bd)
         _sembrar_entregada(bd)
+        _sembrar_recoleccion(bd)
         _sembrar_operativo(bd)
         sistema = [a.id for a in bd.execute(select(Automatizacion).where(Automatizacion.sistema.is_(True))).scalars()
                    if a.tarea != "catalogo.sincronizar"]
@@ -242,6 +246,93 @@ def _sembrar_entregada(bd) -> None:
                                usuario_nombre=quien.nombre if quien else "", de_estado=previo, a_estado=etapa,
                                comentario="Solicitud registrada" if etapa == "recibida" else "Avanza (demostración)"))
         previo = etapa
+    bd.commit()
+
+
+# Recolección de demostración para el IPP agrícola, el IPMC y el ICC. Precios inventados cerca de valores de mercado,
+# marcados con es_demo; los informantes se llaman «de demostración» para no parecer reales.
+_REC_DEMO = {
+    "IPP": {
+        "productos": [("Café oro", "Quintal", "Café", 2350), ("Maíz blanco", "Quintal", "Granos básicos", 210),
+                      ("Frijol negro", "Quintal", "Granos básicos", 560), ("Cardamomo en cereza", "Quintal", "Especias", 260),
+                      ("Banano de exportación", "Caja de 40 lb", "Frutas", 72), ("Tomate", "Caja de 45 lb", "Hortalizas", 185),
+                      ("Papa", "Quintal", "Hortalizas", 240)],
+        "informantes": [("Finca cafetalera", "Huehuetenango"), ("Finca cafetalera", "Santa Rosa"),
+                        ("Productor de granos básicos", "Jutiapa"), ("Productor de granos básicos", "Chiquimula"),
+                        ("Productor de granos básicos", "Petén"), ("Cooperativa agrícola", "Alta Verapaz"),
+                        ("Cooperativa agrícola", "Quiché"), ("Productor de hortalizas", "Chimaltenango"),
+                        ("Productor de hortalizas", "Sololá"), ("Productor de hortalizas", "Quetzaltenango"),
+                        ("Finca bananera", "Izabal"), ("Finca bananera", "Escuintla")],
+    },
+    "IPMC": {
+        "productos": [("Cemento gris 42.5 kg", "Saco", "Aglomerantes", 79), ("Hierro corrugado 3/8 pulgada", "Varilla", "Metales", 52),
+                      ("Block de concreto 15 x 20 x 40 cm", "Unidad", "Mampostería", 6.4), ("Arena de río", "Metro cúbico", "Agregados", 255),
+                      ("Lámina galvanizada calibre 26", "Unidad", "Techos", 96)],
+        "informantes": [("Ferretería", "Guatemala"), ("Ferretería", "Guatemala"), ("Depósito de materiales", "Guatemala"),
+                        ("Ferretería", "Guatemala"), ("Depósito de materiales", "Guatemala"), ("Ferretería", "Guatemala"),
+                        ("Distribuidora", "Guatemala")],
+    },
+    "ICC": {
+        "productos": [("Jornal de albañil", "Día", "Mano de obra", 175), ("Jornal de ayudante", "Día", "Mano de obra", 110),
+                      ("Concreto premezclado 3,000 psi", "Metro cúbico", "Materiales", 1150),
+                      ("Alquiler de mezcladora", "Día", "Equipo", 240)],
+        "informantes": [("Empresa constructora", "Guatemala"), ("Empresa constructora", "Guatemala"),
+                        ("Contratista", "Guatemala"), ("Contratista", "Guatemala"), ("Empresa constructora", "Guatemala")],
+    },
+}
+_MUNICIPIOS_IPMC = ["Guatemala", "Mixco", "Villa Nueva", "San Miguel Petapa", "Santa Catarina Pinula", "Villa Canales"]
+
+
+def _sembrar_recoleccion(bd) -> None:
+    if bd.execute(select(func.count()).select_from(InformanteRecoleccion)).scalar():
+        return
+    rnd = random.Random(2026)
+    hoy = ahora()
+    # Seis meses que terminan en el mes anterior al actual; el último queda con captura incompleta.
+    meses = []
+    a, m = hoy.year, hoy.month
+    for _ in range(6):
+        a, m = (a - 1, 12) if m == 1 else (a, m - 1)
+        meses.append((a, m))
+    meses.reverse()
+    for indice, cfg in _REC_DEMO.items():
+        productos = []
+        for j, (nombre, unidad, grupo, _base) in enumerate(cfg["productos"], start=1):
+            p = ProductoRecoleccion(codigo=f"{indice}-P{j:03d}", indice=indice, nombre=nombre, unidad=unidad, grupo=grupo,
+                                    especificacion="Producto de demostración", es_demo=True)
+            bd.add(p)
+            productos.append((p, _base))
+        informantes = []
+        for k, (actividad, depto) in enumerate(cfg["informantes"], start=1):
+            muni = _MUNICIPIOS_IPMC[k % len(_MUNICIPIOS_IPMC)] if depto == "Guatemala" else ""
+            i = InformanteRecoleccion(codigo=f"{indice}-I{k:04d}", indice=indice, nombre=f"{actividad} de demostración {k:02d}",
+                                      actividad=actividad, departamento=depto, municipio=muni, es_demo=True)
+            bd.add(i)
+            informantes.append(i)
+        bd.flush()
+        # Cada informante reporta los productos de su actividad (o 3 o 4 al azar si vende de todo).
+        pares = []
+        for i in informantes:
+            if indice == "IPP":
+                propios = [p for p in productos if (
+                    ("cafetalera" in i.actividad and p[0].grupo == "Café") or ("granos" in i.actividad and p[0].grupo == "Granos básicos")
+                    or ("hortalizas" in i.actividad and p[0].grupo == "Hortalizas") or ("bananera" in i.actividad and p[0].grupo == "Frutas")
+                    or ("Cooperativa" in i.actividad and p[0].grupo in ("Café", "Especias", "Granos básicos")))]
+            else:
+                propios = productos
+            pares += [(i, p, base * rnd.uniform(0.93, 1.07)) for p, base in propios]
+        tendencia = {p.id: rnd.gauss(0.004, 0.006) for p, _ in productos}
+        for t, (anio, mes) in enumerate(meses):
+            ultimo = t == len(meses) - 1
+            for n, (i, p, precio) in enumerate(pares):
+                if ultimo and rnd.random() < 0.12:
+                    continue  # pendiente de captura
+                factor = 1 + tendencia[p.id] * t + rnd.gauss(0, 0.012)
+                if ultimo and n in (2, len(pares) // 2):
+                    factor *= 1.55 if n == 2 else 0.62  # dos variaciones atípicas para revisar
+                bd.add(PrecioCapturado(indice=indice, informante_id=i.id, producto_id=p.id, anio=anio, mes=mes,
+                                       precio=round(precio * factor, 2), es_demo=True,
+                                       capturado_en=hoy - timedelta(days=(len(meses) - t) * 30)))
     bd.commit()
 
 

@@ -29,6 +29,7 @@ from .routers import (
     precios,
     privacidad,
     publico,
+    recoleccion,
     seguridad,
     tableros,
     territorio,
@@ -68,7 +69,7 @@ def crear_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.add_middleware(CabecerasSeguridad)
 
-    for modulo in (auth, admin, centro, tableros, precios, indices, hba, territorio, calidad, automatizaciones,
+    for modulo in (auth, admin, centro, tableros, precios, indices, recoleccion, hba, territorio, calidad, automatizaciones,
                    datos, seguridad, ti, privacidad, bitacora_api, jurado, publico):
         app.include_router(modulo.router)
 

@@ -612,3 +612,54 @@ class SolicitudPrivacidad(Base):
     atendida_en: Mapped[datetime | None] = mapped_column(DateTime)
     atendida_por: Mapped[int | None] = mapped_column(Integer)
     respuesta: Mapped[str] = mapped_column(Text, default="")
+
+
+# ---------------------------------------------------------------------------
+# Recolección de precios del IPP, el IPMC y el ICC (retos de la DIEC)
+# ---------------------------------------------------------------------------
+
+
+class InformanteRecoleccion(Base):
+    """Informante de un índice. El nombre es confidencial: solo lo ve quien recolecta y revisa (DIEC)."""
+
+    __tablename__ = "rec_informantes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    codigo: Mapped[str] = mapped_column(String(20), unique=True)
+    indice: Mapped[str] = mapped_column(String(10), index=True)  # IPP | IPMC | ICC
+    nombre: Mapped[str] = mapped_column(String(200))
+    actividad: Mapped[str] = mapped_column(String(120), default="")
+    departamento: Mapped[str] = mapped_column(String(40), default="")
+    municipio: Mapped[str] = mapped_column(String(80), default="")
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+    es_demo: Mapped[bool] = mapped_column(Boolean, default=False)
+    creado_en: Mapped[datetime] = mapped_column(DateTime, default=ahora)
+
+
+class ProductoRecoleccion(Base):
+    __tablename__ = "rec_productos"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    codigo: Mapped[str] = mapped_column(String(20), unique=True)
+    indice: Mapped[str] = mapped_column(String(10), index=True)
+    nombre: Mapped[str] = mapped_column(String(200))
+    especificacion: Mapped[str] = mapped_column(Text, default="")
+    unidad: Mapped[str] = mapped_column(String(60), default="Unidad")
+    grupo: Mapped[str] = mapped_column(String(80), default="")
+    es_demo: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PrecioCapturado(Base):
+    """Un precio por informante, producto y mes."""
+
+    __tablename__ = "rec_precios"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    indice: Mapped[str] = mapped_column(String(10), index=True)
+    informante_id: Mapped[int] = mapped_column(ForeignKey("rec_informantes.id", ondelete="CASCADE"), index=True)
+    producto_id: Mapped[int] = mapped_column(ForeignKey("rec_productos.id", ondelete="CASCADE"), index=True)
+    anio: Mapped[int] = mapped_column(Integer)
+    mes: Mapped[int] = mapped_column(Integer)
+    precio: Mapped[float] = mapped_column(Float)
+    observacion: Mapped[str] = mapped_column(Text, default="")
+    capturado_por: Mapped[int | None] = mapped_column(Integer)
+    capturado_en: Mapped[datetime] = mapped_column(DateTime, default=ahora)
+    es_demo: Mapped[bool] = mapped_column(Boolean, default=False)
+    __table_args__ = (UniqueConstraint("informante_id", "producto_id", "anio", "mes", name="uq_rec_precio_mes"),)
