@@ -323,6 +323,8 @@ Los lineamientos permiten herramientas de IA generativa si se declaran. Esta es 
 - la descarga de datos desde el portal del INE y desde data.open-contracting.org;
 - un servidor SMTP institucional, si se configura.
 
+Para la demostración en línea durante el Datatón, Nexo se publica desde el equipo de un integrante con un túnel gratuito de Cloudflare (`cloudflared tunnel --url`), sin cuenta ni dominio; la dirección cambia si el túnel se reinicia. Para producción basta un servidor del INE con Docker (sección 4).
+
 Fuera de la plataforma, solo para producir el video demostrativo, la narración se generó con ElevenLabs (plan gratuito, servicio en la nube, voz «Liam», modelo multilingüe; script `docs/video/voz_elevenlabs.py`, la clave se lee de una variable de entorno). Nexo no usa ese servicio ni ningún otro de pago o en la nube.
 
 ## 10. Componentes de terceros
