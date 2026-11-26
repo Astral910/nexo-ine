@@ -38,7 +38,7 @@ En el arranque del Datatón, las Direcciones del INE describieron procesos manua
 | Dirección | Necesidad expresada el 23-nov-2026 | Qué hace Nexo |
 |---|---|---|
 | Precios e Índices de Referencia (DPIR) | Proceso de 6 pasos (solicitud, revisión, investigación de mercado, análisis, informe, entrega) hecho a mano; media, mediana y moda; más del 50 % de fuentes del mercado relevante | Flujo digital completo. Investigación automática en 214 mil compras públicas y en los precios de referencia históricos del INE, ajuste con el IPC, elección del estadístico con el criterio de la DPIR e informe técnico en PDF trazable |
-| Índices y Estadísticas Continuas (DIEC) | Alertas de variaciones atípicas de precios (IPP/IPC); catálogo digital del Manual de Características; calculadora de la Hoja de Balance de Alimentos (HBA); validación de bases con herramientas libres (DESA) | Alertas con el método Hidiroglou-Berthelot, catálogo de artículos del IPC, calculadora HBA, tableros de IPC, IPMC y canasta básica, y un validador de calidad |
+| Índices y Estadísticas Continuas (DIEC) | Alertas de variaciones atípicas de precios (IPP/IPC); catálogo digital del Manual de Características; calculadora de la Hoja de Balance de Alimentos (HBA); validación de bases con herramientas libres (DESA) | Alertas con el método Hidiroglou-Berthelot, **recolección de precios del IPP agrícola, el IPMC y el ICC** (informantes, productos, captura con validación inmediata, cobertura y alertas), **catálogo de campo instalable en el teléfono que funciona sin conexión**, calculadora HBA, tableros de IPC, IPMC y canasta básica, y un validador de calidad |
 | Censos y Encuestas (DCE) y Coordinación Regional (DCR) | Herramienta por municipio y lugar poblado; avance de recolección de las delegaciones; reglas de cuidado de datos (factor de expansión, pocos casos, códigos 98/99…) | Fichas municipales con el Censo 2018 y las proyecciones, mapa de 20 mil lugares poblados, seguimiento del avance por delegación, y validador que aplica las 6 reglas de la DCE |
 
 **Usuarios:** personal técnico de las Direcciones, Dirección y Gerencia, Informática, el oficial de seguridad, las entidades públicas que solicitan precios de referencia y el jurado. Un usuario puede tener varios roles y cambiar de espacio de trabajo con un clic.
@@ -70,6 +70,8 @@ Las cifras salen de los mismos datos que usa Nexo. Las compras son de enero de 2
 | **Tableros generativos** | Todos | Escribes «IPC de Quetzaltenango» o «precio de cemento gris por mes en 2025» y Nexo arma el tablero. Muestra cómo entendió la petición, explica sus límites y nunca inventa cifras |
 | **Precios de Referencia** | DPIR y entidades | Los 6 pasos de la DPIR, explorador de mercado, regla del 50 % de fuentes primarias e informe PDF con huella SHA-256 |
 | **Índices y alertas** | DIEC | Hidiroglou-Berthelot sobre precios recolectados, revisión con bitácora, IPC por región y división, IPMC y canasta básica |
+| **Recolección de precios** | DIEC | IPP agrícola, IPMC e ICC con el mismo flujo: registro de informantes y productos, captura mensual que dice al momento cuánto varió el precio y si conviene confirmarlo, cobertura del mes, pendientes por recolectar y alertas Hidiroglou-Berthelot. El nombre del informante solo lo ve la DIEC |
+| **Catálogo de campo** (`/campo`) | DIEC en campo | Los 441 artículos del IPC con su presentación más observada y su cobertura, en una pantalla de teléfono que se instala como aplicación y se consulta sin conexión. No lleva precios ni informantes |
 | **Hoja de Balance de Alimentos** | DIEC | Suministro interno, dependencia de importaciones, disponibilidad per cápita y calculadora de derivados |
 | **Territorio y operativos** | DCE y DCR | Mapa, fichas municipales, proyecciones 2015–2030 y avance de campo por delegación |
 | **Validador de calidad** | DESA y DCE | Datos personales (CUI, NIT, teléfono, correo), códigos 98/99, pocos casos, extremos y reporte para la fuente. El archivo no se guarda |
@@ -187,7 +189,9 @@ uvicorn app.main:app --port 8000
 2. **Analista DPIR → Precios de Referencia → PR-…-0003:** pulsa «Investigar», agrega cotizaciones, avanza a Análisis e Informe y abre el PDF.
 3. **Tableros → «IPC de Quetzaltenango»:** muestra la Región VI y explica que el IPC no se publica por departamento.
 4. **Analista DIEC → Índices → Alertas → 2022-07:** revisa una alerta; tu decisión queda en la bitácora.
-5. **Registro:** solicita una cuenta. En modo demostración el correo de verificación se ve en pantalla; luego la aprueba un administrador.
+5. **Analista DIEC → Recolección de precios:** captura un precio del IPP y mira la validación inmediata; en la vista Completa están los pendientes, informantes y productos. «Catálogo de campo» abre la versión para teléfono, que sigue funcionando sin internet.
+6. **Analista DPIR → PR-…-0005:** una solicitud ya entregada, con su informe PDF y su huella.
+7. **Registro:** solicita una cuenta. En modo demostración el correo de verificación se ve en pantalla; luego la aprueba un administrador.
 
 ### Datos: actualizar desde las fuentes
 ```bash
@@ -278,9 +282,10 @@ El detalle está en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
   - El precio orientativo no es un precio de referencia oficial: ese lo emite la DPIR a solicitud de cada entidad, y la página lo dice.
   - La búsqueda de productos es por palabras. Por eso cada consulta muestra los grupos por clasificación para afinarla.
   - Los límites y la caché viven en el proceso. Para publicarlo en internet hace falta un proxy con límites y caché compartida, y que el INE decida dónde alojarlo.
+- **Catálogo de campo.** Usa los artículos y las presentaciones de los precios recolectados publicados; el texto del Manual de Características (variedades y especificaciones) no es público y se cargaría al adoptarlo.
 - **Vistas Resumen.** Simplifican a propósito: las notas de método completas y las tablas están en la vista Completa.
 - **Datos de demostración.**
-  - El avance de operativos y las solicitudes de ejemplo son de demostración y están marcados.
+  - El avance de operativos, las solicitudes de ejemplo y los informantes, productos y precios de la recolección del IPP, IPMC e ICC son de demostración y están marcados (el INE no publica precios individuales de esos índices). Las cotizaciones de la solicitud entregada PR-…-0005 son de demostración; sus compras de Guatecompras son reales.
   - El universo del avance (lugares poblados) es real.
 - **Pendiente.**
   - Inicio de sesión institucional (Microsoft 365 / Entra ID por OIDC).
@@ -290,7 +295,8 @@ El detalle está en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
   - Auditoría completa de accesibilidad.
 
 **Mejoras propuestas**
-1. Conectar el registro de informantes y precios del IPP y una app móvil sin conexión para el Manual de Características (propuestas de la DIEC).
+1. Cargar el Manual de Características oficial al catálogo de campo y llevar la captura de la recolección al teléfono sin conexión (sincroniza al volver la señal).
+6. Para la DCE: clasificación automática de respuestas abiertas con un modelo local y comparación entre censos.
 2. Descubrir automáticamente los recursos nuevos del CKAN y cargarlos al publicarse cada mes.
 3. Validar con la DPIR los parámetros de atípicos y agregar normalización de unidades y presentaciones.
 4. Integrarse con el sistema de captura de la Coordinación Regional para el avance real por delegación.

@@ -42,6 +42,8 @@ Reparto: **una persona habla y otra opera**. Si algo falla más de 15 segundos, 
 13. **¿Por qué una parte pública?** El objetivo general del Datatón es acercar la información a la población. Nexo Abierto usa la misma capa semántica, pero solo con fuentes públicas, sin cuenta, de solo lectura y con límite de consultas por conexión.
 14. **¿Nexo Abierto expone datos internos?** No. Solo responde con las fuentes públicas de la lista blanca. Los precios recolectados con su informante, las alertas, las solicitudes y la bitácora devuelven error, y hay pruebas automáticas que lo verifican.
 15. **¿Para quién es la vista Resumen?** Para quien decide o no es experto: pocas cifras, cada una con su significado. La vista Completa conserva todas las tablas y notas para el analista.
+16. **¿Y lo que pidió la DIEC para el IPP, el IPMC y el ICC?** Está en «Recolección de precios»: informantes, productos, captura mensual que avisa al momento si un precio varió de forma inusual, cobertura, pendientes y alertas Hidiroglou-Berthelot. Los datos son de demostración porque el INE no publica esos precios individuales; el flujo y los cálculos son los reales.
+17. **¿Y el Manual de Características en el teléfono?** «Catálogo de campo» (`/campo`) se instala como aplicación y funciona sin internet. Hoy usa los 441 artículos y presentaciones de los precios recolectados publicados; el texto del Manual se carga al adoptarlo.
 
 **No decir:**
 - «La IA lo hizo».

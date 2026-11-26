@@ -62,6 +62,7 @@ Cada integrante del equipo debe poder explicar los módulos que tiene a cargo. *
 | Bitácora y auditoría | `bitacora.py`, `routers/bitacora_api.py` | _(nombre)_ |
 | Precios de Referencia | `routers/precios.py`, `services/precios_ref.py`, `paginas/Precios.tsx`, `Solicitud.tsx` | _(nombre)_ |
 | Índices, alertas y HBA | `routers/indices.py`, `services/alertas.py`, `routers/hba.py` | _(nombre)_ |
+| Recolección (IPP, IPMC, ICC) y catálogo de campo | `routers/recoleccion.py`, `paginas/Recoleccion.tsx`, `paginas/Campo.tsx`, `public/sw.js` | _(nombre)_ |
 | Capa semántica y tableros | `services/semantica.py`, `services/generador.py`, `routers/tableros.py`, `componentes/Widget.tsx` | _(nombre)_ |
 | Territorio | `routers/territorio.py`, `componentes/MapaGT.tsx` | _(nombre)_ |
 | Datos (ETL) | `etl/*` | _(nombre)_ |

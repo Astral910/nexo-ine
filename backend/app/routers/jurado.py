@@ -55,7 +55,8 @@ def evidencia(bd: Session) -> dict:
          "rutas": ["/precios", "/automatizaciones", "/tableros"]},
         {"criterio": "Aplicabilidad institucional (desempate)", "peso": 20, "evidencia": [
             "Responde a lo que presentaron las Direcciones el 23 de noviembre: proceso de 6 pasos de la DPIR, "
-            "alertas de precios del IPC/IPP, calculadora HBA, catálogo de artículos, territorio por lugar poblado, "
+            "alertas de precios del IPC, recolección del IPP, IPMC e ICC con informantes y alertas al capturar, "
+            "catálogo de campo instalable que funciona sin conexión, calculadora HBA, territorio por lugar poblado, "
             "avance de operativos y validación de bases con herramientas libres.",
             f"{bd.execute(select(func.count()).select_from(Rol)).scalar()} roles que reflejan las áreas del INE, con "
             "aprobación de cuentas por Informática.",

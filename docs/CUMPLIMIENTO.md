@@ -29,8 +29,8 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 
 | Criterio | Peso | Evidencia principal |
 |---|---|---|
-| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial y plantillas, tableros por rol y generados desde texto, Nexo Abierto sin cuenta, 36 pruebas automáticas |
-| Aplicabilidad institucional (desempate) | 20 % | Responde a lo que presentaron la DPIR, la DIEC, la DCE y la DCR; usa su metodología (regla del 50 %, media, mediana y moda, 6 reglas de la DCE); sirve a los usuarios del INE fuera de la institución (Nexo Abierto); adopción con software libre |
+| Funcionalidad | 25 % | Flujo DPIR completo de punta a punta, automatizaciones con historial y plantillas, tableros por rol y generados desde texto, Nexo Abierto sin cuenta, recolección del IPP, IPMC e ICC con alertas al capturar, catálogo de campo que funciona sin conexión, 40 pruebas automáticas |
+| Aplicabilidad institucional (desempate) | 20 % | Responde a lo que presentaron la DPIR, la DIEC, la DCE y la DCR; cubre las propuestas de la DIEC para el IPP, el IPMC, el ICC y el Manual de Características; usa su metodología (regla del 50 %, media, mediana y moda, 6 reglas de la DCE); sirve a los usuarios del INE fuera de la institución (Nexo Abierto); adopción con software libre |
 | Calidad técnica | 20 % | Arquitectura modular, capa semántica única, CI con pruebas en SQLite y PostgreSQL, documentación completa |
 | Innovación | 15 % | Tableros generativos deterministas, agentes de seguridad y TI, bitácora HMAC con anclas, precio unitario de 214 mil compras ajustado con el IPC, y una capa pública que explica cada cifra |
 | Rigor en el uso de los datos | 10 % | Hidiroglou-Berthelot, Tukey sobre logaritmos, medidas de saldo, supresión por secreto estadístico y recodificación verificada |
