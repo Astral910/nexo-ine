@@ -28,6 +28,7 @@ from .etl.cargar import cargar_todo
 from .models import (
     Automatizacion,
     AvanceOperativo,
+    Cotizacion,
     EventoSolicitud,
     LugarPoblado,
     PrecioRecolectado,
@@ -37,7 +38,7 @@ from .models import (
     UsuarioRol,
 )
 from .security.passwords import evaluar_password, hash_password
-from .services import agente_seguridad, agente_ti, alertas
+from .services import agente_seguridad, agente_ti, alertas, precios_ref
 from .siembra import preparar_base
 
 DEMO = [
@@ -103,6 +104,7 @@ def cmd_demo(_args) -> None:
             _crear_usuario(bd, email, nombre, unidad, [rol], clave, True)
             credenciales.append((rol, email, clave))
         _sembrar_solicitudes(bd)
+        _sembrar_entregada(bd)
         _sembrar_operativo(bd)
         sistema = [a.id for a in bd.execute(select(Automatizacion).where(Automatizacion.sistema.is_(True))).scalars()
                    if a.tarea != "catalogo.sincronizar"]
@@ -180,6 +182,66 @@ def _sembrar_solicitudes(bd) -> None:
                                    usuario_nombre=quien.nombre if quien else "", de_estado=previo, a_estado=etapa,
                                    comentario="Solicitud registrada" if etapa == "recibida" else "Avanza (demostración)"))
             previo = etapa
+    bd.commit()
+
+
+def _sembrar_entregada(bd) -> None:
+    """Una solicitud recorrida de punta a punta (pasos 1 a 6) para que la demostración muestre un informe entregado.
+
+    Usa compras reales de Guatecompras y cotizaciones de demostración, marcadas como tales en su nota.
+    """
+    if bd.execute(select(func.count()).select_from(SolicitudPrecio).where(
+            SolicitudPrecio.es_demo.is_(True), SolicitudPrecio.estado == "entregada")).scalar():
+        return
+    entidad = bd.execute(select(Usuario).where(Usuario.email == "entidad.solicitante@nexo.example.com")).scalar()
+    analista = bd.execute(select(Usuario).where(Usuario.email == "analista.dpir@nexo.example.com")).scalar()
+    try:
+        res = precios_ref.investigar(bd, "llanta")
+    except ValueError:
+        return
+    compras = sorted((c for c in res["compras"] if not c["atipico"] and c["precio_ajustado"]),
+                     key=lambda c: c["precio_ajustado"])
+    if len(compras) < 4:
+        return
+    centro = compras[len(compras) // 2]["precio_ajustado"]
+    elegidas = compras[len(compras) // 2 - 2: len(compras) // 2 + 2]
+    anio = ahora().year
+    n = (bd.execute(select(func.count()).select_from(SolicitudPrecio)
+                    .where(SolicitudPrecio.codigo.like(f"PR-{anio}-%"))).scalar() or 0) + 1
+    creada = ahora() - timedelta(days=9)
+    sol = SolicitudPrecio(codigo=f"PR-{anio}-{n:04d}", entidad="Municipalidad de Quetzaltenango",
+                          solicitante_id=entidad.id if entidad else None, producto="Llanta para vehículo liviano",
+                          especificaciones="Llanta radial para pick-up municipal, rin 15 a 16 pulgadas",
+                          cantidad=24, unidad="Unidad", terminos_busqueda="llanta", estado="entregada",
+                          modalidad="Cotización", es_demo=True, asignada_a=analista.id if analista else None,
+                          fecha_limite=(creada + timedelta(days=12)).date(), creada_en=creada)
+    bd.add(sol)
+    bd.flush()
+    for c in elegidas:
+        bd.add(Cotizacion(solicitud_id=sol.id, tipo="guatecompras", descripcion=c["descripcion"],
+                          origen=c["origen"] or "", referencia=str(c.get("referencia") or ""), precio=c["precio"],
+                          fecha=date.fromisoformat(c["fecha"]) if c.get("fecha") else None, incluida=True,
+                          creada_por=analista.id if analista else None))
+    rnd = random.Random(2026)
+    for letra in "ABCDEF":
+        bd.add(Cotizacion(solicitud_id=sol.id, tipo="cotizacion", descripcion="Llanta radial 15-16 pulgadas",
+                          origen=f"Proveedor {letra} (demostración)", fecha=creada.date() + timedelta(days=2),
+                          precio=round(centro * rnd.uniform(0.9, 1.12), 2), incluida=True,
+                          nota="Cotización de demostración, no es un precio real de un proveedor",
+                          creada_por=analista.id if analista else None))
+    bd.flush()
+    precios_ref.analizar_solicitud(bd, sol)
+    cot = bd.execute(select(Cotizacion).where(Cotizacion.solicitud_id == sol.id)).scalars().all()
+    sol.informe_sha256 = precios_ref.huella_datos(sol, cot)
+    sol.entregada_en = creada + timedelta(days=6, hours=3)
+    sol.actualizada_en = sol.entregada_en
+    previo = None
+    for i, etapa in enumerate(["recibida", "revision", "investigacion", "analisis", "informe", "entregada"]):
+        quien = entidad if etapa == "recibida" else analista
+        bd.add(EventoSolicitud(solicitud_id=sol.id, ts=creada + timedelta(days=i * 1.2), usuario_id=quien.id if quien else None,
+                               usuario_nombre=quien.nombre if quien else "", de_estado=previo, a_estado=etapa,
+                               comentario="Solicitud registrada" if etapa == "recibida" else "Avanza (demostración)"))
+        previo = etapa
     bd.commit()
 
 
