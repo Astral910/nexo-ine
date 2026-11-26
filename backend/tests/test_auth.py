@@ -20,6 +20,22 @@ def _activar_mfa(c) -> tuple[str, list[str]]:
     return secreto, r.json()["codigos_recuperacion"]
 
 
+def test_reenviar_verificacion_exige_la_contrasena():
+    c = cliente()
+    assert c.post("/api/auth/registro", json={
+        "nombre": "Persona Sin Verificar", "email": "sin.verificar@ejemplo.gob.gt", "unidad": "DIEC",
+        "rol_solicitado": "analista_dpir", "password": CLAVE, "acepta_privacidad": True}).status_code == 202
+    login = c.post("/api/auth/login", json={"email": "sin.verificar@ejemplo.gob.gt", "password": CLAVE})
+    assert login.status_code == 403 and "verifique su correo" in login.text
+    # Con otra contraseña no se entrega el enlace (misma respuesta, sin clave del buzón)
+    r = c.post("/api/auth/reenviar-verificacion", json={"email": "sin.verificar@ejemplo.gob.gt", "password": "otra-clave-cualquiera"})
+    assert r.status_code == 202 and "clave_buzon" not in r.json()
+    r = c.post("/api/auth/reenviar-verificacion", json={"email": "sin.verificar@ejemplo.gob.gt", "password": CLAVE})
+    correo = c.get("/api/auth/buzon", params={"clave": r.json()["clave_buzon"]}).json()
+    token = re.search(r"token=([\w-]+)", correo["enlace"]).group(1)
+    assert c.post("/api/auth/verificar-correo", json={"token": token}).json()["estado"] == "pendiente_aprobacion"
+
+
 def test_registro_verificacion_aprobacion_y_login():
     admin = cliente()
     crear_usuario("admin.pruebas@ejemplo.gob.gt", ["admin_ti"])

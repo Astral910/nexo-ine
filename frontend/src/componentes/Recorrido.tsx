@@ -162,7 +162,14 @@ function Superposicion({ def, pasos, indice, ir, salir }: {
       const el = document.querySelector<HTMLElement>(`[data-recorrido="${paso.ancla}"]`);
       if (el && el.getBoundingClientRect().height > 0) {
         objetivo.current = el;
-        el.scrollIntoView({ block: el.getBoundingClientRect().height > window.innerHeight * 0.6 ? "start" : "center", behavior: reducido ? "auto" : "smooth" });
+        if (window.innerWidth < 720) {
+          // En el teléfono la tarjeta va abajo: el elemento sube hasta quedar bajo la barra fija para que no se tapen.
+          const tope = Math.max(0, ...[...document.querySelectorAll<HTMLElement>(".publico-barra, .barra-superior")].map((b) => b.getBoundingClientRect().bottom));
+          el.style.scrollMarginTop = `${Math.round(tope) + 12}px`;
+          el.scrollIntoView({ block: "start", behavior: reducido ? "auto" : "smooth" });
+        } else {
+          el.scrollIntoView({ block: el.getBoundingClientRect().height > window.innerHeight * 0.6 ? "start" : "center", behavior: reducido ? "auto" : "smooth" });
+        }
         setBuscando(false);
         return;
       }
@@ -211,6 +218,13 @@ function Superposicion({ def, pasos, indice, ir, salir }: {
 
   useEffect(() => { siguienteRef.current?.focus({ preventScroll: true }); }, [indice]);
 
+  // Espacio extra al final de la página mientras dura el recorrido: así hasta el último elemento puede subir por
+  // encima de la tarjeta en el teléfono.
+  useEffect(() => {
+    document.documentElement.classList.add("con-recorrido");
+    return () => document.documentElement.classList.remove("con-recorrido");
+  }, []);
+
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       const destino = e.target as HTMLElement | null;
@@ -243,7 +257,7 @@ function Superposicion({ def, pasos, indice, ir, salir }: {
         {paso.pruebe && <p className="recorrido-pruebe"><b>Pruebe:</b> {paso.pruebe}</p>}
         {buscando && paso.ancla && <p className="pequeno suave">Abriendo la pantalla…</p>}
         <div className="fila espaciado" style={{ marginTop: 4 }}>
-          <button type="button" className="boton fantasma pequeno" onClick={() => salir(false)}>Salir</button>
+          <button type="button" className="boton fantasma pequeno recorrido-salir" onClick={() => salir(false)}>Salir</button>
           <div className="fila" style={{ gap: 8 }}>
             {indice > 0 && <button type="button" className="boton secundario" onClick={() => ir(indice - 1)}><ArrowLeft /> Anterior</button>}
             <button ref={siguienteRef} type="button" className="boton" onClick={() => (ultimo ? salir(true) : ir(indice + 1))}>

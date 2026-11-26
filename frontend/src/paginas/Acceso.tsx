@@ -66,6 +66,25 @@ function CampoClave({ valor, onCambio, autocompletar, id }: { valor: string; onC
   );
 }
 
+/** Correo de verificación en modo demostración (sin servidor de correo): se muestra aquí mismo con su botón. */
+function CorreoDemo({ clave }: { clave: string }) {
+  const [correo, setCorreo] = useState<any>(null);
+  useEffect(() => { api(`/api/auth/buzon?clave=${encodeURIComponent(clave)}`).then(setCorreo).catch(() => undefined); }, [clave]);
+  if (!correo) return null;
+  const enlace = correo.enlace ? new URL(correo.enlace) : null;
+  return (
+    <div className="columna" style={{ gap: 10 }}>
+      <Aviso tono="alerta"><b>Modo demostración:</b> esta instalación no tiene servidor de correo, así que el mensaje que le enviaríamos aparece aquí.</Aviso>
+      <div className="tarjeta">
+        <div className="pequeno suave"><Mail size={14} /> Para: {correo.para}</div>
+        <h3 style={{ margin: "6px 0" }}>{correo.asunto}</h3>
+        <p className="pequeno">{correo.cuerpo}</p>
+        {enlace && <a className="boton" style={{ marginTop: 10 }} href={enlace.pathname + enlace.search}><CircleCheck /> Verificar mi correo</a>}
+      </div>
+    </div>
+  );
+}
+
 function Pasos({ actual, nombres }: { actual: number; nombres: string[] }) {
   return (
     <ol className="pasos" style={{ gridTemplateColumns: `repeat(${nombres.length}, 1fr)`, margin: "4px 0 6px", padding: 0, listStyle: "none" }} aria-label="Avance">
@@ -103,7 +122,15 @@ export function Acceso() {
   const [paso, setPaso] = useState<"credenciales" | "mfa">(usuario?.mfa_por_verificar ? "mfa" : "credenciales");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [reenvio, setReenvio] = useState<{ mensaje: string; clave_buzon?: string } | null>(null);
+  const sinVerificar = error.startsWith("Primero verifique su correo");
 
+  const reenviar = async () => {
+    setEnviando(true);
+    try { setReenvio(await api("/api/auth/reenviar-verificacion", { cuerpo: { email, password: clave } })); setError(""); }
+    catch (err) { setError((err as ErrorApi).message); }
+    finally { setEnviando(false); }
+  };
   const continuar = (u: Usuario) => {
     establecer(u);
     if (u.mfa_por_verificar) { setPaso("mfa"); return; }
@@ -133,6 +160,10 @@ export function Acceso() {
         </p>
       </div>
       {error && <Aviso tono="critico">{error}</Aviso>}
+      {sinVerificar && (
+        <button type="button" className="boton secundario" onClick={reenviar} disabled={enviando}><Mail /> Enviarme un enlace nuevo</button>
+      )}
+      {reenvio && (reenvio.clave_buzon ? <CorreoDemo clave={reenvio.clave_buzon} /> : <Aviso tono="info">{reenvio.mensaje}</Aviso>)}
       {paso === "credenciales" ? (
         <form className="columna" onSubmit={entrar}>
           <Campo etiqueta="Correo institucional"><input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@ine.gob.gt" /></Campo>
@@ -180,7 +211,6 @@ export function Registro() {
   const [f, setF] = useState({ nombre: "", email: "", unidad: "", rol_solicitado: "", motivo: "", password: "", confirmar: "", acepta_privacidad: false });
   const [error, setError] = useState("");
   const [listo, setListo] = useState<{ mensaje: string; clave_buzon?: string } | null>(null);
-  const [correo, setCorreo] = useState<any>(null);
   const [aviso, setAviso] = useState(false);
   useEffect(() => { api("/api/auth/config").then((c) => { setConfig(c); setF((x) => ({ ...x, rol_solicitado: c.roles[0]?.codigo ?? "" })); }); }, []);
   const cambiar = (k: string, v: unknown) => setF((x) => ({ ...x, [k]: v }));
@@ -202,20 +232,7 @@ export function Registro() {
         <ol className="pequeno" style={{ paddingLeft: 18, margin: 0 }}>
           <li>Abra el enlace que le enviamos para verificar su correo.</li><li>Informática aprueba su solicitud y asigna su rol.</li><li>Inicie sesión; si su rol lo exige, configure el segundo factor.</li>
         </ol>
-        {listo.clave_buzon && (
-          <Aviso tono="alerta">
-            <b>Modo demostración:</b> esta instalación no envía correos reales.{" "}
-            <button className="boton secundario pequeno" onClick={() => api(`/api/auth/buzon?clave=${encodeURIComponent(listo.clave_buzon!)}`).then(setCorreo)}><Mail /> Ver el correo de verificación</button>
-          </Aviso>
-        )}
-        {correo && (
-          <div className="tarjeta">
-            <div className="pequeno suave">Para: {correo.para}</div>
-            <h3 style={{ margin: "6px 0" }}>{correo.asunto}</h3>
-            <p className="pequeno">{correo.cuerpo}</p>
-            {correo.enlace && <a className="boton" style={{ marginTop: 10 }} href={new URL(correo.enlace).pathname + new URL(correo.enlace).search}>Verificar mi correo</a>}
-          </div>
-        )}
+        {listo.clave_buzon && <CorreoDemo clave={listo.clave_buzon} />}
         <Link to="/login">Volver al inicio de sesión</Link>
       </Plantilla>
     );

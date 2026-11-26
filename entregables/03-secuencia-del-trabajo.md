@@ -2,7 +2,7 @@
 
 Nexo · Datatón INE 2026, Categoría 2. Equipo: Josue David Sajche Boror, Jeferson Andre Cano López, Angel David Siliezar López y Ricardo Javier González Corado.
 
-El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 42 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
+El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 45 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
 
 ## Orden de los entregables
 
@@ -74,7 +74,13 @@ Instalación en Windows verificada desde cero, solicitud de precio de referencia
 | 22:08 | Rakataxxd | Carpeta de entregables ordenada (presentación, video y secuencia del trabajo día por día generada del historial) y documentación del codificador CIUO-08 |
 | 22:43 | Rakataxxd | Windows: los archivos se leen y escriben en UTF-8 (el Modo Jurado fallaba con error 500 al leer pruebas con tildes; también bitácora, ETL, TI y credenciales) |
 | 22:43 | Rakataxxd | Video demostrativo de 2 min 36 s con narración de ElevenLabs, recorrido de todos los módulos (incluye codificador CIUO-08, ficha municipal y Modo Jurado) y secuencia actualizada |
+| 22:43 | Rakataxxd | Secuencia del trabajo actualizada con los últimos commits |
+| 23:16 | Rakataxxd | Documentación: demostración en línea con túnel gratuito de Cloudflare, declarado como servicio en la nube |
 
 ## Jueves 26 de noviembre: entrega
 
 Entrega de los proyectos a las 09:00, por el medio que indicó el INE.
+
+| Hora | Autor | Qué se hizo |
+|---|---|---|
+| 00:10 | Rakataxxd | Celular: el recorrido sube el cuadro resaltado para que la tarjeta no lo tape, buscador fijo en el catálogo de campo y barras fijas que vuelven a funcionar; enlace de verificación nuevo desde el inicio de sesión |

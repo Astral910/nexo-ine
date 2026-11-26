@@ -52,6 +52,8 @@ export default function Campo() {
 
   return (
     <div className="campo-app">
+      {/* Cabecera y buscador quedan fijos arriba: el buscador está a la mano aunque se baje por la lista. */}
+      <div className="campo-fijo">
       <header className="campo-cabecera">
         <Link to="/" className="campo-volver" aria-label="Volver a Nexo"><ArrowLeft size={20} /></Link>
         <div>
@@ -60,6 +62,11 @@ export default function Campo() {
         </div>
         <button className="campo-icono" onClick={descargar} aria-label="Actualizar catálogo" title="Actualizar"><RefreshCw size={18} /></button>
       </header>
+      <label className="campo-buscar">
+        <Search size={18} />
+        <input type="search" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar artículo o código" inputMode="search" />
+      </label>
+      </div>
 
       <div className="campo-estado" data-estado={estado}>
         {estado === "cargando" && "Actualizando…"}
@@ -73,11 +80,6 @@ export default function Campo() {
           <Download size={18} /> Instalar en este teléfono
         </button>
       )}
-
-      <label className="campo-buscar">
-        <Search size={18} />
-        <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar artículo o código" inputMode="search" />
-      </label>
 
       {!cat && estado !== "cargando" && <p className="campo-vacio"><Smartphone size={28} /><br />El catálogo se descarga la primera vez que abre esta página con internet.</p>}
 
