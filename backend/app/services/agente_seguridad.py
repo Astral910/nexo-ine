@@ -150,7 +150,7 @@ def chequeos(bd: Session) -> list[Resultado]:
                        "ISO 27001 A.8.16 · NIST CSF DE.AE"))
 
     req = RAIZ / "backend" / "requirements.txt"
-    con_hash = req.exists() and "--hash=sha256:" in req.read_text()
+    con_hash = req.exists() and "--hash=sha256:" in req.read_text(encoding="utf-8")
     lock = (RAIZ / "frontend" / "package-lock.json").exists()
     r.append(Resultado("dependencias_fijadas", "Dependencias sin versión fija o sin hash", con_hash and lock, "media",
                        f"requirements con hash: {'sí' if con_hash else 'no'}; package-lock: {'sí' if lock else 'no'}.",

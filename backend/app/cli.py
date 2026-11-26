@@ -118,7 +118,7 @@ def cmd_demo(_args) -> None:
         ejecutar_automatizacion(aid, disparada_por="instalacion")
     ruta = cfg.directorio_var / "credenciales-demo.txt"
     ruta.write_text("Cuentas de demostración de Nexo (no subir a ningún repositorio)\n\n" +
-                    "\n".join(f"{r:<22} {e:<40} {c}" for r, e, c in credenciales) + "\n")
+                    "\n".join(f"{r:<22} {e:<40} {c}" for r, e, c in credenciales) + "\n", encoding="utf-8")
     os.chmod(ruta, 0o600)
     print("\nCuentas de demostración (también guardadas en", ruta, "con permisos 600):\n")
     for r, e, c in credenciales:
@@ -147,7 +147,7 @@ def cmd_admin_pruebas(_args) -> None:
     ruta = cfg.directorio_var / "credenciales-admin-local.txt"
     ruta.write_text("Cuenta local de pruebas con todos los roles internos (no subir a ningún repositorio)\n\n"
                     f"URL:        {cfg.url_publica}\nCorreo:     {email}\nContraseña: {clave}\n\n"
-                    "Al primer inicio de sesión se configura el segundo factor (código QR).\n")
+                    "Al primer inicio de sesión se configura el segundo factor (código QR).\n", encoding="utf-8")
     os.chmod(ruta, 0o600)
     bitacora.registrar("usuarios.admin_pruebas_creado", modulo="usuarios", objeto=f"usuario:{u.id}",
                        detalle={"roles": roles})

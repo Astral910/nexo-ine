@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/jurado", tags=["jurado"])
 def _pruebas() -> int:
     total = 0
     for archivo in (RAIZ / "backend" / "tests").glob("test_*.py"):
-        arbol = ast.parse(archivo.read_text())
+        arbol = ast.parse(archivo.read_text(encoding="utf-8"))
         total += sum(1 for n in ast.walk(arbol) if isinstance(n, ast.FunctionDef) and n.name.startswith("test_"))
     return total
 

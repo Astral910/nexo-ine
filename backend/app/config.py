@@ -111,7 +111,7 @@ def _resolver_clave(cfg: Configuracion) -> str:
         log.warning("Se generó una clave secreta local de desarrollo en %s", archivo)
     except FileExistsError:
         pass
-    return archivo.read_text().strip()
+    return archivo.read_text(encoding="utf-8").strip()
 
 
 @lru_cache

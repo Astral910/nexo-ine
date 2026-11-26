@@ -540,9 +540,9 @@ def procesar_todo(solo: list[str] | None = None) -> dict:
     entidades: dict[str, str] = {}
     if quiere("compras"):
         resumen["compras_items"], entidades = proc_guatecompras()
-        _ruta_entidades().write_text(json.dumps(entidades, ensure_ascii=False))
+        _ruta_entidades().write_text(json.dumps(entidades, ensure_ascii=False), encoding="utf-8")
     elif _ruta_entidades().exists():
-        entidades = json.loads(_ruta_entidades().read_text())
+        entidades = json.loads(_ruta_entidades().read_text(encoding="utf-8"))
     if quiere("precios_referencia"):
         resumen["pr_referencia"] = proc_precios_referencia(entidades)
     if quiere("series"):

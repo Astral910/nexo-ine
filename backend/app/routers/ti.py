@@ -47,7 +47,7 @@ def componentes() -> dict:
     requeridos = set()
     req = RAIZ / "backend" / "requirements.txt"
     if req.exists():
-        for linea in req.read_text().splitlines():
+        for linea in req.read_text(encoding="utf-8").splitlines():
             m = re.match(r"^([A-Za-z0-9_.\-]+)==", linea)
             if m:
                 requeridos.add(m.group(1).lower())
@@ -59,7 +59,7 @@ def componentes() -> dict:
     js = []
     lock = RAIZ / "frontend" / "package-lock.json"
     if lock.exists():
-        datos = json.loads(lock.read_text())
+        datos = json.loads(lock.read_text(encoding="utf-8"))
         directos = set((datos.get("packages", {}).get("", {}).get("dependencies") or {}).keys())
         for ruta, p in (datos.get("packages") or {}).items():
             nombre = ruta.split("node_modules/")[-1] if ruta else ""

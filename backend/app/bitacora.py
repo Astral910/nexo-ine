@@ -135,7 +135,7 @@ def leer_ultima_ancla() -> dict | None:
     ruta = ruta_anclas()
     if not ruta.exists():
         return None
-    lineas = [x for x in ruta.read_text().splitlines() if x.strip()]
+    lineas = [x for x in ruta.read_text(encoding="utf-8").splitlines() if x.strip()]
     if not lineas:
         return None
     ts, id_, h = lineas[-1].split()
@@ -143,7 +143,7 @@ def leer_ultima_ancla() -> dict | None:
 
 
 def anclar(id_: int, hash_: str) -> None:
-    with ruta_anclas().open("a") as f:
+    with ruta_anclas().open("a", encoding="utf-8") as f:
         f.write(f"{ahora().isoformat(timespec='seconds')} {id_} {hash_}\n")
 
 
