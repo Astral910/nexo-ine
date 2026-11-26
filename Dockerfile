@@ -1,4 +1,3 @@
-# Imagen única: compila el frontend y lo sirve junto con la API (un solo origen, sin CORS).
 FROM node:22-alpine AS frontend
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
