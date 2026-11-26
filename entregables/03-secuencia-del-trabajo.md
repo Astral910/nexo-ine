@@ -2,7 +2,7 @@
 
 Nexo · Datatón INE 2026, Categoría 2. Equipo: Josue David Sajche Boror, Jeferson Andre Cano López, Angel David Siliezar López y Ricardo Javier González Corado.
 
-El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 50 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
+El repositorio se creó el 23 de noviembre de 2026 a las 22:09 (día 1) y tiene 51 commits. Cada fila de las tablas es un commit del historial de Git (hora de Guatemala): es la evidencia del trabajo realizado durante el evento. Este documento se genera con `python scripts/secuencia.py`.
 
 ## Orden de los entregables
 
@@ -89,3 +89,4 @@ Entrega de los proyectos a las 09:00, por el medio que indicó el INE.
 | 00:20 | xsiliezxr | Merge branch 'main' of https://github.com/Astral910/nexo-ine |
 | 04:17 | Rakataxxd | Demostración: la cuenta queda activa al registrarse, sin verificar el correo ni esperar aprobación (en producción se mantiene el flujo completo; NEXO_ALTA_INMEDIATA lo controla) |
 | 04:17 | Rakataxxd | Secuencia del trabajo actualizada |
+| 04:24 | Rakataxxd | Inicio de sesión más simple y botón «Entrar a la demostración» (cuenta de solo lectura del jurado, desactivado en producción) |
