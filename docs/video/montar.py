@@ -63,7 +63,7 @@ for i, m in enumerate(marcas, start=1):
 filtros.append("".join(f"[a{i}]" for i in range(1, len(marcas) + 1)) + f"amix=inputs={len(marcas)}:normalize=0,alimiter=limit=0.89[voz]")
 estilo = "FontName=Segoe UI,FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H80000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=36"
 filtros.append(f"[0:v]subtitles=_tmp/subtitulos.srt:force_style='{estilo}',format=yuv420p[v]")
-salida = AQUI / "Nexo-video-demostrativo.mp4"
+salida = AQUI.parents[1] / "entregables" / "02-video-demostrativo.mp4"
 
 
 def codificar(codec):

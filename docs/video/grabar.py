@@ -1,7 +1,7 @@
 """Graba el video demostrativo (2 a 3 minutos) sin abrir ventanas: Edge headless + narración + subtítulos.
 
 Requiere Nexo corriendo (por defecto en http://127.0.0.1:8011, variable NEXO_URL), las cuentas de demostración en
-var/credenciales-demo.txt, los audios de voz/ (ver guion.json) y ffmpeg. Resultado: Nexo-video-demostrativo.mp4
+var/credenciales-demo.txt, los audios de voz/ (ver guion.json) y ffmpeg. Después: python montar.py
 """
 
 import base64
@@ -25,7 +25,7 @@ shutil.rmtree(TMP, ignore_errors=True)
 TMP.mkdir()
 
 # Láminas de la presentación como imágenes a 1920 x 1080.
-pdf = fitz.open(RAIZ / "docs/presentacion/Nexo-Datatón-INE-2026.pdf")
+pdf = fitz.open(RAIZ / "entregables/01-presentacion-Nexo.pdf")
 LAMINA = {}
 for n in (0, 1, 10):
     pix = pdf[n].get_pixmap(matrix=fitz.Matrix(1920 / pdf[n].rect.width, 1920 / pdf[n].rect.width))

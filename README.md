@@ -39,7 +39,7 @@ En el arranque del Datatón, las Direcciones del INE describieron procesos manua
 |---|---|---|
 | Precios e Índices de Referencia (DPIR) | Proceso de 6 pasos (solicitud, revisión, investigación de mercado, análisis, informe, entrega) hecho a mano; media, mediana y moda; más del 50 % de fuentes del mercado relevante | Flujo digital completo. Investigación automática en 214 mil compras públicas y en los precios de referencia históricos del INE, ajuste con el IPC, elección del estadístico con el criterio de la DPIR e informe técnico en PDF trazable |
 | Índices y Estadísticas Continuas (DIEC) | Alertas de variaciones atípicas de precios (IPP/IPC); catálogo digital del Manual de Características; calculadora de la Hoja de Balance de Alimentos (HBA); validación de bases con herramientas libres (DESA) | Alertas con el método Hidiroglou-Berthelot, **recolección de precios del IPP agrícola, el IPMC y el ICC** (informantes, productos, captura con validación inmediata, cobertura y alertas), **catálogo de campo instalable en el teléfono que funciona sin conexión**, calculadora HBA, tableros de IPC, IPMC y canasta básica, y un validador de calidad |
-| Censos y Encuestas (DCE) y Coordinación Regional (DCR) | Herramienta por municipio y lugar poblado; avance de recolección de las delegaciones; reglas de cuidado de datos (factor de expansión, pocos casos, códigos 98/99…) | Fichas municipales con el Censo 2018 y las proyecciones, mapa de 20 mil lugares poblados, seguimiento del avance por delegación, y validador que aplica las 6 reglas de la DCE |
+| Censos y Encuestas (DCE) y Coordinación Regional (DCR) | Herramienta por municipio y lugar poblado; avance de recolección de las delegaciones; reglas de cuidado de datos (factor de expansión, pocos casos, códigos 98/99…) | Fichas municipales con el Censo 2018 y las proyecciones, mapa de 20 mil lugares poblados, seguimiento del avance por delegación, validador que aplica las 6 reglas de la DCE y **codificador automático de respuestas abiertas de ocupación (CIUO-08)** |
 
 **Usuarios:** personal técnico de las Direcciones, Dirección y Gerencia, Informática, el oficial de seguridad, las entidades públicas que solicitan precios de referencia y el jurado. Un usuario puede tener varios roles y cambiar de espacio de trabajo con un clic.
 
@@ -74,6 +74,7 @@ Las cifras salen de los mismos datos que usa Nexo. Las compras son de enero de 2
 | **Catálogo de campo** (`/campo`) | DIEC en campo | Los 441 artículos del IPC con su presentación más observada y su cobertura, en una pantalla de teléfono que se instala como aplicación y se consulta sin conexión. No lleva precios ni informantes |
 | **Hoja de Balance de Alimentos** | DIEC | Suministro interno, dependencia de importaciones, disponibilidad per cápita y calculadora de derivados |
 | **Territorio y operativos** | DCE y DCR | Mapa, fichas municipales, proyecciones 2015–2030 y avance de campo por delegación |
+| **Codificador CIUO-08** | DCE | Respuestas abiertas de ocupación → subgrupo de la CIUO-08 con su confianza; las dudosas quedan para revisión humana y «no sabe/no responde» como 99. Corre en el servidor, sin modelos externos |
 | **Validador de calidad** | DESA y DCE | Datos personales (CUI, NIT, teléfono, correo), códigos 98/99, pocos casos, extremos y reporte para la fuente. El archivo no se guarda |
 | **Nexo Abierto (sin cuenta)** | Ciudadanía, periodistas, municipalidades y compradores públicos | Tres secciones de solo lectura, con fuentes públicas y límite de consultas por conexión. Cada una enlaza al archivo original:<br>• **«¿Cuánto debería costar?»:** rango de lo que pagó el Estado (del 10 % más barato al 10 % más caro), mediana y precio orientativo, precios de referencia del INE y el ejemplo de media, mediana y moda de la DPIR.<br>• **«Mi municipio en datos»:** 340 fichas con el Censo 2018 y las proyecciones, con la cita lista para copiar.<br>• **«Pregunte a los datos»:** tableros generados solo con fuentes públicas. |
 | **Vistas Resumen y Completa** | Todos | Cada pantalla tiene dos vistas: lo esencial con explicaciones sencillas, o todo el detalle. El botón «Cómo leer esta pantalla» explica qué muestra la pantalla, de dónde salen los datos y qué se puede hacer, con un glosario |
@@ -282,6 +283,7 @@ El detalle está en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
   - El precio orientativo no es un precio de referencia oficial: ese lo emite la DPIR a solicitud de cada entidad, y la página lo dice.
   - La búsqueda de productos es por palabras. Por eso cada consulta muestra los grupos por clasificación para afinarla.
   - Los límites y la caché viven en el proceso. Para publicarlo en internet hace falta un proxy con límites y caché compartida, y que el INE decida dónde alojarlo.
+- **Codificador CIUO-08.** Sugiere el subgrupo (2 dígitos) por similitud de texto con un vocabulario de cada subgrupo; no está entrenado con respuestas reales codificadas, por eso marca para revisión las dudosas.
 - **Catálogo de campo.** Usa los artículos y las presentaciones de los precios recolectados publicados; el texto del Manual de Características (variedades y especificaciones) no es público y se cargaría al adoptarlo.
 - **Vistas Resumen.** Simplifican a propósito: las notas de método completas y las tablas están en la vista Completa.
 - **Datos de demostración.**
@@ -296,7 +298,7 @@ El detalle está en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
 
 **Mejoras propuestas**
 1. Cargar el Manual de Características oficial al catálogo de campo y llevar la captura de la recolección al teléfono sin conexión (sincroniza al volver la señal).
-6. Para la DCE: clasificación automática de respuestas abiertas con un modelo local y comparación entre censos.
+6. Para la DCE: comparación entre censos cuando el INE publique en su portal los cuadros municipales del Censo 2002 (hoy solo están el Censo 2018 y las proyecciones), y entrenar el codificador CIUO-08 con respuestas ya codificadas por la DCE.
 2. Descubrir automáticamente los recursos nuevos del CKAN y cargarlos al publicarse cada mes.
 3. Validar con la DPIR los parámetros de atípicos y agregar normalización de unidades y presentaciones.
 4. Integrarse con el sistema de captura de la Coordinación Regional para el avance real por delegación.
@@ -335,8 +337,7 @@ Según los términos de la Categoría 2, los integrantes conservan el reconocimi
 
 - Matriz de lineamientos y rúbrica: [docs/CUMPLIMIENTO.md](docs/CUMPLIMIENTO.md).
 - Guion de la demostración: [docs/GUION-DEMO.md](docs/GUION-DEMO.md).
-- Presentación en PDF: [docs/presentacion/Nexo-Datatón-INE-2026.pdf](docs/presentacion/Nexo-Datat%C3%B3n-INE-2026.pdf) (fuente HTML y `generar_pdf.py` en la misma carpeta).
-- Video demostrativo (2 min 24 s): [docs/video/Nexo-video-demostrativo.mp4](docs/video/Nexo-video-demostrativo.mp4). Se regenera con `docs/video/grabar.py` y `montar.py` (Edge sin ventana, ffmpeg).
+- **Entregables ordenados en [entregables/](entregables/)**: presentación en PDF, video demostrativo y la secuencia del trabajo día por día. Sus fuentes están en `docs/presentacion` y `docs/video`.
 - El historial de commits es la evidencia del trabajo, desde el 23-nov-2026 a las 22:09 (día 1).
 
 ---

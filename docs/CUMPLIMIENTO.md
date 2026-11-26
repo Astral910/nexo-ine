@@ -22,7 +22,7 @@ Matriz entre cada lineamiento de la nota conceptual del Datatón INE 2026 y su e
 | Resultados fieles a las definiciones del INE, sin inducir a error | Reglas de rigor de la capa semántica y notas metodológicas en cada gráfica ([docs/METODOS.md](METODOS.md)) | Cumplido |
 | Listar los componentes de terceros con su licencia | [docs/TERCEROS.md](TERCEROS.md) y *Salud de TI* | Cumplido |
 | Citar al INE como fuente | Pie de cada gráfica, menú lateral, PDF, README y documentos | Cumplido |
-| Entregables: enlace al repositorio, PDF de la presentación y video de 2 a 3 minutos | Repositorio, [presentación en PDF](presentacion/Nexo-Datat%C3%B3n-INE-2026.pdf) y [video de 2 min 24 s](video/Nexo-video-demostrativo.mp4) | Cumplido |
+| Entregables: enlace al repositorio, PDF de la presentación y video de 2 a 3 minutos | Carpeta [entregables/](../entregables/): presentación en PDF, video demostrativo y secuencia del trabajo día por día | Cumplido |
 | Nota de consentimiento firmada, enviada por correo (lineamientos generales) | Firmada por los cuatro integrantes. **Confirmar que se envió por correo** | Por confirmar |
 
 ## Rúbrica
